@@ -68,7 +68,7 @@ def set_region_rules(world: "SohWorld") -> None:
             (is_adult(bundle) and
              (can_do_trick(Tricks.FIRE_BOSS_DOOR_JUMP, bundle) or
               has_item(LocalEvents.FIRE_TEMPLE_FIRE_MAZE_UPPER_PLATFORM_HIT, bundle) or
-              can_use(Items.HOVER_BOOTS, bundle))))
+              can_use(Items.HOVER_BOOTS, bundle))), SOHBossEntranceNames.FIRE_TEMPLE_BOSS_ENTRANCE, SOHEntranceGroups.ADULT_ONLY_BOSSES, EntranceType.ONE_WAY)
     ])
 
     # Fire Temple Loop Enemies

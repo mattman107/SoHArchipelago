@@ -559,7 +559,8 @@ def set_region_rules(world: "SohWorld") -> None:
     # Connections
     connect_regions(Regions.WATER_TEMPLE_PRE_BOSS_ROOM, world, [
         (Regions.WATER_TEMPLE_LOBBY, lambda bundle: True),
-        (Regions.WATER_TEMPLE_BOSS_ENTRYWAY, lambda bundle: True)
+        (Regions.WATER_TEMPLE_BOSS_ENTRYWAY, lambda bundle: True, SOHBossEntranceNames.WATER_TEMPLE_BOSS_ENTRANCE,
+         SOHEntranceGroups.ADULT_ONLY_BOSSES, EntranceType.ONE_WAY)
     ])
 
     # Water Temple Boss Entryway

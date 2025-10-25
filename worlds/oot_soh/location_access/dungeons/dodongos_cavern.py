@@ -70,7 +70,7 @@ def set_region_rules(world: "SohWorld") -> None:
          lambda bundle: has_item(LocalEvents.DODONGOS_CAVERN_LIFT_PLATFORM, bundle)),
         (Regions.DODONGOS_CAVERN_BOSS_REGION, lambda bundle: has_item(
             LocalEvents.DODONGOS_CAVERN_EYES_LIT, bundle)),
-        (Regions.DODONGOS_CAVERN_BOSS_ENTRYWAY, lambda bundle: False),
+        # (Regions.DODONGOS_CAVERN_BOSS_ENTRYWAY, lambda bundle: False),
     ])
 
     # Dodongos Cavern Lobby Switch
@@ -402,7 +402,8 @@ def set_region_rules(world: "SohWorld") -> None:
         (Regions.DODONGOS_CAVERN_LOBBY, lambda bundle: True),
         (Regions.DODONGOS_CAVERN_BACK_ROOM,
          lambda bundle: can_break_mud_walls(bundle)),
-        (Regions.DODONGOS_CAVERN_BOSS_ENTRYWAY, lambda bundle: True),
+        (Regions.DODONGOS_CAVERN_BOSS_ENTRYWAY, lambda bundle: True, SOHBossEntranceNames.DODONGOS_CAVERN_BOSS_ENTRANCE,
+         SOHEntranceGroups.CHILD_BOSSES, EntranceType.ONE_WAY),
     ])
 
     # Dodongos Cavern Back Room

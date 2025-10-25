@@ -3843,3 +3843,58 @@ class Tricks(StrEnum):
     BOTTOM_OF_THE_WELL_SKULL_PUSH = "Bottom of the Well Skull Push"
     GANONS_CASTLE_BARRIER_SKIP_HOVER = "Ganons Castle Barrier Skip Hover"
     GANONS_CASTLE_GOLD_GAUNTLET_SKIP = "Ganons Castle Gold Gauntlet Skip"
+
+
+class SOHEntranceGroups(IntEnum):
+    OTHER = 0
+    DUNGEONS = 1
+    CHILD_BOSSES = 2
+    CHILD_ONLY_BOSSES = 3
+    ADULT_BOSSES = 4
+    ADULT_ONLY_BOSSES = 5
+    OVERWORLD = 6
+    INTERIOR = 7
+
+
+class SOHDungeonEntranceName(StrEnum):
+    DEKU_TREE_DUNGEON_ENTRANCE = "Deku Tree Dungeon Entrance"
+    DODONGOS_CAVERN_DUNGEON_ENTRANCE = "Dodongos Cavern Dungeon Entrance"
+    JABU_JABUS_DUNGEON_ENTRANCE = "Jabu Jabus Dungeon Entrance"
+    FOREST_TEMPLE_DUNGEON_ENTRANCE = "Forest Temple Dungeon Entrance"
+    FIRE_TEMPLE_DUNGEON_ENTRANCE = "Fire Temple Dungeon Entrance"
+    WATER_TEMPLE_DUNGEON_ENTRANCE = "Water Temple Dungeon Entrance"
+    SHADOW_TEMPLE_DUNGEON_ENTRANCE = "Shadow Temple Dungeon Entrance"
+    SPIRIT_TEMPLE_DUNGEON_ENTRANCE = "Spirit Temple Dungeon Entrance"
+
+
+class SOHDungeonEntranceExitNames(StrEnum):
+    DEKU_TREE_DUNGEON_EXIT = "Deku Tree Dungeon Exit"
+    DODONGOS_CAVERN_DUNGEON_EXIT = "Dodongos Cavern Dungeon Exit"
+    JABU_JABUS_DUNGEON_EXIT = "Jabu Jabus Dungeon Exit"
+    FOREST_TEMPLE_DUNGEON_EXIT = "Forest Temple Dungeon Exit"
+    FIRE_TEMPLE_DUNGEON_EXIT = "Fire Temple Dungeon Exit"
+    WATER_TEMPLE_DUNGEON_EXIT = "Water Temple Dungeon Exit"
+    SHADOW_TEMPLE_DUNGEON_EXIT = "Shadow Temple Dungeon Exit"
+    SPIRIT_TEMPLE_DUNGEON_EXIT = "Spirit Temple Dungeon Exit"
+
+
+class SOHBossEntranceNames(StrEnum):
+    DEKU_TREE_BOSS_ENTRANCE = "Deku Tree Boss Entrance"
+    DODONGOS_CAVERN_BOSS_ENTRANCE = "Dodongos Cavern Boss Entrance"
+    JABU_JABUS_BOSS_ENTRANCE = "Jabu Jabus Boss Entrance"
+    FOREST_TEMPLE_BOSS_ENTRANCE = "Forest Temple Boss Entrance"
+    FIRE_TEMPLE_BOSS_ENTRANCE = "Fire Temple Boss Entrance"
+    WATER_TEMPLE_BOSS_ENTRANCE = "Water Temple Boss Entrance"
+    SHADOW_TEMPLE_BOSS_ENTRANCE = "Shadow Temple Boss Entrance"
+    SPIRIT_TEMPLE_BOSS_ENTRANCE = "Spirit Temple Boss Entrance"
+
+
+class SOHBossEntranceExitNames(StrEnum):
+    DEKU_TREE_BOSS_EXIT = "Deku Tree Boss Exit"
+    DODONGOS_CAVERN_BOSS_EXIT = "Dodongos Cavern Boss Exit"
+    JABU_JABUS_BOSS_EXIT = "Jabu Jabus Boss Exit"
+    FOREST_TEMPLE_BOSS_EXIT = "Forest Temple Boss Exit"
+    FIRE_TEMPLE_BOSS_EXIT = "Fire Temple Boss Exit"
+    WATER_TEMPLE_BOSS_EXIT = "Water Temple Boss Exit"
+    SHADOW_TEMPLE_BOSS_EXIT = "Shadow Temple Boss Exit"
+    SPIRIT_TEMPLE_BOSS_EXIT = "Spirit Temple Boss Exit"

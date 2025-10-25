@@ -203,7 +203,8 @@ def set_region_rules(world: "SohWorld") -> None:
     # Connections
     connect_regions(Regions.SPIRIT_TEMPLE_INSIDE_STATUE_HEAD, world, [
         (Regions.SPIRIT_TEMPLE_CENTRAL_CHAMBER, lambda bundle: True),
-        (Regions.SPIRIT_TEMPLE_BOSS_ENTRYWAY, lambda bundle: True)
+        (Regions.SPIRIT_TEMPLE_BOSS_ENTRYWAY, lambda bundle: True, SOHBossEntranceNames.SPIRIT_TEMPLE_BOSS_ENTRANCE,
+         SOHEntranceGroups.ADULT_BOSSES, EntranceType.ONE_WAY)
     ])
 
     # Spirit Temple Boss Entryway

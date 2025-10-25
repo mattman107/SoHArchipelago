@@ -835,6 +835,43 @@ class TrueNoLogic(Toggle):
     display_name = "True No Logic"
     visibility = Visibility.spoiler
 
+    
+class ShuffleEntrances(Toggle):
+    """
+    Shuffle Entrances. Enables the use of all the below entrance options.
+    """
+    display_name = "Shuffle Entrances"
+
+
+class ShuffleDungeonBossEntrances(Choice):
+    """
+    Shuffle the pool of dungeon boss entrances. This affects the boss rooms of all stone and medallion dungeons
+    Age Restricted - Shuffle the entrances of child and adult boss rooms separetly.
+    Full - Shuffle the entrances of all boss rooms together. Child may be expected to defeat Phantom Ganon and/or Bongo Bongo
+    """
+    display_name = "Boss Entrances Shuffle"
+    option_off = 0
+    option_age_restricted = 1
+    option_full = 2
+    default = 0
+
+
+class ShuffleDungeonEntrances(Choice):
+    """
+    Shuffle the pool of dungeon entrances, including Bottom of the Well, Ice Cavern and Gerudo Training Ground.
+    Shuffling Ganon's Castle can be enabled separately.
+    Additionally, the entrances of Deku Tree, Fire Temple, Bottom of the Well and Gerudo Training Ground are 
+    opened for both child and adult.
+    - Deku Tree will be open for adult after Mido has seen child Link with a sword and a shield.
+    - Bottom of the Well will be open for adult after playing Song of Storms to the Windmill guy as child.
+    - Gerudo Training Ground will be open for child after adult has paid to open the gate once.
+    """
+    display_name = "Dungeon Entrances Shuffle"
+    option_off = 0
+    option_on = 1
+    option_on_plus_ganon = 2
+    default = 0
+
 
 @dataclass
 class SohOptions(PerGameCommonOptions):
@@ -919,6 +956,9 @@ class SohOptions(PerGameCommonOptions):
     ice_trap_count: IceTrapCount
     ice_trap_filler_replacement: IceTrapFillerReplacement
     true_no_logic: TrueNoLogic
+    shuffle_entrances: ShuffleEntrances
+    shuffle_dungeon_entrances: ShuffleDungeonEntrances
+    shuffle_boss_entrances: ShuffleDungeonBossEntrances
 
 
 soh_option_groups = [
@@ -946,17 +986,18 @@ soh_option_groups = [
         TriforceHuntPiecesTotal,
         TriforceHuntPiecesRequiredPercentage,
     ]),
-    # OptionGroup("Shuffle Entrances", [
-    #     # Dungeon Entrances
-    #     # Boss Entrances
-    #     # Overworld Entrances
-    #     # Interior Entrances
-    #     # Grotto Entrances
-    #     # Owl Drops
-    #     # Warp Songs
-    #     # Overworld Spawns
-    #     # Decouple Entrances
-    # ]),
+    OptionGroup("Shuffle Entrances", [
+        ShuffleEntrances,
+        ShuffleDungeonEntrances,
+        ShuffleDungeonBossEntrances
+        # Overworld Entrances
+        # Interior Entrances
+        # Grotto Entrances
+        # Owl Drops
+        # Warp Songs
+        # Overworld Spawns
+        # Decouple Entrances
+    ]),
     OptionGroup("Shuffle Items", [
         # Shuffle Songs -- idk if this or the other ones here will be an actual option here, delete if not
         ShuffleTokens,

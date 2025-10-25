@@ -2,7 +2,7 @@ from collections import Counter
 from typing import TYPE_CHECKING, Callable
 from collections import Counter
 
-from BaseClasses import CollectionState, ItemClassification as IC, MultiWorld
+from BaseClasses import CollectionState, ItemClassification as IC, MultiWorld, EntranceType
 from .Locations import SohLocation
 from worlds.generic.Rules import set_rule
 from worlds.AutoWorld import LogicMixin
@@ -47,14 +47,22 @@ def add_locations(parent_region: Regions, world: "SohWorld",
 
 
 def connect_regions(parent_region: Regions, world: "SohWorld",
-                    child_regions: list[tuple[Regions, Callable[[tuple[CollectionState, Regions, "SohWorld"]], bool]]]) -> None:
+                    child_regions: list[tuple[Regions, Callable[[tuple[CollectionState, Regions, "SohWorld"]], bool], SOHBossEntranceNames, SOHEntranceGroups, EntranceType]]) -> None:
     for region in child_regions:
         regionName = region[0]
+        entranceName = None
         def regionRule(bundle): return True
         if len(region) > 1:
-            regionRule = region[1]  # type: ignore # noqa
-        world.get_region(parent_region).connect(world.get_region(regionName),
-                                                rule=rule_wrapper.wrap(parent_region, regionRule, world))
+            regionRule = region[1]
+        if len(region) > 2:
+            entranceName = region[2].value
+        entrance = world.get_region(parent_region).connect(world.get_region(
+            regionName), entranceName, rule_wrapper.wrap(parent_region, regionRule, world))
+
+        if len(region) > 3:
+            entrance.randomization_group = region[3].value
+        if len(region) > 4:
+            entrance.randomization_type = region[4]
 
 
 def add_events(parent_region: Regions, world: "SohWorld",

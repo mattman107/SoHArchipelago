@@ -277,7 +277,7 @@ def set_region_rules(world: "SohWorld") -> None:
     connect_regions(Regions.DEKU_TREE_OUTSIDE_BOSS_ROOM, world, [
         (Regions.DEKU_TREE_BASEMENT_UPPER, lambda bundle: True),
         (Regions.DEKU_TREE_BOSS_ENTRYWAY, lambda bundle: (has_item(Items.BRONZE_SCALE, bundle) or can_use(Items.IRON_BOOTS, bundle))
-            and can_reflect_nuts(bundle))
+            and can_reflect_nuts(bundle), SOHBossEntranceNames.DEKU_TREE_BOSS_ENTRANCE, SOHEntranceGroups.CHILD_BOSSES, EntranceType.ONE_WAY)
     ])
 
     # Skipping master quest for now

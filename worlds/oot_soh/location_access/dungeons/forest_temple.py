@@ -510,7 +510,8 @@ def set_region_rules(world: "SohWorld") -> None:
     # Connections
     connect_regions(Regions.FOREST_TEMPLE_BOSS_REGION, world, [
         (Regions.FOREST_TEMPLE_LOBBY, lambda bundle: True),
-        (Regions.FOREST_TEMPLE_BOSS_ENTRYWAY, lambda bundle: True)
+        (Regions.FOREST_TEMPLE_BOSS_ENTRYWAY, lambda bundle: True, SOHBossEntranceNames.FOREST_TEMPLE_BOSS_ENTRANCE,
+         SOHEntranceGroups.ADULT_BOSSES, EntranceType.ONE_WAY)
     ])
 
     # Forest Temple Boss Entryway
