@@ -194,7 +194,7 @@ def set_region_rules(world: "SohWorld") -> None:
             has_item(Items.GOLDEN_SCALE, bundle))) or
           (is_adult(bundle) and
            can_use(Items.LONGSHOT, bundle) and
-           has_item(Items.GOLDEN_SCALE, bundle)))),
+           has_item(Items.GOLDEN_SCALE, bundle))), SOHDungeonEntranceNames.WATER_TEMPLE_DUNGEON_ENTRANCE, SOHEntranceGroups.ADULT_ONLY_DUNGEONS, EntranceType.TWO_WAY),
     ])
 
     # LH Fishing Island

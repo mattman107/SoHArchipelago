@@ -25,7 +25,8 @@ def set_region_rules(world: "SohWorld") -> None:
     connect_regions(Regions.WATER_TEMPLE_ENTRYWAY, world, [
         (Regions.WATER_TEMPLE_LOBBY, lambda bundle: (
             has_item(Items.BRONZE_SCALE, bundle))),
-        (Regions.LH_FROM_WATER_TEMPLE, lambda bundle: True)
+        (Regions.LH_FROM_WATER_TEMPLE, lambda bundle: True, SOHDungeonExitNames.WATER_TEMPLE_DUNGEON_EXIT,
+         SOHEntranceGroups.ADULT_DUNGEONS, EntranceType.TWO_WAY)
     ])
 
     # Water Temple Lobby

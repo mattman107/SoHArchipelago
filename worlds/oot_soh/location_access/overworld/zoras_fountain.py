@@ -52,8 +52,8 @@ def set_region_rules(world: "SohWorld") -> None:
             Items.SILVER_GAUNTLETS, bundle) and blast_or_smash(bundle)),
         (Regions.ZF_ROCK, lambda bundle: is_adult(
             bundle) and can_use(Items.SCARECROW, bundle)),
-        (Regions.JABU_JABUS_BELLY_ENTRYWAY,
-         lambda bundle: is_child(bundle) and (can_use(Items.BOTTLE_WITH_FISH, bundle) or world.options.jabu_jabu.value == 1)),
+        (Regions.JABU_JABUS_BELLY_ENTRYWAY, lambda bundle: is_child(bundle) and (can_use(Items.BOTTLE_WITH_FISH, bundle)
+         or world.options.jabu_jabu.value == 1), SOHDungeonEntranceNames.JABU_JABUS_DUNGEON_ENTRANCE, SOHEntranceGroups.CHILD_ONLY_DUNGEONS, EntranceType.TWO_WAY),
         (Regions.ZF_GREAT_FAIRY_FOUNTAIN, lambda bundle: has_explosives(bundle) or (can_do_trick(
             Tricks.ZF_GREAT_FAIRY_WITHOUT_EXPLOSIVES, bundle) and can_use(Items.MEGATON_HAMMER, bundle) and can_use(Items.SILVER_GAUNTLETS, bundle)))
     ])
@@ -124,7 +124,8 @@ def set_region_rules(world: "SohWorld") -> None:
         (Regions.ZORAS_FOUNTAIN, lambda bundle: has_item(Items.BRONZE_SCALE, bundle)),
         (Regions.ZF_ICEBERGS, lambda bundle: is_adult(bundle)),
         (Regions.ZF_LAKEBED, lambda bundle: can_use(Items.IRON_BOOTS, bundle)),
-        (Regions.ICE_CAVERN_ENTRYWAY, lambda bundle: True)
+        (Regions.ICE_CAVERN_ENTRYWAY, lambda bundle: True, SOHDungeonEntranceNames.ICE_CAVERN_DUNGEON_ENTRANCE,
+         SOHEntranceGroups.ADULT_ONLY_DUNGEONS, EntranceType.TWO_WAY)
     ])
 
     # Zora's Fountain Hidden Cave

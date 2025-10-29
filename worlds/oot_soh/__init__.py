@@ -19,7 +19,7 @@ from .Presets import oot_soh_options_presets
 from .UniversalTracker import setup_options_from_slot_data
 from settings import Group, Bool
 from Options import OptionError
-from .EntranceShuffle import entrance_matching
+from .EntranceShuffle import randomize_entrances_soh
 
 import logging
 logger = logging.getLogger("SOH_OOT")
@@ -108,7 +108,8 @@ class SohWorld(World):
             self.options.shuffle_scrubs_maximum_price.value = self.options.shuffle_scrubs_minimum_price.value
 
         # Entrance Rando stuff
-        self.explicit_indirect_conditions = True
+        if (self.options.shuffle_dungeon_entrances.value > 0 or self.options.shuffle_boss_entrances.value > 0):
+            self.explicit_indirect_conditions = True
 
     def create_regions(self) -> None:
         create_regions_and_locations(self)
@@ -170,38 +171,47 @@ class SohWorld(World):
             set_price_rules(self)
 
     def connect_entrances(self):
-        if self.options.shuffle_entrances.value:
-            entrances_to_shuffle = set()
-            entrance_groups_combined = dict()
+        entrances_to_shuffle = set()
 
-            # Dungeon Entrances
-            if self.options.shuffle_dungeon_entrances.value > 0:
-                for entrance in SOHBossEntranceNames:
+        # Dungeon Entrances
+        if self.options.shuffle_dungeon_entrances.value > 0:
+            for entrance in SOHDungeonExitNames:
+                if entrance != SOHDungeonExitNames.GANONS_CASTLE_DUNGEON_EXIT or self.options.shuffle_dungeon_entrances == 2:
                     entrances_to_shuffle.add(entrance)
 
-            # Boss Entrances
-            if self.options.shuffle_boss_entrances.value > 0:
-                for entrance in SOHBossEntranceNames:
+            for entrance in SOHDungeonEntranceNames:
+                if entrance != SOHDungeonEntranceNames.GANONS_CASTLE_DUNGEON_ENTRANCE or self.options.shuffle_dungeon_entrances == 2:
                     entrances_to_shuffle.add(entrance)
 
-                if self.options.shuffle_boss_entrances.value == 1:
-                    entrance_groups_combined.update({SOHEntranceGroups.CHILD_BOSSES.value: [SOHEntranceGroups.CHILD_BOSSES.value, SOHEntranceGroups.CHILD_ONLY_BOSSES.value],
-                                                    SOHEntranceGroups.ADULT_BOSSES.value: [SOHEntranceGroups.ADULT_BOSSES.value, SOHEntranceGroups.ADULT_ONLY_BOSSES.value],
-                                                    SOHEntranceGroups.CHILD_ONLY_BOSSES.value: [SOHEntranceGroups.CHILD_BOSSES.value, SOHEntranceGroups.CHILD_ONLY_BOSSES.value],
-                                                    SOHEntranceGroups.ADULT_ONLY_BOSSES.value: [SOHEntranceGroups.ADULT_BOSSES.value, SOHEntranceGroups.ADULT_ONLY_BOSSES.value]})
-                else:
-                    entrance_groups_combined.update({SOHEntranceGroups.CHILD_ONLY_BOSSES.value: [SOHEntranceGroups.CHILD_BOSSES.value, SOHEntranceGroups.CHILD_ONLY_BOSSES.value],
-                                                    SOHEntranceGroups.ADULT_ONLY_BOSSES.value: [SOHEntranceGroups.ADULT_BOSSES.value, SOHEntranceGroups.ADULT_ONLY_BOSSES.value],
-                                                    SOHEntranceGroups.CHILD_BOSSES.value: [SOHEntranceGroups.CHILD_ONLY_BOSSES.value, SOHEntranceGroups.ADULT_BOSSES.value, SOHEntranceGroups.CHILD_BOSSES.value],
-                                                    SOHEntranceGroups.ADULT_BOSSES.value: [SOHEntranceGroups.ADULT_ONLY_BOSSES.value, SOHEntranceGroups.CHILD_BOSSES.value, SOHEntranceGroups.ADULT_BOSSES.value],
-                                                     })
+            # These groupings are currently really fiddly. They need to be tweaked for accuracy.
+            randomize_entrances_soh(
+                self, entrances_to_shuffle, {SOHEntranceGroups.BOTH_DUNGEONS.value: [SOHEntranceGroups.BOTH_DUNGEONS.value, SOHEntranceGroups.ADULT_DUNGEONS.value, SOHEntranceGroups.CHILD_DUNGEONS.value],
+                                             SOHEntranceGroups.CHILD_ONLY_DUNGEONS.value: [SOHEntranceGroups.CHILD_ONLY_DUNGEONS.value, SOHEntranceGroups.CHILD_DUNGEONS.value],
+                                             SOHEntranceGroups.ADULT_ONLY_DUNGEONS.value: [SOHEntranceGroups.ADULT_ONLY_DUNGEONS.value, SOHEntranceGroups.ADULT_DUNGEONS.value],
+                                             SOHEntranceGroups.CHILD_DUNGEONS.value: [SOHEntranceGroups.CHILD_DUNGEONS.value, SOHEntranceGroups.CHILD_ONLY_DUNGEONS.value, SOHEntranceGroups.ADULT_DUNGEONS.value, SOHEntranceGroups.BOTH_DUNGEONS.value],
+                                             SOHEntranceGroups.ADULT_DUNGEONS.value: [SOHEntranceGroups.ADULT_DUNGEONS.value, SOHEntranceGroups.ADULT_ONLY_DUNGEONS.value, SOHEntranceGroups.CHILD_DUNGEONS.value, SOHEntranceGroups.BOTH_DUNGEONS.value]})
 
-            for entranceEnum in entrances_to_shuffle:
-                disconnect_entrance_for_randomization(
-                    self.multiworld.get_entrance(entranceEnum.value, self.player), one_way_target_name=entrance_matching[entranceEnum].value)
+            entrances_to_shuffle.clear()
 
-            randomize_entrances(
-                self, True, entrance_groups_combined, True)
+        # Boss Entrances
+        if self.options.shuffle_boss_entrances.value > 0:
+            for entrance in SOHBossEntranceNames:
+                entrances_to_shuffle.add(entrance)
+
+            if self.options.shuffle_boss_entrances.value == 1:
+                randomize_entrances_soh(
+                    self, entrances_to_shuffle, {SOHEntranceGroups.CHILD_BOSSES.value: [SOHEntranceGroups.CHILD_BOSSES.value, SOHEntranceGroups.CHILD_ONLY_BOSSES.value],
+                                                 SOHEntranceGroups.ADULT_BOSSES.value: [SOHEntranceGroups.ADULT_BOSSES.value, SOHEntranceGroups.ADULT_ONLY_BOSSES.value],
+                                                 SOHEntranceGroups.CHILD_ONLY_BOSSES.value: [SOHEntranceGroups.CHILD_ONLY_BOSSES.value, SOHEntranceGroups.CHILD_BOSSES.value],
+                                                 SOHEntranceGroups.ADULT_ONLY_BOSSES.value: [SOHEntranceGroups.ADULT_ONLY_BOSSES.value, SOHEntranceGroups.ADULT_BOSSES.value]})
+            else:
+                randomize_entrances_soh(
+                    self, entrances_to_shuffle, {SOHEntranceGroups.CHILD_ONLY_BOSSES.value: [SOHEntranceGroups.CHILD_BOSSES.value, SOHEntranceGroups.CHILD_ONLY_BOSSES.value],
+                                                 SOHEntranceGroups.ADULT_ONLY_BOSSES.value: [SOHEntranceGroups.ADULT_BOSSES.value, SOHEntranceGroups.ADULT_ONLY_BOSSES.value],
+                                                 SOHEntranceGroups.CHILD_BOSSES.value: [SOHEntranceGroups.CHILD_ONLY_BOSSES.value, SOHEntranceGroups.ADULT_BOSSES.value, SOHEntranceGroups.CHILD_BOSSES.value],
+                                                 SOHEntranceGroups.ADULT_BOSSES.value: [SOHEntranceGroups.ADULT_ONLY_BOSSES.value, SOHEntranceGroups.CHILD_BOSSES.value, SOHEntranceGroups.ADULT_BOSSES.value]})
+
+            entrances_to_shuffle.clear()
 
         return super().connect_entrances()
 
@@ -295,11 +305,11 @@ class SohWorld(World):
         return changed
 
     # For debugging purposes
-    def generate_output(self, output_directory: str):
-        from Utils import visualize_regions
-        visualize_regions(self.get_region(self.origin_region_name), f"SOH-Player{self.player}.puml",
-                          show_entrance_names=True,
-                          regions_to_highlight=self.multiworld.get_all_state().reachable_regions[self.player])
+    # def generate_output(self, output_directory: str):
+    #     from Utils import visualize_regions
+    #     visualize_regions(self.get_region(self.origin_region_name), f"SOH-Player{self.player}.puml",
+    #                       show_entrance_names=True,
+    #                       regions_to_highlight=self.multiworld.get_all_state().reachable_regions[self.player])
 
     def fill_slot_data(self) -> dict[str, Any]:
         return {
@@ -383,4 +393,5 @@ class SohWorld(World):
             "ice_trap_filler_replacement": self.options.ice_trap_filler_replacement.value,
             "no_logic": self.options.true_no_logic.value,
             "apworld_version": self.apworld_version,
+            # Need to figure out how to get the randomized entrances to Ship
         }

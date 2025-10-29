@@ -48,8 +48,8 @@ def set_region_rules(world: "SohWorld") -> None:
     # Connections
     connect_regions(Regions.SACRED_FOREST_MEADOW, world, [
         (Regions.SFM_ENTRYWAY, lambda bundle: True),
-        (Regions.FOREST_TEMPLE_ENTRYWAY,
-         lambda bundle: can_use(Items.HOOKSHOT, bundle)),
+        (Regions.FOREST_TEMPLE_ENTRYWAY, lambda bundle: can_use(Items.HOOKSHOT, bundle),
+         SOHDungeonEntranceNames.FOREST_TEMPLE_DUNGEON_ENTRANCE, SOHEntranceGroups.ADULT_ONLY_DUNGEONS, EntranceType.TWO_WAY),
         (Regions.SFM_FAIRY_GROTTO, lambda bundle: True),
         (Regions.SFM_STORMS_GROTTO, lambda bundle: can_open_storms_grotto(bundle)),
     ])

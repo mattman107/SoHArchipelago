@@ -430,9 +430,7 @@ def set_region_rules(world: "SohWorld") -> None:
     # Connections
     connect_regions(Regions.KAK_WELL, world, [
         (Regions.KAKARIKO_VILLAGE,
-         lambda bundle: is_adult(bundle) or has_item(Items.BRONZE_SCALE, bundle) or has_item(Events.DRAIN_WELL,
-                                                                                             bundle)),
-        # TODO: Add check for dungeon entrance randomization
-        (Regions.BOTTOM_OF_THE_WELL_ENTRYWAY, lambda bundle: is_child(
-            bundle) or has_item(Events.DRAIN_WELL, bundle)),
+         lambda bundle: is_adult(bundle) or has_item(Items.BRONZE_SCALE, bundle) or has_item(Events.DRAIN_WELL, bundle)),
+        (Regions.BOTTOM_OF_THE_WELL_ENTRYWAY, lambda bundle: is_child(bundle) or (has_item(Events.DRAIN_WELL, bundle) and world.options.shuffle_dungeon_entrances.value >
+         0), SOHDungeonEntranceNames.BOTTOM_OF_THE_WELL_DUNGEON_ENTRANCE, SOHEntranceGroups.BOTH_DUNGEONS, EntranceType.TWO_WAY)
     ])

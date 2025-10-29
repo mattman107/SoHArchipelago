@@ -52,9 +52,8 @@ def set_region_rules(world: "SohWorld") -> None:
         (Regions.DMC_UPPER_NEARBY, lambda bundle: True),
         (Regions.DMC_LADDER_REGION_NEARBY, lambda bundle: fire_timer(
             bundle) >= 16 or hearts(bundle) >= 3),
-        (Regions.DMC_CENTRAL_NEARBY, lambda bundle: is_adult(bundle) and can_use(Items.GORON_TUNIC, bundle) and can_use(Items.DISTANT_SCARECROW, bundle) and (effective_health(
-            # TODO Implement Dungeon Shuffle Option to replace False
-            bundle) > 2 or (can_use(Items.BOTTLE_WITH_FAIRY, bundle) and False or can_use(Items.NAYRUS_LOVE, bundle)))),
+        (Regions.DMC_CENTRAL_NEARBY, lambda bundle: is_adult(bundle) and can_use(Items.GORON_TUNIC, bundle) and can_use(Items.DISTANT_SCARECROW, bundle) and (
+            effective_health(bundle) > 2 or (can_use(Items.BOTTLE_WITH_FAIRY, bundle) and world.options.shuffle_dungeon_entrances.value > 0) or can_use(Items.NAYRUS_LOVE, bundle))),
         (Regions.DMC_LOWER_NEARBY, lambda bundle: False),
         (Regions.DMC_DISTANT_PLATFORM, lambda bundle: (fire_timer(
             bundle) >= 48 or hearts(bundle) >= 2) or hearts(bundle) >= 3),
@@ -162,9 +161,8 @@ def set_region_rules(world: "SohWorld") -> None:
          bundle)) or can_use(Items.HOVER_BOOTS, bundle) or can_use(Items.HOOKSHOT, bundle)),
         (Regions.DMC_UPPER_NEARBY, lambda bundle: is_adult(bundle)
          and has_item(LocalEvents.DMC_BEAN_PLANTED, bundle)),
-        (Regions.FIRE_TEMPLE_ENTRYWAY, lambda bundle: (is_child(bundle) and hearts(bundle) >= 3 and False) or (
-            # TODO Implement Dungeon Shuffle Option to replace False
-            is_adult(bundle) and fire_timer(bundle) >= 24)),
+        (Regions.FIRE_TEMPLE_ENTRYWAY, lambda bundle: (is_child(bundle) and hearts(bundle) >= 3 and world.options.shuffle_dungeon_entrances.value > 0) or (
+            is_adult(bundle) and fire_timer(bundle) >= 24), SOHDungeonEntranceNames.FIRE_TEMPLE_DUNGEON_ENTRANCE, SOHEntranceGroups.ADULT_DUNGEONS, EntranceType.TWO_WAY),
         (Regions.DMC_DISTANT_PLATFORM, lambda bundle: (fire_timer(bundle) >=
          48 or hearts(bundle) >= 2) and can_use(Items.DISTANT_SCARECROW, bundle)),
     ])
@@ -204,10 +202,14 @@ def set_region_rules(world: "SohWorld") -> None:
          lambda bundle: can_break_lower_hives(bundle)),
         (Locations.DMC_UPPER_GROTTO_BEEHIVE_RIGHT,
          lambda bundle: can_break_lower_hives(bundle)),
-        (Locations.DMC_UPPER_GROTTO_GRASS1, lambda bundle: can_cut_shrubs(bundle)),
-        (Locations.DMC_UPPER_GROTTO_GRASS2, lambda bundle: can_cut_shrubs(bundle)),
-        (Locations.DMC_UPPER_GROTTO_GRASS3, lambda bundle: can_cut_shrubs(bundle)),
-        (Locations.DMC_UPPER_GROTTO_GRASS4, lambda bundle: can_cut_shrubs(bundle))
+        (Locations.DMC_UPPER_GROTTO_GRASS1,
+         lambda bundle: can_cut_shrubs(bundle)),
+        (Locations.DMC_UPPER_GROTTO_GRASS2,
+         lambda bundle: can_cut_shrubs(bundle)),
+        (Locations.DMC_UPPER_GROTTO_GRASS3,
+         lambda bundle: can_cut_shrubs(bundle)),
+        (Locations.DMC_UPPER_GROTTO_GRASS4,
+         lambda bundle: can_cut_shrubs(bundle))
     ])
     # Connections
     connect_regions(Regions.DMC_UPPER_GROTTO, world, [
@@ -234,13 +236,20 @@ def set_region_rules(world: "SohWorld") -> None:
     # Death Mountain Crater Distant Platform
     # Locations
     add_locations(Regions.DMC_DISTANT_PLATFORM, world, [
-        (Locations.DMC_DISTANT_PLATFORM_RUPEE1, lambda bundle: is_adult(bundle)),
-        (Locations.DMC_DISTANT_PLATFORM_RUPEE2, lambda bundle: is_adult(bundle)),
-        (Locations.DMC_DISTANT_PLATFORM_RUPEE3, lambda bundle: is_adult(bundle)),
-        (Locations.DMC_DISTANT_PLATFORM_RUPEE4, lambda bundle: is_adult(bundle)),
-        (Locations.DMC_DISTANT_PLATFORM_RUPEE5, lambda bundle: is_adult(bundle)),
-        (Locations.DMC_DISTANT_PLATFORM_RUPEE6, lambda bundle: is_adult(bundle)),
-        (Locations.DMC_DISTANT_PLATFORM_RED_RUPEE, lambda bundle: is_adult(bundle))
+        (Locations.DMC_DISTANT_PLATFORM_RUPEE1,
+         lambda bundle: is_adult(bundle)),
+        (Locations.DMC_DISTANT_PLATFORM_RUPEE2,
+         lambda bundle: is_adult(bundle)),
+        (Locations.DMC_DISTANT_PLATFORM_RUPEE3,
+         lambda bundle: is_adult(bundle)),
+        (Locations.DMC_DISTANT_PLATFORM_RUPEE4,
+         lambda bundle: is_adult(bundle)),
+        (Locations.DMC_DISTANT_PLATFORM_RUPEE5,
+         lambda bundle: is_adult(bundle)),
+        (Locations.DMC_DISTANT_PLATFORM_RUPEE6,
+         lambda bundle: is_adult(bundle)),
+        (Locations.DMC_DISTANT_PLATFORM_RED_RUPEE,
+         lambda bundle: is_adult(bundle))
     ])
     # Connections
     connect_regions(Regions.DMC_DISTANT_PLATFORM, world, [

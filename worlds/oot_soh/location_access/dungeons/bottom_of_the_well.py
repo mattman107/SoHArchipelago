@@ -26,7 +26,8 @@ def set_region_rules(world: "SohWorld") -> None:
         (Regions.BOTTOM_OF_THE_WELL_PERIMETER, lambda bundle: is_child(
             bundle) and can_pass_enemy(bundle, Enemies.BIG_SKULLTULA)),
         # [Regions.BOTTOM_OF_THE_WELL_MQ_PERIMETER, lambda bundle: is_child(bundle),
-        (Regions.KAK_WELL, lambda bundle: True)
+        (Regions.KAK_WELL, lambda bundle: True, SOHDungeonExitNames.BOTTOM_OF_THE_WELL_DUNGEON_EXIT,
+         SOHEntranceGroups.BOTH_DUNGEONS, EntranceType.TWO_WAY)
     ])
 
     # Bottom of the Well Perimeter

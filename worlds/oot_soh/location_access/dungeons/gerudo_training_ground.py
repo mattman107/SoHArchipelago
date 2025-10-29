@@ -9,7 +9,8 @@ def set_region_rules(world: "SohWorld") -> None:
     # Connections
     connect_regions(Regions.GERUDO_TRAINING_GROUND_ENTRYWAY, world, [
         (Regions.GERUDO_TRAINING_GROUND_LOBBY, lambda bundle: True),
-        (Regions.GF_EXITING_GTG, lambda bundle: True),
+        (Regions.GF_TO_GTG, lambda bundle: True, SOHDungeonExitNames.GERUDO_TRAINING_GROUND_DUNGEON_EXIT,
+         SOHEntranceGroups.ADULT_DUNGEONS, EntranceType.TWO_WAY),
     ])
 
     # Gerudo Training Ground Lobby

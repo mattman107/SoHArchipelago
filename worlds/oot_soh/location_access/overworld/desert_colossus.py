@@ -51,7 +51,8 @@ def set_region_rules(world: "SohWorld") -> None:
         (Locations.COLOSSUS_GOSSIP_STONE_FAIRY,
          lambda bundle: call_gossip_fairy(bundle)),
         (Locations.COLOSSUS_GOSSIP_STONE_BIG_FAIRY,
-         lambda bundle: can_use(Items.SONG_OF_STORMS, bundle))
+         lambda bundle: can_use(Items.SONG_OF_STORMS, bundle)),
+        (Locations.SHEIK_AT_COLOSSUS, lambda bundle: True)
 
     ])
     # Connections
@@ -60,7 +61,8 @@ def set_region_rules(world: "SohWorld") -> None:
             has_item(Items.BRONZE_SCALE, bundle) or can_use(Items.IRON_BOOTS, bundle))),
         (Regions.COLOSSUS_GREAT_FAIRY_FOUNTAIN,
          lambda bundle: has_explosives(bundle)),
-        (Regions.SPIRIT_TEMPLE_ENTRYWAY, lambda bundle: True),
+        (Regions.SPIRIT_TEMPLE_ENTRYWAY, lambda bundle: True, SOHDungeonEntranceNames.SPIRIT_TEMPLE_DUNGEON_ENTRNACE,
+         SOHEntranceGroups.BOTH_DUNGEONS, EntranceType.TWO_WAY),
         (Regions.WASTELAND_NEAR_COLOSSUS, lambda bundle: True),
         (Regions.COLOSSUS_GROTTO, lambda bundle: can_use(
             Items.SILVER_GAUNTLETS, bundle))
@@ -89,15 +91,15 @@ def set_region_rules(world: "SohWorld") -> None:
         (Regions.DESERT_COLOSSUS, lambda bundle: True)
     ])
 
-    # Desert Colossus Outside Temple
-    # Locations
-    add_locations(Regions.DESERT_COLOSSUS_OUTSIDE_TEMPLE, world, [
-        (Locations.SHEIK_AT_COLOSSUS, lambda bundle: True)
-    ])
-    # Connections
-    connect_regions(Regions.DESERT_COLOSSUS_OUTSIDE_TEMPLE, world, [
-        (Regions.DESERT_COLOSSUS, lambda bundle: True)
-    ])
+    # # Desert Colossus Outside Temple
+    # # Locations
+    # add_locations(Regions.DESERT_COLOSSUS_OUTSIDE_TEMPLE, world, [
+    #     (Locations.SHEIK_AT_COLOSSUS, lambda bundle: True)
+    # ])
+    # # Connections
+    # connect_regions(Regions.DESERT_COLOSSUS_OUTSIDE_TEMPLE, world, [
+    #     (Regions.DESERT_COLOSSUS, lambda bundle: True)
+    # ])
 
     # Desert Colossus Great Fairy Fountain
     # Locations

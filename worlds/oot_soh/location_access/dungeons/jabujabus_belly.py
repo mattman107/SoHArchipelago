@@ -31,7 +31,8 @@ def set_region_rules(world: "SohWorld") -> None:
     connect_regions(Regions.JABU_JABUS_BELLY_ENTRYWAY, world, [
         # TODO: Add vanilla/MQ check
         (Regions.JABU_JABUS_BELLY_BEGINNING, lambda bundle: True),
-        (Regions.ZORAS_FOUNTAIN, lambda bundle: True)
+        (Regions.ZORAS_FOUNTAIN, lambda bundle: True, SOHDungeonExitNames.JABU_JABUS_DUNGEON_EXIT,
+         SOHEntranceGroups.CHILD_DUNGEONS, EntranceType.TWO_WAY)
     ])
 
     # Jabu Jabu's Belly Beginning

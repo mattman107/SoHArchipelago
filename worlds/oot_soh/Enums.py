@@ -69,7 +69,7 @@ class Regions(StrEnum):
     GF_NEAR_GROTTO = "GF Near Grotto"
     GF_OUTSIDE_GTG = "GF Outside GTG"
     GF_TO_GTG = "GF to GTG"
-    GF_EXITING_GTG = "GF Exiting GTG"
+    # GF_EXITING_GTG = "GF Exiting GTG"
     GF_ABOVE_GTG = "GF Above GTG"
     GF_BOTTOM_OF_LOWER_VINES = "GF Bottom of Lower Vines"
     GF_TOP_OF_LOWER_VINES = "GF Top of Lower Vines"
@@ -103,7 +103,7 @@ class Regions(StrEnum):
     WASTELAND_NEAR_COLOSSUS = "Wasteland Near Colossus"
     DESERT_COLOSSUS = "Desert Colossus"
     DESERT_COLOSSUS_OASIS = "Desert Colossus Oasis"
-    DESERT_COLOSSUS_OUTSIDE_TEMPLE = "Desert Colossus Outside Temple"
+    # DESERT_COLOSSUS_OUTSIDE_TEMPLE = "Desert Colossus Outside Temple"
     COLOSSUS_GREAT_FAIRY_FOUNTAIN = "Colossus Great Fairy Fountain"
     COLOSSUS_GROTTO = "Colossus Grotto"
     MARKET_ENTRANCE = "Market Entrance"
@@ -124,7 +124,7 @@ class Regions(StrEnum):
     BEYOND_DOOR_OF_TIME = "Beyond Door of Time"
     MASTER_SWORD_PEDESTAL = "Master Sword Pedestal"
     CASTLE_GROUNDS = "Castle Grounds"
-    CASTLE_GROUNDS_FROM_GANONS_CASTLE = "Castle Grounds From Ganon's Castle"
+    # CASTLE_GROUNDS_FROM_GANONS_CASTLE = "Castle Grounds From Ganon's Castle"
     HYRULE_CASTLE_GROUNDS = "Hyrule Castle Grounds"
     HC_GARDEN_SONG_FROM_IMPA = "HC Garden Song From Impa"
     HC_GARDEN = "HC Garden"
@@ -3845,29 +3845,24 @@ class Tricks(StrEnum):
     GANONS_CASTLE_GOLD_GAUNTLET_SKIP = "Ganons Castle Gold Gauntlet Skip"
 
 
+# Probabaly need more than these for other shuffles, but for now this works.
 class SOHEntranceGroups(IntEnum):
     OTHER = 0
-    DUNGEONS = 1
-    CHILD_BOSSES = 2
-    CHILD_ONLY_BOSSES = 3
-    ADULT_BOSSES = 4
-    ADULT_ONLY_BOSSES = 5
-    OVERWORLD = 6
-    INTERIOR = 7
+    CHILD_DUNGEONS = 1
+    CHILD_ONLY_DUNGEONS = 2
+    ADULT_DUNGEONS = 3
+    ADULT_ONLY_DUNGEONS = 4
+    BOTH_DUNGEONS = 5
+    CHILD_BOSSES = 6
+    CHILD_ONLY_BOSSES = 7
+    ADULT_BOSSES = 8
+    ADULT_ONLY_BOSSES = 9
+    EITHER_BOSSES = 10
+    OVERWORLD = 11
+    INTERIOR = 12
 
 
-class SOHDungeonEntranceName(StrEnum):
-    DEKU_TREE_DUNGEON_ENTRANCE = "Deku Tree Dungeon Entrance"
-    DODONGOS_CAVERN_DUNGEON_ENTRANCE = "Dodongos Cavern Dungeon Entrance"
-    JABU_JABUS_DUNGEON_ENTRANCE = "Jabu Jabus Dungeon Entrance"
-    FOREST_TEMPLE_DUNGEON_ENTRANCE = "Forest Temple Dungeon Entrance"
-    FIRE_TEMPLE_DUNGEON_ENTRANCE = "Fire Temple Dungeon Entrance"
-    WATER_TEMPLE_DUNGEON_ENTRANCE = "Water Temple Dungeon Entrance"
-    SHADOW_TEMPLE_DUNGEON_ENTRANCE = "Shadow Temple Dungeon Entrance"
-    SPIRIT_TEMPLE_DUNGEON_ENTRANCE = "Spirit Temple Dungeon Entrance"
-
-
-class SOHDungeonEntranceExitNames(StrEnum):
+class SOHDungeonExitNames(StrEnum):
     DEKU_TREE_DUNGEON_EXIT = "Deku Tree Dungeon Exit"
     DODONGOS_CAVERN_DUNGEON_EXIT = "Dodongos Cavern Dungeon Exit"
     JABU_JABUS_DUNGEON_EXIT = "Jabu Jabus Dungeon Exit"
@@ -3876,6 +3871,25 @@ class SOHDungeonEntranceExitNames(StrEnum):
     WATER_TEMPLE_DUNGEON_EXIT = "Water Temple Dungeon Exit"
     SHADOW_TEMPLE_DUNGEON_EXIT = "Shadow Temple Dungeon Exit"
     SPIRIT_TEMPLE_DUNGEON_EXIT = "Spirit Temple Dungeon Exit"
+    GANONS_CASTLE_DUNGEON_EXIT = "Ganons Castle Dungeon Exit"
+    BOTTOM_OF_THE_WELL_DUNGEON_EXIT = "Bottom of the Well Dungeon Exit"
+    ICE_CAVERN_DUNGEON_EXIT = "Ice Cavern Dungeon Exit"
+    GERUDO_TRAINING_GROUND_DUNGEON_EXIT = "Gerudo Training Ground Dungeon Exit"
+
+
+class SOHDungeonEntranceNames(StrEnum):
+    DEKU_TREE_DUNGEON_ENTRANCE = "Deku Tree Dungeon Entrance"
+    DODONGOS_CAVERN_DUNGEON_ENTRANCE = "Dodongos Cavern Dungeon Entrance"
+    JABU_JABUS_DUNGEON_ENTRANCE = "Jabu Jabus Dungeon Entrance"
+    FOREST_TEMPLE_DUNGEON_ENTRANCE = "Forest Temple Dungeon Entrance"
+    FIRE_TEMPLE_DUNGEON_ENTRANCE = "Fire Temple Dungeon Entrance"
+    WATER_TEMPLE_DUNGEON_ENTRANCE = "Water Temple Dungeon Entrance"
+    SHADOW_TEMPLE_DUNGEON_ENTRANCE = "Shadow Temple Dungeon Entrance"
+    SPIRIT_TEMPLE_DUNGEON_ENTRNACE = "Spirit Temple Dungeon Entrance"
+    GANONS_CASTLE_DUNGEON_ENTRANCE = "Ganons Castle Dungeon Entrance"
+    BOTTOM_OF_THE_WELL_DUNGEON_ENTRANCE = "Bottom of the Well Dungeon Entrance"
+    ICE_CAVERN_DUNGEON_ENTRANCE = "Ice Cavern Dungeon Entrance"
+    GERUDO_TRAINING_GROUND_DUNGEON_ENTRANCE = "Gerudo Training Ground Dungeon Entrance"
 
 
 class SOHBossEntranceNames(StrEnum):

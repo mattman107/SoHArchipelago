@@ -32,7 +32,8 @@ def set_region_rules(world: "SohWorld") -> None:
     # Connections
     connect_regions(Regions.GANONS_CASTLE_ENTRYWAY, world, [
         (Regions.GANONS_CASTLE_LOBBY, lambda bundle: True),
-        (Regions.CASTLE_GROUNDS_FROM_GANONS_CASTLE, lambda bundle: True)
+        (Regions.GANONS_CASTLE_LEDGE, lambda bundle: True,
+         SOHDungeonExitNames.GANONS_CASTLE_DUNGEON_EXIT, SOHEntranceGroups.ADULT_DUNGEONS, EntranceType.TWO_WAY)
     ])
 
     # Ganon's Castle Lobby

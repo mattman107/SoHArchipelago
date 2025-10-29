@@ -47,7 +47,7 @@ def add_locations(parent_region: Regions, world: "SohWorld",
 
 
 def connect_regions(parent_region: Regions, world: "SohWorld",
-                    child_regions: list[tuple[Regions, Callable[[tuple[CollectionState, Regions, "SohWorld"]], bool], SOHBossEntranceNames, SOHEntranceGroups, EntranceType]]) -> None:
+                    child_regions: list[tuple[Regions, Callable[[tuple[CollectionState, Regions, "SohWorld"]], bool], SOHBossEntranceNames | SOHDungeonExitNames, SOHEntranceGroups, EntranceType]]) -> None:
     for region in child_regions:
         regionName = region[0]
         entranceName = None

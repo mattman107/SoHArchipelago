@@ -184,17 +184,20 @@ def set_region_rules(world: "SohWorld") -> None:
         (Regions.CASTLE_GROUNDS, lambda bundle: True)
     ])
 
-    # Castle Grounds from Ganon's Castle
-    # Connections
-    connect_regions(Regions.CASTLE_GROUNDS_FROM_GANONS_CASTLE, world, [
-        (Regions.HYRULE_CASTLE_GROUNDS, lambda bundle: is_child(bundle)),
-        (Regions.GANONS_CASTLE_LEDGE, lambda bundle: is_adult(bundle))
-    ])
+    # Deviation from Ship, but makes ER easier
+    # # Castle Grounds from Ganon's Castle
+    # # Connections
+    # connect_regions(Regions.CASTLE_GROUNDS_FROM_GANONS_CASTLE, world, [
+    #     (Regions.HYRULE_CASTLE_GROUNDS, lambda bundle: is_child(bundle)),
+    #     (Regions.GANONS_CASTLE_LEDGE, lambda bundle: is_adult(bundle))
+    # ])
 
     # Ganon's Castle Ledge
     # Connections
     connect_regions(Regions.GANONS_CASTLE_LEDGE, world, [
-        (Regions.GANONS_CASTLE_GROUNDS, lambda bundle: has_item(
-            LocalEvents.HC_OGC_RAINBOW_BRIDGE_BUILT, bundle)),
-        (Regions.GANONS_CASTLE_ENTRYWAY, lambda bundle: is_adult(bundle))
+        (Regions.GANONS_CASTLE_GROUNDS, lambda bundle: is_adult(bundle)
+         and has_item(LocalEvents.HC_OGC_RAINBOW_BRIDGE_BUILT, bundle)),
+        (Regions.HYRULE_CASTLE_GROUNDS, lambda bundle: is_child(bundle)),
+        (Regions.GANONS_CASTLE_ENTRYWAY, lambda bundle: is_adult(bundle),
+         SOHDungeonEntranceNames.GANONS_CASTLE_DUNGEON_ENTRANCE, SOHEntranceGroups.ADULT_ONLY_DUNGEONS, EntranceType.TWO_WAY)
     ])

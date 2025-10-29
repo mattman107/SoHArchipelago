@@ -80,9 +80,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.GF_OUTSIDE_GTG, world, [
-        # TODO: Check for entrance rando
-        (Regions.GF_TO_GTG, lambda bundle: has_item(
-            LocalEvents.GTG_GATE_OPEN, bundle) and is_adult(bundle)),
+        (Regions.GF_TO_GTG, lambda bundle: True),
         (Regions.GF_JAIL_WINDOW, lambda bundle: can_use(Items.HOOKSHOT, bundle)),
         (Regions.GERUDO_FORTRESS_OUTSKIRTS, lambda bundle: True),
         (Regions.GF_NEAR_GROTTO, lambda bundle: is_child(bundle)
@@ -98,17 +96,23 @@ def set_region_rules(world: "SohWorld") -> None:
     # GF to GTG
     # Connections
     connect_regions(Regions.GF_TO_GTG, world, [
-        (Regions.GERUDO_TRAINING_GROUND_ENTRYWAY, lambda bundle: True),
-    ])
-
-    # GF Exiting GTG
-    # Connections
-    connect_regions(Regions.GF_EXITING_GTG, world, [
+        (Regions.GERUDO_TRAINING_GROUND_ENTRYWAY, lambda bundle: has_item(LocalEvents.GTG_GATE_OPEN, bundle) and (is_adult(bundle) or world.options.shuffle_dungeon_entrances >
+         0), SOHDungeonEntranceNames.GERUDO_TRAINING_GROUND_DUNGEON_ENTRANCE, SOHEntranceGroups.ADULT_DUNGEONS, EntranceType.TWO_WAY),
         (Regions.GF_OUTSIDE_GTG, lambda bundle: is_child(bundle)
          or has_item(Items.GERUDO_MEMBERSHIP_CARD, bundle)),
         (Regions.GF_JAIL_WINDOW, lambda bundle: can_use(Items.HOOKSHOT, bundle)),
         (Regions.GERUDO_FORTRESS_OUTSKIRTS, lambda bundle: True),
     ])
+
+    # Deviation from Ship
+    # GF Exiting GTG
+    # Connections
+    # connect_regions(Regions.GF_EXITING_GTG, world, [
+    #     (Regions.GF_OUTSIDE_GTG, lambda bundle: is_child(bundle)
+    #      or has_item(Items.GERUDO_MEMBERSHIP_CARD, bundle)),
+    #     (Regions.GF_JAIL_WINDOW, lambda bundle: can_use(Items.HOOKSHOT, bundle)),
+    #     (Regions.GERUDO_FORTRESS_OUTSKIRTS, lambda bundle: True),
+    # ])
 
     # GF Above GTG
     # Connections

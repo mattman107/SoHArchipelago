@@ -12,13 +12,12 @@ class EventLocations(StrEnum):
 
 def set_region_rules(world: "SohWorld") -> None:
     # Ice Cavern Entryway
-    # Locations
-    add_locations(Regions.ICE_CAVERN_ENTRYWAY, world, [])
     # Connections
     connect_regions(Regions.ICE_CAVERN_ENTRYWAY, world, [
         (Regions.ICE_CAVERN_BEGINNING, lambda bundle: True),
         # Skipping MQ
-        (Regions.ZF_LEDGE, lambda bundle: True)
+        (Regions.ZF_LEDGE, lambda bundle: True, SOHDungeonExitNames.ICE_CAVERN_DUNGEON_EXIT,
+         SOHEntranceGroups.ADULT_DUNGEONS, EntranceType.TWO_WAY)
     ])
 
     # Ice Cavern Beginning

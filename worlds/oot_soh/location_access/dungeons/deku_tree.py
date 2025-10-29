@@ -30,7 +30,8 @@ def set_region_rules(world: "SohWorld") -> None:
     # Connections
     connect_regions(Regions.DEKU_TREE_ENTRYWAY, world, [
         (Regions.DEKU_TREE_LOBBY, lambda bundle: True),
-        (Regions.KF_OUTSIDE_DEKU_TREE, lambda bundle: True)
+        (Regions.KF_OUTSIDE_DEKU_TREE, lambda bundle: True, SOHDungeonExitNames.DEKU_TREE_DUNGEON_EXIT,
+         SOHEntranceGroups.CHILD_DUNGEONS, EntranceType.TWO_WAY)
     ])
 
     # Deku Lobby

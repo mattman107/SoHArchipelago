@@ -36,7 +36,8 @@ def set_region_rules(world: "SohWorld") -> None:
     connect_regions(Regions.FOREST_TEMPLE_ENTRYWAY, world, [
         # Todo: Change this when we have IsVanilla vs. IsMQ
         (Regions.FOREST_TEMPLE_FIRST_ROOM, lambda bundle: True),
-        (Regions.SACRED_FOREST_MEADOW, lambda bundle: True)
+        (Regions.SACRED_FOREST_MEADOW, lambda bundle: True, SOHDungeonExitNames.FOREST_TEMPLE_DUNGEON_EXIT,
+         SOHEntranceGroups.ADULT_DUNGEONS, EntranceType.TWO_WAY)
     ])
 
     # Forest Temple First Room

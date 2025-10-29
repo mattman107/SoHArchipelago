@@ -16,7 +16,8 @@ def set_region_rules(world: "SohWorld") -> None:
     connect_regions(Regions.SHADOW_TEMPLE_ENTRYWAY, world, [
         (Regions.SHADOW_TEMPLE_BEGINNING, lambda bundle: (can_do_trick(Tricks.LENS_SHADOW, bundle) or can_use(
             Items.LENS_OF_TRUTH, bundle)) and (can_use(Items.HOVER_BOOTS, bundle) or can_use(Items.HOOKSHOT, bundle))),
-        (Regions.GRAVEYARD_WARP_PAD_REGION, lambda bundle: True)
+        (Regions.GRAVEYARD_WARP_PAD_REGION, lambda bundle: True,
+         SOHDungeonExitNames.SHADOW_TEMPLE_DUNGEON_EXIT, SOHEntranceGroups.ADULT_DUNGEONS, EntranceType.TWO_WAY)
     ])
 
     # Shadow Temple Beginning
@@ -177,8 +178,8 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.SHADOW_TEMPLE_BEYOND_BOAT, world, [
-        (Regions.SHADOW_TEMPLE_BOSS_ENTRYWAY, lambda bundle: (can_use(Items.FAIRY_BOW, bundle) or can_use(Items.DISTANT_SCARECROW, bundle) or (can_do_trick(
-            Tricks.SHADOW_STATUE, bundle) and can_use(Items.BOMBCHUS_5, bundle))) and small_keys(Items.SHADOW_TEMPLE_SMALL_KEY, 5, bundle) and can_use(Items.HOVER_BOOTS, bundle), SOHBossEntranceNames.SHADOW_TEMPLE_BOSS_ENTRANCE, SOHEntranceGroups.ADULT_BOSSES, EntranceType.ONE_WAY),
+        (Regions.SHADOW_TEMPLE_BOSS_ENTRYWAY, lambda bundle: (can_use(Items.FAIRY_BOW, bundle) or can_use(Items.DISTANT_SCARECROW, bundle) or (can_do_trick(Tricks.SHADOW_STATUE, bundle) and can_use(Items.BOMBCHUS_5, bundle)))
+         and small_keys(Items.SHADOW_TEMPLE_SMALL_KEY, 5, bundle) and can_use(Items.HOVER_BOOTS, bundle), SOHBossEntranceNames.SHADOW_TEMPLE_BOSS_ENTRANCE, SOHEntranceGroups.ADULT_BOSSES, EntranceType.ONE_WAY),
     ])
 
     # Shadow Temple Boss Entryway
