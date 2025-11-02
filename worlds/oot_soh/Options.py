@@ -835,13 +835,6 @@ class TrueNoLogic(Toggle):
     display_name = "True No Logic"
     visibility = Visibility.spoiler
 
-    
-class ShuffleEntrances(Toggle):
-    """
-    Shuffle Entrances. Enables the use of all the below entrance options.
-    """
-    display_name = "Shuffle Entrances"
-
 
 class ShuffleDungeonBossEntrances(Choice):
     """
@@ -964,7 +957,6 @@ class SohOptions(PerGameCommonOptions):
     ice_trap_count: IceTrapCount
     ice_trap_filler_replacement: IceTrapFillerReplacement
     true_no_logic: TrueNoLogic
-    shuffle_entrances: ShuffleEntrances
     shuffle_dungeon_entrances: ShuffleDungeonEntrances
     shuffle_boss_entrances: ShuffleDungeonBossEntrances
     decouple_entrances: DecoupleEntrances
@@ -996,7 +988,6 @@ soh_option_groups = [
         TriforceHuntPiecesRequiredPercentage,
     ]),
     OptionGroup("Shuffle Entrances", [
-        ShuffleEntrances,
         ShuffleDungeonEntrances,
         ShuffleDungeonBossEntrances,
         DecoupleEntrances
