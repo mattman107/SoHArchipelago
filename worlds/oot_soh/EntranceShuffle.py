@@ -36,7 +36,7 @@ def randomize_entrances_soh(world: "SohWorld", entrances_to_shuffle: set[SOHBoss
 
 
 # This should probably be double checked by someone who knows how to properly remove a location from a region and give it a new parent region
-def on_connect_soh_sheik_at_collosus(er_state: ERPlacementState, placed_exits: list[Entrance], paired_entrances: list[Entrance]) -> bool:
+def on_connect_soh_sheik_at_colossus(er_state: ERPlacementState, placed_exits: list[Entrance], paired_entrances: list[Entrance]) -> bool:
     if len(paired_entrances) >= 2 and paired_entrances[1].name == SOHDungeonEntranceNames.SPIRIT_TEMPLE_DUNGEON_ENTRNACE:
         world: SohWorld = er_state.world
         def locationRule(bundle): return True
