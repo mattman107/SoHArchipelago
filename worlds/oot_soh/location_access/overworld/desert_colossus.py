@@ -53,7 +53,6 @@ def set_region_rules(world: "SohWorld") -> None:
         (Locations.COLOSSUS_GOSSIP_STONE_BIG_FAIRY,
          lambda bundle: can_use(Items.SONG_OF_STORMS, bundle)),
         (Locations.SHEIK_AT_COLOSSUS, lambda bundle: True)
-
     ])
     # Connections
     connect_regions(Regions.DESERT_COLOSSUS, world, [

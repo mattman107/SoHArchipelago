@@ -19,7 +19,7 @@ from .Presets import oot_soh_options_presets
 from .UniversalTracker import setup_options_from_slot_data
 from settings import Group, Bool
 from Options import OptionError
-from .EntranceShuffle import randomize_entrances_soh
+from .EntranceShuffle import randomize_entrances_soh, on_connect_soh_sheik_at_collosus
 
 import logging
 logger = logging.getLogger("SOH_OOT")
@@ -189,7 +189,7 @@ class SohWorld(World):
                                              SOHEntranceGroups.CHILD_ONLY_DUNGEONS.value: [SOHEntranceGroups.CHILD_ONLY_DUNGEONS.value, SOHEntranceGroups.CHILD_DUNGEONS.value],
                                              SOHEntranceGroups.ADULT_ONLY_DUNGEONS.value: [SOHEntranceGroups.ADULT_ONLY_DUNGEONS.value, SOHEntranceGroups.ADULT_DUNGEONS.value],
                                              SOHEntranceGroups.CHILD_DUNGEONS.value: [SOHEntranceGroups.CHILD_DUNGEONS.value, SOHEntranceGroups.CHILD_ONLY_DUNGEONS.value, SOHEntranceGroups.ADULT_DUNGEONS.value, SOHEntranceGroups.BOTH_DUNGEONS.value],
-                                             SOHEntranceGroups.ADULT_DUNGEONS.value: [SOHEntranceGroups.ADULT_DUNGEONS.value, SOHEntranceGroups.ADULT_ONLY_DUNGEONS.value, SOHEntranceGroups.CHILD_DUNGEONS.value, SOHEntranceGroups.BOTH_DUNGEONS.value]})
+                                             SOHEntranceGroups.ADULT_DUNGEONS.value: [SOHEntranceGroups.ADULT_DUNGEONS.value, SOHEntranceGroups.ADULT_ONLY_DUNGEONS.value, SOHEntranceGroups.CHILD_DUNGEONS.value, SOHEntranceGroups.BOTH_DUNGEONS.value]}, on_connect_soh_sheik_at_collosus)
 
             entrances_to_shuffle.clear()
 
@@ -305,11 +305,11 @@ class SohWorld(World):
         return changed
 
     # For debugging purposes
-    # def generate_output(self, output_directory: str):
-    #     from Utils import visualize_regions
-    #     visualize_regions(self.get_region(self.origin_region_name), f"SOH-Player{self.player}.puml",
-    #                       show_entrance_names=True,
-    #                       regions_to_highlight=self.multiworld.get_all_state().reachable_regions[self.player])
+    def generate_output(self, output_directory: str):
+        from Utils import visualize_regions
+        visualize_regions(self.get_region(self.origin_region_name), f"SOH-Player{self.player}.puml",
+                          show_entrance_names=True,
+                          regions_to_highlight=self.multiworld.get_all_state().reachable_regions[self.player])
 
     def fill_slot_data(self) -> dict[str, Any]:
         return {
