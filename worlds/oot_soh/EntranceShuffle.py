@@ -24,7 +24,7 @@ entrance_matching = {
 
 
 # Might need to return the ER Placement state at the end
-def randomize_entrances_soh(world: "SohWorld", entrances_to_shuffle: set[SOHBossEntranceNames | SOHDungeonEntranceNames | SOHDungeonExitNames], entrance_groups: dict[int: list[int]], on_connect: Callable[[ERPlacementState, list[Entrance], list[Entrance]], bool | None] | None = None) -> None:
+def randomize_entrances_soh(world: "SohWorld", entrances_to_shuffle: set[SOHBossEntranceNames | SOHDungeonEntranceNames | SOHDungeonExitNames], entrance_groups: dict[int: list[int]], on_connect: Callable[[ERPlacementState, list[Entrance], list[Entrance]], bool | None] | None = None, coupled: bool = True) -> None:
     for entranceEnum in entrances_to_shuffle:
         disconnect_entrance_for_randomization(world.multiworld.get_entrance(
             entranceEnum.value, world.player), one_way_target_name=entrance_matching[entranceEnum].value if entranceEnum in entrance_matching else None)
@@ -32,7 +32,7 @@ def randomize_entrances_soh(world: "SohWorld", entrances_to_shuffle: set[SOHBoss
     # Figure out decoupled entrances. For now setting to False
     #randomize_entrances(world, (not bool(world.options.decouple_entrances)), entrance_groups, True, on_connect=on_connect)
     randomize_entrances(
-        world, False, entrance_groups, True, on_connect=on_connect)
+        world, coupled, entrance_groups, True, on_connect=on_connect)
 
 
 # This should probably be double checked by someone who knows how to properly remove a location from a region and give it a new parent region
@@ -41,7 +41,7 @@ def on_connect_soh_sheik_at_colossus(er_state: ERPlacementState, placed_exits: l
         world: SohWorld = er_state.world
         def locationRule(bundle): return True
 
-        print(f'Placed Exits: {placed_exits} | Paired Entrances: {paired_entrances}')
+        # print(f'Placed Exits: {placed_exits} | Paired Entrances: {paired_entrances}')
         location: Location = world.get_location(Locations.SHEIK_AT_COLOSSUS)
         location.parent_region.locations.remove(location)
 
