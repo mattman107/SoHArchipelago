@@ -172,9 +172,9 @@ class SohWorld(World):
 
     def connect_entrances(self):
         entrances_to_shuffle = set()
-        # Reverse decoupled option for randomize_entrances, because it is asking if you wanted coupled
+        # Reverse decoupled option for randomize_entrances because it is asking if you wanted coupled
         # Update this when it is figured out why decoupled doesn't work with the current groupings
-        decoupled = True #(not self.options.decouple_entrances)
+        coupled = True#(not self.options.decouple_entrances)
 
         # Dungeon Entrances
         if self.options.shuffle_dungeon_entrances.value > 0:
@@ -192,7 +192,7 @@ class SohWorld(World):
                                              SOHEntranceGroups.CHILD_ONLY_DUNGEONS.value: [SOHEntranceGroups.CHILD_ONLY_DUNGEONS.value, SOHEntranceGroups.CHILD_DUNGEONS.value],
                                              SOHEntranceGroups.ADULT_ONLY_DUNGEONS.value: [SOHEntranceGroups.ADULT_ONLY_DUNGEONS.value, SOHEntranceGroups.ADULT_DUNGEONS.value],
                                              SOHEntranceGroups.CHILD_DUNGEONS.value: [SOHEntranceGroups.CHILD_DUNGEONS.value, SOHEntranceGroups.CHILD_ONLY_DUNGEONS.value, SOHEntranceGroups.ADULT_DUNGEONS.value, SOHEntranceGroups.BOTH_DUNGEONS.value],
-                                             SOHEntranceGroups.ADULT_DUNGEONS.value: [SOHEntranceGroups.ADULT_DUNGEONS.value, SOHEntranceGroups.ADULT_ONLY_DUNGEONS.value, SOHEntranceGroups.CHILD_DUNGEONS.value, SOHEntranceGroups.BOTH_DUNGEONS.value]}, on_connect_soh_sheik_at_colossus, decoupled)
+                                             SOHEntranceGroups.ADULT_DUNGEONS.value: [SOHEntranceGroups.ADULT_DUNGEONS.value, SOHEntranceGroups.ADULT_ONLY_DUNGEONS.value, SOHEntranceGroups.CHILD_DUNGEONS.value, SOHEntranceGroups.BOTH_DUNGEONS.value]}, on_connect_soh_sheik_at_colossus, coupled)
 
             entrances_to_shuffle.clear()
 
