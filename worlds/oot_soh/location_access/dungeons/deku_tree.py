@@ -31,7 +31,7 @@ def set_region_rules(world: "SohWorld") -> None:
     connect_regions(Regions.DEKU_TREE_ENTRYWAY, world, [
         (Regions.DEKU_TREE_LOBBY, lambda bundle: True),
         (Regions.KF_OUTSIDE_DEKU_TREE, lambda bundle: True, SOHDungeonExitNames.DEKU_TREE_DUNGEON_EXIT,
-         SOHEntranceGroups.CHILD_DUNGEONS, EntranceType.TWO_WAY)
+         SOHEntranceGroups.DUNGEON_ENTRANCE | SOHEntranceGroups.CHILD, EntranceType.TWO_WAY)
     ])
 
     # Deku Lobby
@@ -278,7 +278,7 @@ def set_region_rules(world: "SohWorld") -> None:
     connect_regions(Regions.DEKU_TREE_OUTSIDE_BOSS_ROOM, world, [
         (Regions.DEKU_TREE_BASEMENT_UPPER, lambda bundle: True),
         (Regions.DEKU_TREE_BOSS_ENTRYWAY, lambda bundle: (has_item(Items.BRONZE_SCALE, bundle) or can_use(Items.IRON_BOOTS, bundle))
-            and can_reflect_nuts(bundle), SOHBossEntranceNames.DEKU_TREE_BOSS_ENTRANCE, SOHEntranceGroups.CHILD_BOSSES, EntranceType.ONE_WAY)
+            and can_reflect_nuts(bundle), SOHBossEntranceNames.DEKU_TREE_BOSS_ENTRANCE, SOHEntranceGroups.BOSS_ENTRANCE | SOHEntranceGroups.CHILD, EntranceType.ONE_WAY)
     ])
 
     # Skipping master quest for now

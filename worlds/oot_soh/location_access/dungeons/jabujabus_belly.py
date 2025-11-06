@@ -32,7 +32,7 @@ def set_region_rules(world: "SohWorld") -> None:
         # TODO: Add vanilla/MQ check
         (Regions.JABU_JABUS_BELLY_BEGINNING, lambda bundle: True),
         (Regions.ZORAS_FOUNTAIN, lambda bundle: True, SOHDungeonExitNames.JABU_JABUS_DUNGEON_EXIT,
-         SOHEntranceGroups.CHILD_DUNGEONS, EntranceType.TWO_WAY)
+         SOHEntranceGroups.DUNGEON_ENTRANCE | SOHEntranceGroups.CHILD, EntranceType.TWO_WAY)
     ])
 
     # Jabu Jabu's Belly Beginning
@@ -246,7 +246,7 @@ def set_region_rules(world: "SohWorld") -> None:
     connect_regions(Regions.JABU_JABUS_BELLY_NEAR_BOSS_ROOM, world, [
         (Regions.JABU_JABUS_BELLY_MAIN, lambda bundle: True),
         (Regions.JABU_JABUS_BELLY_BOSS_ENTRYWAY, lambda bundle: can_use(Items.BOOMERANG, bundle) or (can_do_trick(Tricks.JABU_NEAR_BOSS_RANGED, bundle) and can_use_any([Items.HOOKSHOT, Items.FAIRY_BOW, Items.FAIRY_SLINGSHOT], bundle)) or (
-            can_do_trick(Tricks.JABU_NEAR_BOSS_EXPLOSIVES, bundle) and (can_use(Items.BOMBCHUS_5, bundle) or (can_use(Items.HOVER_BOOTS, bundle) and can_use(Items.BOMB_BAG, bundle)))), SOHBossEntranceNames.JABU_JABUS_BOSS_ENTRANCE, SOHEntranceGroups.CHILD_ONLY_BOSSES, EntranceType.ONE_WAY)
+            can_do_trick(Tricks.JABU_NEAR_BOSS_EXPLOSIVES, bundle) and (can_use(Items.BOMBCHUS_5, bundle) or (can_use(Items.HOVER_BOOTS, bundle) and can_use(Items.BOMB_BAG, bundle)))), SOHBossEntranceNames.JABU_JABUS_BOSS_ENTRANCE, SOHEntranceGroups.BOSS_ENTRANCE | SOHEntranceGroups.CHILD_ONLY, EntranceType.ONE_WAY)
     ])
 
     # Skipping master quest for now

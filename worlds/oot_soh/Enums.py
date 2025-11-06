@@ -3847,19 +3847,26 @@ class Tricks(StrEnum):
 
 # Probabaly need more than these for other shuffles, but for now this works.
 class SOHEntranceGroups(IntEnum):
+    # Entrance Type
     OTHER = 0
-    CHILD_DUNGEONS = 1
-    CHILD_ONLY_DUNGEONS = 2
-    ADULT_DUNGEONS = 3
-    ADULT_ONLY_DUNGEONS = 4
-    BOTH_DUNGEONS = 5
-    CHILD_BOSSES = 6
-    CHILD_ONLY_BOSSES = 7
-    ADULT_BOSSES = 8
-    ADULT_ONLY_BOSSES = 9
-    EITHER_BOSSES = 10
-    OVERWORLD = 11
-    INTERIOR = 12
+    DUNGEON_ENTRANCE = 1
+    BOSS_ENTRANCE = 2
+    OVERWORLD = 3
+    INTERIOR = 4
+    THEIVES_HIDEOUT_ENTRANCE = 5
+    GROTTO = 6
+    OWL_DROP = 7
+    WARP_SONG = 8
+    # Age Accessible
+    ANY_AGE = 1 << 4
+    CHILD = 2 << 4
+    ADULT = 3 << 4
+    CHILD_ONLY = 4 << 4
+    ADULT_ONLY = 5 << 4
+    BOTH_AGE = 6 << 4
+    # Bitmasks
+    TYPE_MASK = ANY_AGE - 1
+    AGE_MASK = ~0 << 4
 
 
 class SOHDungeonExitNames(StrEnum):
@@ -3893,22 +3900,22 @@ class SOHDungeonEntranceNames(StrEnum):
 
 
 class SOHBossEntranceNames(StrEnum):
-    DEKU_TREE_BOSS_ENTRANCE = "Deku Tree Boss Entrance"
-    DODONGOS_CAVERN_BOSS_ENTRANCE = "Dodongos Cavern Boss Entrance"
-    JABU_JABUS_BOSS_ENTRANCE = "Jabu Jabus Boss Entrance"
-    FOREST_TEMPLE_BOSS_ENTRANCE = "Forest Temple Boss Entrance"
-    FIRE_TEMPLE_BOSS_ENTRANCE = "Fire Temple Boss Entrance"
-    WATER_TEMPLE_BOSS_ENTRANCE = "Water Temple Boss Entrance"
-    SHADOW_TEMPLE_BOSS_ENTRANCE = "Shadow Temple Boss Entrance"
-    SPIRIT_TEMPLE_BOSS_ENTRANCE = "Spirit Temple Boss Entrance"
+    DEKU_TREE_BOSS_ENTRANCE = "Deku Tree Dungeon Boss Entrance"
+    DODONGOS_CAVERN_BOSS_ENTRANCE = "Dodongos Cavern Dungeon Boss Entrance"
+    JABU_JABUS_BOSS_ENTRANCE = "Jabu Jabus Dungeon Boss Entrance"
+    FOREST_TEMPLE_BOSS_ENTRANCE = "Forest Temple Dungeon Boss Entrance"
+    FIRE_TEMPLE_BOSS_ENTRANCE = "Fire Temple Dungeon Boss Entrance"
+    WATER_TEMPLE_BOSS_ENTRANCE = "Water Temple Dungeon Boss Entrance"
+    SHADOW_TEMPLE_BOSS_ENTRANCE = "Shadow Temple Dungeon Boss Entrance"
+    SPIRIT_TEMPLE_BOSS_ENTRANCE = "Spirit Temple Dungeon Boss Entrance"
 
 
 class SOHBossEntranceExitNames(StrEnum):
-    DEKU_TREE_BOSS_EXIT = "Deku Tree Boss Exit"
-    DODONGOS_CAVERN_BOSS_EXIT = "Dodongos Cavern Boss Exit"
-    JABU_JABUS_BOSS_EXIT = "Jabu Jabus Boss Exit"
-    FOREST_TEMPLE_BOSS_EXIT = "Forest Temple Boss Exit"
-    FIRE_TEMPLE_BOSS_EXIT = "Fire Temple Boss Exit"
-    WATER_TEMPLE_BOSS_EXIT = "Water Temple Boss Exit"
-    SHADOW_TEMPLE_BOSS_EXIT = "Shadow Temple Boss Exit"
-    SPIRIT_TEMPLE_BOSS_EXIT = "Spirit Temple Boss Exit"
+    DEKU_TREE_BOSS_EXIT = "Deku Tree Dungeon Boss Exit"
+    DODONGOS_CAVERN_BOSS_EXIT = "Dodongos Cavern Dungeon Boss Exit"
+    JABU_JABUS_BOSS_EXIT = "Jabu Jabus Dungeon Boss Exit"
+    FOREST_TEMPLE_BOSS_EXIT = "Forest Temple Dungeon Boss Exit"
+    FIRE_TEMPLE_BOSS_EXIT = "Fire Temple Dungeon Boss Exit"
+    WATER_TEMPLE_BOSS_EXIT = "Water Temple Dungeon Boss Exit"
+    SHADOW_TEMPLE_BOSS_EXIT = "Shadow Temple Dungeon Boss Exit"
+    SPIRIT_TEMPLE_BOSS_EXIT = "Spirit Temple Dungeon Boss Exit"

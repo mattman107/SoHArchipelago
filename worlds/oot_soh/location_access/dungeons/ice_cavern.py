@@ -17,7 +17,7 @@ def set_region_rules(world: "SohWorld") -> None:
         (Regions.ICE_CAVERN_BEGINNING, lambda bundle: True),
         # Skipping MQ
         (Regions.ZF_LEDGE, lambda bundle: True, SOHDungeonExitNames.ICE_CAVERN_DUNGEON_EXIT,
-         SOHEntranceGroups.ADULT_DUNGEONS, EntranceType.TWO_WAY)
+         SOHEntranceGroups.DUNGEON_ENTRANCE | SOHEntranceGroups.ADULT, EntranceType.TWO_WAY)
     ])
 
     # Ice Cavern Beginning

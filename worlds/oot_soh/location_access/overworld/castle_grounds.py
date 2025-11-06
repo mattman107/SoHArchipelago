@@ -199,5 +199,5 @@ def set_region_rules(world: "SohWorld") -> None:
          and has_item(LocalEvents.HC_OGC_RAINBOW_BRIDGE_BUILT, bundle)),
         (Regions.HYRULE_CASTLE_GROUNDS, lambda bundle: is_child(bundle)),
         (Regions.GANONS_CASTLE_ENTRYWAY, lambda bundle: is_adult(bundle),
-         SOHDungeonEntranceNames.GANONS_CASTLE_DUNGEON_ENTRANCE, SOHEntranceGroups.ADULT_ONLY_DUNGEONS, EntranceType.TWO_WAY)
+         SOHDungeonEntranceNames.GANONS_CASTLE_DUNGEON_ENTRANCE, SOHEntranceGroups.DUNGEON_ENTRANCE | SOHEntranceGroups.ADULT_ONLY, EntranceType.TWO_WAY)
     ])

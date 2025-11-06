@@ -26,7 +26,7 @@ def set_region_rules(world: "SohWorld") -> None:
         (Regions.WATER_TEMPLE_LOBBY, lambda bundle: (
             has_item(Items.BRONZE_SCALE, bundle))),
         (Regions.LH_FROM_WATER_TEMPLE, lambda bundle: True, SOHDungeonExitNames.WATER_TEMPLE_DUNGEON_EXIT,
-         SOHEntranceGroups.ADULT_DUNGEONS, EntranceType.TWO_WAY)
+         SOHEntranceGroups.DUNGEON_ENTRANCE | SOHEntranceGroups.ADULT, EntranceType.TWO_WAY)
     ])
 
     # Water Temple Lobby
@@ -561,7 +561,7 @@ def set_region_rules(world: "SohWorld") -> None:
     connect_regions(Regions.WATER_TEMPLE_PRE_BOSS_ROOM, world, [
         (Regions.WATER_TEMPLE_LOBBY, lambda bundle: True),
         (Regions.WATER_TEMPLE_BOSS_ENTRYWAY, lambda bundle: True, SOHBossEntranceNames.WATER_TEMPLE_BOSS_ENTRANCE,
-         SOHEntranceGroups.ADULT_ONLY_BOSSES, EntranceType.ONE_WAY)
+         SOHEntranceGroups.BOSS_ENTRANCE | SOHEntranceGroups.ADULT_ONLY, EntranceType.ONE_WAY)
     ])
 
     # Water Temple Boss Entryway

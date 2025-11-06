@@ -37,7 +37,7 @@ def set_region_rules(world: "SohWorld") -> None:
         # Todo: Change this when we have IsVanilla vs. IsMQ
         (Regions.FOREST_TEMPLE_FIRST_ROOM, lambda bundle: True),
         (Regions.SACRED_FOREST_MEADOW, lambda bundle: True, SOHDungeonExitNames.FOREST_TEMPLE_DUNGEON_EXIT,
-         SOHEntranceGroups.ADULT_DUNGEONS, EntranceType.TWO_WAY)
+         SOHEntranceGroups.DUNGEON_ENTRANCE | SOHEntranceGroups.ADULT, EntranceType.TWO_WAY)
     ])
 
     # Forest Temple First Room
@@ -512,7 +512,7 @@ def set_region_rules(world: "SohWorld") -> None:
     connect_regions(Regions.FOREST_TEMPLE_BOSS_REGION, world, [
         (Regions.FOREST_TEMPLE_LOBBY, lambda bundle: True),
         (Regions.FOREST_TEMPLE_BOSS_ENTRYWAY, lambda bundle: True, SOHBossEntranceNames.FOREST_TEMPLE_BOSS_ENTRANCE,
-         SOHEntranceGroups.ADULT_BOSSES, EntranceType.ONE_WAY)
+         SOHEntranceGroups.BOSS_ENTRANCE | SOHEntranceGroups.ADULT, EntranceType.ONE_WAY)
     ])
 
     # Forest Temple Boss Entryway

@@ -61,7 +61,7 @@ def set_region_rules(world: "SohWorld") -> None:
         (Regions.COLOSSUS_GREAT_FAIRY_FOUNTAIN,
          lambda bundle: has_explosives(bundle)),
         (Regions.SPIRIT_TEMPLE_ENTRYWAY, lambda bundle: True, SOHDungeonEntranceNames.SPIRIT_TEMPLE_DUNGEON_ENTRNACE,
-         SOHEntranceGroups.BOTH_DUNGEONS, EntranceType.TWO_WAY),
+         SOHEntranceGroups.DUNGEON_ENTRANCE | SOHEntranceGroups.BOTH_AGE, EntranceType.TWO_WAY),
         (Regions.WASTELAND_NEAR_COLOSSUS, lambda bundle: True),
         (Regions.COLOSSUS_GROTTO, lambda bundle: can_use(
             Items.SILVER_GAUNTLETS, bundle))

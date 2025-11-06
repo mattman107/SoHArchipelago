@@ -27,7 +27,7 @@ def set_region_rules(world: "SohWorld") -> None:
     connect_regions(Regions.DODONGOS_CAVERN_ENTRYWAY, world, [
         (Regions.DODONGOS_CAVERN_BEGINNING, lambda bundle: True),
         (Regions.DEATH_MOUNTAIN_TRAIL, lambda bundle: True, SOHDungeonExitNames.DODONGOS_CAVERN_DUNGEON_EXIT,
-         SOHEntranceGroups.BOTH_DUNGEONS, EntranceType.TWO_WAY),
+         SOHEntranceGroups.DUNGEON_ENTRANCE | SOHEntranceGroups.BOTH_AGE, EntranceType.TWO_WAY),
     ])
     # Dodongos Cavern Beginning
     # Connections
@@ -403,7 +403,7 @@ def set_region_rules(world: "SohWorld") -> None:
         (Regions.DODONGOS_CAVERN_BACK_ROOM,
          lambda bundle: can_break_mud_walls(bundle)),
         (Regions.DODONGOS_CAVERN_BOSS_ENTRYWAY, lambda bundle: True, SOHBossEntranceNames.DODONGOS_CAVERN_BOSS_ENTRANCE,
-         SOHEntranceGroups.CHILD_BOSSES, EntranceType.ONE_WAY),
+         SOHEntranceGroups.BOSS_ENTRANCE | SOHEntranceGroups.CHILD, EntranceType.ONE_WAY),
     ])
 
     # Dodongos Cavern Back Room

@@ -3,8 +3,7 @@ import pkgutil
 
 from typing import Any, List, ClassVar
 
-from BaseClasses import CollectionState, Item, Tutorial, Entrance
-from entrance_rando import disconnect_entrance_for_randomization, randomize_entrances
+from BaseClasses import CollectionState, Item, Tutorial
 from worlds.AutoWorld import WebWorld, World
 from .Items import SohItem, item_data_table, item_table, item_name_groups, progressive_items
 from .Locations import location_table, location_name_groups
@@ -20,6 +19,7 @@ from .UniversalTracker import setup_options_from_slot_data
 from settings import Group, Bool
 from Options import OptionError
 from .EntranceShuffle import randomize_entrances_soh, on_connect_soh_sheik_at_colossus
+from entrance_rando import bake_target_group_lookup
 
 import logging
 logger = logging.getLogger("SOH_OOT")
@@ -176,6 +176,15 @@ class SohWorld(World):
         # Update this when it is figured out why decoupled doesn't work with the current groupings
         coupled = True#(not self.options.decouple_entrances)
 
+        # Boss Entrances
+        if self.options.shuffle_boss_entrances.value > 0:
+            for entrance in SOHBossEntranceNames:
+                entrances_to_shuffle.add(entrance)
+
+            if self.options.shuffle_boss_entrances.value == 1:
+                randomize_entrances_soh(self, entrances_to_shuffle, ageRestricted=True)
+                entrances_to_shuffle.clear()
+
         # Dungeon Entrances
         if self.options.shuffle_dungeon_entrances.value > 0:
             for entrance in SOHDungeonExitNames:
@@ -186,35 +195,13 @@ class SohWorld(World):
                 if entrance != SOHDungeonEntranceNames.GANONS_CASTLE_DUNGEON_ENTRANCE or self.options.shuffle_dungeon_entrances == 2:
                     entrances_to_shuffle.add(entrance)
 
-            # These groupings are currently really fiddly. They need to be tweaked for accuracy.
-            randomize_entrances_soh(
-                self, entrances_to_shuffle, {SOHEntranceGroups.BOTH_DUNGEONS.value: [SOHEntranceGroups.BOTH_DUNGEONS.value, SOHEntranceGroups.ADULT_DUNGEONS.value, SOHEntranceGroups.CHILD_DUNGEONS.value],
-                                             SOHEntranceGroups.CHILD_ONLY_DUNGEONS.value: [SOHEntranceGroups.CHILD_ONLY_DUNGEONS.value, SOHEntranceGroups.CHILD_DUNGEONS.value],
-                                             SOHEntranceGroups.ADULT_ONLY_DUNGEONS.value: [SOHEntranceGroups.ADULT_ONLY_DUNGEONS.value, SOHEntranceGroups.ADULT_DUNGEONS.value],
-                                             SOHEntranceGroups.CHILD_DUNGEONS.value: [SOHEntranceGroups.CHILD_DUNGEONS.value, SOHEntranceGroups.CHILD_ONLY_DUNGEONS.value, SOHEntranceGroups.ADULT_DUNGEONS.value, SOHEntranceGroups.BOTH_DUNGEONS.value],
-                                             SOHEntranceGroups.ADULT_DUNGEONS.value: [SOHEntranceGroups.ADULT_DUNGEONS.value, SOHEntranceGroups.ADULT_ONLY_DUNGEONS.value, SOHEntranceGroups.CHILD_DUNGEONS.value, SOHEntranceGroups.BOTH_DUNGEONS.value]}, on_connect_soh_sheik_at_colossus, coupled)
+            # randomize_entrances_soh(
+            #     self, entrances_to_shuffle, on_connect_soh_sheik_at_colossus, coupled)
 
-            entrances_to_shuffle.clear()
+            # entrances_to_shuffle.clear()
 
-        # Boss Entrances
-        if self.options.shuffle_boss_entrances.value > 0:
-            for entrance in SOHBossEntranceNames:
-                entrances_to_shuffle.add(entrance)
-
-            if self.options.shuffle_boss_entrances.value == 1:
-                randomize_entrances_soh(
-                    self, entrances_to_shuffle, {SOHEntranceGroups.CHILD_BOSSES.value: [SOHEntranceGroups.CHILD_BOSSES.value, SOHEntranceGroups.CHILD_ONLY_BOSSES.value],
-                                                 SOHEntranceGroups.ADULT_BOSSES.value: [SOHEntranceGroups.ADULT_BOSSES.value, SOHEntranceGroups.ADULT_ONLY_BOSSES.value],
-                                                 SOHEntranceGroups.CHILD_ONLY_BOSSES.value: [SOHEntranceGroups.CHILD_ONLY_BOSSES.value, SOHEntranceGroups.CHILD_BOSSES.value],
-                                                 SOHEntranceGroups.ADULT_ONLY_BOSSES.value: [SOHEntranceGroups.ADULT_ONLY_BOSSES.value, SOHEntranceGroups.ADULT_BOSSES.value]})
-            else:
-                randomize_entrances_soh(
-                    self, entrances_to_shuffle, {SOHEntranceGroups.CHILD_ONLY_BOSSES.value: [SOHEntranceGroups.CHILD_BOSSES.value, SOHEntranceGroups.CHILD_ONLY_BOSSES.value],
-                                                 SOHEntranceGroups.ADULT_ONLY_BOSSES.value: [SOHEntranceGroups.ADULT_BOSSES.value, SOHEntranceGroups.ADULT_ONLY_BOSSES.value],
-                                                 SOHEntranceGroups.CHILD_BOSSES.value: [SOHEntranceGroups.CHILD_ONLY_BOSSES.value, SOHEntranceGroups.ADULT_BOSSES.value, SOHEntranceGroups.CHILD_BOSSES.value],
-                                                 SOHEntranceGroups.ADULT_BOSSES.value: [SOHEntranceGroups.ADULT_ONLY_BOSSES.value, SOHEntranceGroups.CHILD_BOSSES.value, SOHEntranceGroups.ADULT_BOSSES.value]})
-
-            entrances_to_shuffle.clear()
+        randomize_entrances_soh(
+                self, entrances_to_shuffle, on_connect_soh_sheik_at_colossus, coupled)
 
         return super().connect_entrances()
 

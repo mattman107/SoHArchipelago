@@ -15,7 +15,7 @@ def set_region_rules(world: "SohWorld") -> None:
     connect_regions(Regions.SPIRIT_TEMPLE_ENTRYWAY, world, [
         (Regions.SPIRIT_TEMPLE_LOBBY, lambda bundle: True),
         (Regions.DESERT_COLOSSUS, lambda bundle: True, SOHDungeonExitNames.SPIRIT_TEMPLE_DUNGEON_EXIT,
-         SOHEntranceGroups.BOTH_DUNGEONS, EntranceType.TWO_WAY)
+         SOHEntranceGroups.DUNGEON_ENTRANCE | SOHEntranceGroups.BOTH_AGE, EntranceType.TWO_WAY)
     ])
 
     # Spirit Temple Lobby
@@ -205,7 +205,7 @@ def set_region_rules(world: "SohWorld") -> None:
     connect_regions(Regions.SPIRIT_TEMPLE_INSIDE_STATUE_HEAD, world, [
         (Regions.SPIRIT_TEMPLE_CENTRAL_CHAMBER, lambda bundle: True),
         (Regions.SPIRIT_TEMPLE_BOSS_ENTRYWAY, lambda bundle: True, SOHBossEntranceNames.SPIRIT_TEMPLE_BOSS_ENTRANCE,
-         SOHEntranceGroups.ADULT_ONLY_BOSSES, EntranceType.ONE_WAY)
+         SOHEntranceGroups.BOSS_ENTRANCE | SOHEntranceGroups.ADULT_ONLY, EntranceType.ONE_WAY)
     ])
 
     # Spirit Temple Boss Entryway

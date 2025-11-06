@@ -874,6 +874,13 @@ class DecoupleEntrances(Toggle):
     display_name = "Decouple Entrances"
 
 
+class MixedEntrancePools(Toggle):
+    """
+    Shuffle entrances into a mixed pool instead of separate ones. Has no effect on pools whose entrances aren't shuffled, and "Shuffle Boss Entrances" must be set to "Full" to include them.
+    """
+    display_name = "Mixed Entrances Pools"
+
+
 @dataclass
 class SohOptions(PerGameCommonOptions):
     closed_forest: ClosedForest
@@ -960,6 +967,7 @@ class SohOptions(PerGameCommonOptions):
     shuffle_dungeon_entrances: ShuffleDungeonEntrances
     shuffle_boss_entrances: ShuffleDungeonBossEntrances
     decouple_entrances: DecoupleEntrances
+    mixed_entrances_pools: MixedEntrancePools
 
 
 soh_option_groups = [
@@ -990,7 +998,8 @@ soh_option_groups = [
     OptionGroup("Shuffle Entrances", [
         ShuffleDungeonEntrances,
         ShuffleDungeonBossEntrances,
-        DecoupleEntrances
+        DecoupleEntrances,
+        MixedEntrancePools
         # Overworld Entrances
         # Interior Entrances
         # Grotto Entrances

@@ -201,5 +201,5 @@ def set_region_rules(world: "SohWorld") -> None:
     connect_regions(Regions.GRAVEYARD_WARP_PAD_REGION, world, [
         (Regions.THE_GRAVEYARD, lambda bundle: True),
         (Regions.SHADOW_TEMPLE_ENTRYWAY, lambda bundle: can_use(Items.DINS_FIRE, bundle) or (can_do_trick(Tricks.GY_SHADOW_FIRE_ARROWS, bundle) and is_adult(
-            bundle) and can_use(Items.FIRE_ARROW, bundle)), SOHDungeonEntranceNames.SHADOW_TEMPLE_DUNGEON_ENTRANCE, SOHEntranceGroups.BOTH_DUNGEONS, EntranceType.TWO_WAY)
+            bundle) and can_use(Items.FIRE_ARROW, bundle)), SOHDungeonEntranceNames.SHADOW_TEMPLE_DUNGEON_ENTRANCE, SOHEntranceGroups.DUNGEON_ENTRANCE | SOHEntranceGroups.ADULT, EntranceType.TWO_WAY)
     ])

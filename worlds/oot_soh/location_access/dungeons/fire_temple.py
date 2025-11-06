@@ -24,7 +24,7 @@ def set_region_rules(world: "SohWorld") -> None:
     connect_regions(Regions.FIRE_TEMPLE_ENTRYWAY, world, [
         (Regions.FIRE_TEMPLE_FIRST_ROOM, lambda bundle: True),
         (Regions.DMC_CENTRAL_LOCAL, lambda bundle: True, SOHDungeonExitNames.FIRE_TEMPLE_DUNGEON_EXIT,
-         SOHEntranceGroups.ADULT_DUNGEONS, EntranceType.TWO_WAY)
+         SOHEntranceGroups.DUNGEON_ENTRANCE | SOHEntranceGroups.ADULT, EntranceType.TWO_WAY)
     ])
 
     # Fire Temple First Room
@@ -69,7 +69,7 @@ def set_region_rules(world: "SohWorld") -> None:
             (is_adult(bundle) and
              (can_do_trick(Tricks.FIRE_BOSS_DOOR_JUMP, bundle) or
               has_item(LocalEvents.FIRE_TEMPLE_FIRE_MAZE_UPPER_PLATFORM_HIT, bundle) or
-              can_use(Items.HOVER_BOOTS, bundle))), SOHBossEntranceNames.FIRE_TEMPLE_BOSS_ENTRANCE, SOHEntranceGroups.ADULT_BOSSES, EntranceType.ONE_WAY)
+              can_use(Items.HOVER_BOOTS, bundle))), SOHBossEntranceNames.FIRE_TEMPLE_BOSS_ENTRANCE, SOHEntranceGroups.BOSS_ENTRANCE | SOHEntranceGroups.ADULT_ONLY, EntranceType.ONE_WAY)
     ])
 
     # Fire Temple Loop Enemies
