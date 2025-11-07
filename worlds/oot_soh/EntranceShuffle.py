@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Callable
 from BaseClasses import Location, Region
-from .Enums import SOHBossEntranceExitNames, SOHBossEntranceNames, SOHDungeonExitNames, SOHDungeonEntranceNames, Locations, SOHEntranceGroups
+from .Enums import SOHBossEntranceExitNames, SOHBossEntranceNames, SOHDungeonExitNames, SOHDungeonEntranceNames, Locations, SOHEntranceGroups, Regions, SOHBossWarpEntranceNames
 from .Locations import SohLocation
 from entrance_rando import disconnect_entrance_for_randomization, randomize_entrances, bake_target_group_lookup
 from entrance_rando import ERPlacementState, Entrance
@@ -20,6 +20,17 @@ entrance_matching = {
     SOHBossEntranceNames.WATER_TEMPLE_BOSS_ENTRANCE: SOHBossEntranceExitNames.WATER_TEMPLE_BOSS_EXIT,
     SOHBossEntranceNames.SHADOW_TEMPLE_BOSS_ENTRANCE: SOHBossEntranceExitNames.SHADOW_TEMPLE_BOSS_EXIT,
     SOHBossEntranceNames.SPIRIT_TEMPLE_BOSS_ENTRANCE: SOHBossEntranceExitNames.SPIRIT_TEMPLE_BOSS_EXIT,
+}
+
+boss_indirect_condition_matching = {
+    SOHBossEntranceNames.DEKU_TREE_BOSS_ENTRANCE: (Regions.DEKU_TREE_BOSS_ROOM, SOHBossWarpEntranceNames.DEKU_TREE_BOSS_WARP_ENTRANCE),
+    SOHBossEntranceNames.DODONGOS_CAVERN_BOSS_ENTRANCE: (Regions.DODONGOS_CAVERN_BOSS_ROOM, SOHBossWarpEntranceNames.DODONGOS_CAVERN_BOSS_WARP_ENTRANCE),
+    SOHBossEntranceNames.JABU_JABUS_BOSS_ENTRANCE: (Regions.JABU_JABUS_BELLY_BOSS_ROOM, SOHBossWarpEntranceNames.JABU_JABUS_BOSS_WARP_ENTRANCE),
+    SOHBossEntranceNames.FOREST_TEMPLE_BOSS_ENTRANCE: (Regions.FOREST_TEMPLE_BOSS_ROOM, SOHBossWarpEntranceNames.FOREST_TEMPLE_BOSS_WARP_ENTRANCE),
+    SOHBossEntranceNames.FIRE_TEMPLE_BOSS_ENTRANCE: (Regions.FIRE_TEMPLE_BOSS_ROOM, SOHBossWarpEntranceNames.FIRE_TEMPLE_BOSS_WARP_ENTRANCE),
+    SOHBossEntranceNames.WATER_TEMPLE_BOSS_ENTRANCE: (Regions.WATER_TEMPLE_BOSS_ROOM, SOHBossWarpEntranceNames.WATER_TEMPLE_BOSS_WARP_ENTRANCE),
+    SOHBossEntranceNames.SHADOW_TEMPLE_BOSS_ENTRANCE: (Regions.SHADOW_TEMPLE_BOSS_ROOM, SOHBossWarpEntranceNames.SHADOW_TEMPLE_BOSS_WARP_ENTRANCE),
+    SOHBossEntranceNames.SPIRIT_TEMPLE_BOSS_ENTRANCE: (Regions.SPIRIT_TEMPLE_BOSS_ROOM, SOHBossWarpEntranceNames.SPIRIT_TEMPLE_BOSS_WARP_ENTRANCE),
 }
 
 default_group_lookup = {

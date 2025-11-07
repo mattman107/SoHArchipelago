@@ -18,7 +18,7 @@ from .Presets import oot_soh_options_presets
 from .UniversalTracker import setup_options_from_slot_data
 from settings import Group, Bool
 from Options import OptionError
-from .EntranceShuffle import randomize_entrances_soh, on_connect_soh_sheik_at_colossus
+from .EntranceShuffle import randomize_entrances_soh, on_connect_soh_sheik_at_colossus, boss_indirect_condition_matching
 from entrance_rando import bake_target_group_lookup
 
 import logging
@@ -107,9 +107,6 @@ class SohWorld(World):
         if self.options.shuffle_scrubs_minimum_price.value > self.options.shuffle_scrubs_maximum_price.value:
             self.options.shuffle_scrubs_maximum_price.value = self.options.shuffle_scrubs_minimum_price.value
 
-        # Entrance Rando stuff
-        if (self.options.shuffle_dungeon_entrances.value > 0 or self.options.shuffle_boss_entrances.value > 0):
-            self.explicit_indirect_conditions = True
 
     def create_regions(self) -> None:
         create_regions_and_locations(self)
@@ -178,22 +175,29 @@ class SohWorld(World):
 
         # Boss Entrances
         if self.options.shuffle_boss_entrances.value > 0:
-            for entrance in SOHBossEntranceNames:
-                entrances_to_shuffle.add(entrance)
+            for entranceName in SOHBossEntranceNames:
+                entrances_to_shuffle.add(entranceName)
+
+                region = self.get_region(str(boss_indirect_condition_matching[entranceName][0]))
+                entrance = self.get_entrance(str(boss_indirect_condition_matching[entranceName][1]))
+                self.multiworld.register_indirect_condition(region, entrance)
+
 
             if self.options.shuffle_boss_entrances.value == 1:
                 randomize_entrances_soh(self, entrances_to_shuffle, ageRestricted=True)
                 entrances_to_shuffle.clear()
 
+        print(self.multiworld.indirect_connections)
+
         # Dungeon Entrances
         if self.options.shuffle_dungeon_entrances.value > 0:
-            for entrance in SOHDungeonExitNames:
-                if entrance != SOHDungeonExitNames.GANONS_CASTLE_DUNGEON_EXIT or self.options.shuffle_dungeon_entrances == 2:
-                    entrances_to_shuffle.add(entrance)
+            for entranceName in SOHDungeonExitNames:
+                if entranceName != SOHDungeonExitNames.GANONS_CASTLE_DUNGEON_EXIT or self.options.shuffle_dungeon_entrances == 2:
+                    entrances_to_shuffle.add(entranceName)
 
-            for entrance in SOHDungeonEntranceNames:
-                if entrance != SOHDungeonEntranceNames.GANONS_CASTLE_DUNGEON_ENTRANCE or self.options.shuffle_dungeon_entrances == 2:
-                    entrances_to_shuffle.add(entrance)
+            for entranceName in SOHDungeonEntranceNames:
+                if entranceName != SOHDungeonEntranceNames.GANONS_CASTLE_DUNGEON_ENTRANCE or self.options.shuffle_dungeon_entrances == 2:
+                    entrances_to_shuffle.add(entranceName)
 
             # randomize_entrances_soh(
             #     self, entrances_to_shuffle, on_connect_soh_sheik_at_colossus, coupled)

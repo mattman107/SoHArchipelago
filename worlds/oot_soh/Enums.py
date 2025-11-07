@@ -3919,3 +3919,24 @@ class SOHBossEntranceExitNames(StrEnum):
     WATER_TEMPLE_BOSS_EXIT = "Water Temple Dungeon Boss Exit"
     SHADOW_TEMPLE_BOSS_EXIT = "Shadow Temple Dungeon Boss Exit"
     SPIRIT_TEMPLE_BOSS_EXIT = "Spirit Temple Dungeon Boss Exit"
+
+class SOHBossWarpEntranceNames(StrEnum):
+    DEKU_TREE_BOSS_WARP_ENTRANCE = "Deku Tree Dungeon Boss Warp Entrance"
+    DODONGOS_CAVERN_BOSS_WARP_ENTRANCE = "Dodongos Cavern Dungeon Boss Warp Entrance"
+    JABU_JABUS_BOSS_WARP_ENTRANCE = "Jabu Jabus Dungeon Boss Warp Entrance"
+    FOREST_TEMPLE_BOSS_WARP_ENTRANCE = "Forest Temple Dungeon Boss Warp Entrance"
+    FIRE_TEMPLE_BOSS_WARP_ENTRANCE = "Fire Temple Dungeon Boss Warp Entrance"
+    WATER_TEMPLE_BOSS_WARP_ENTRANCE = "Water Temple Dungeon Boss Warp Entrance"
+    SHADOW_TEMPLE_BOSS_WARP_ENTRANCE = "Shadow Temple Dungeon Boss Warp Entrance"
+    SPIRIT_TEMPLE_BOSS_WARP_ENTRANCE = "Spirit Temple Dungeon Boss Warp Entrance"
+
+
+class SOHBossWarpExitNames(StrEnum):
+    DEKU_TREE_BOSS_WARP_EXIT = "Deku Tree Dungeon Boss Warp Exit"
+    DODONGOS_CAVERN_BOSS_WARP_EXIT = "Dodongos Cavern Dungeon Boss Warp Exit"
+    JABU_JABUS_BOSS_WARP_EXIT = "Jabu Jabus Dungeon Boss Warp Exit"
+    FOREST_TEMPLE_BOSS_WARP_EXIT = "Forest Temple Dungeon Boss Warp Exit"
+    FIRE_TEMPLE_BOSS_WARP_EXIT = "Fire Temple Dungeon Boss Warp Exit"
+    WATER_TEMPLE_BOSS_WARP_EXIT = "Water Temple Dungeon Boss Warp Exit"
+    SHADOW_TEMPLE_BOSS_WARP_EXIT = "Shadow Temple Dungeon Boss Warp Exit"
+    SPIRIT_TEMPLE_BOSS_WARP_EXIT = "Spirit Temple Dungeon Boss Warp Exit"

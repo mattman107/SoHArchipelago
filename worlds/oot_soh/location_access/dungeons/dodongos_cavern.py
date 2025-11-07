@@ -454,5 +454,5 @@ def set_region_rules(world: "SohWorld") -> None:
     connect_regions(Regions.DODONGOS_CAVERN_BOSS_ROOM, world, [
         (Regions.DODONGOS_CAVERN_BOSS_EXIT, lambda bundle: True),
         (Regions.DEATH_MOUNTAIN_TRAIL, lambda bundle: has_item(
-            Events.DODONGOS_CAVERN_COMPLETED, bundle)),
+            Events.DODONGOS_CAVERN_COMPLETED, bundle), SOHBossWarpEntranceNames.DODONGOS_CAVERN_BOSS_WARP_ENTRANCE, SOHEntranceGroups.OTHER, EntranceType.ONE_WAY),
     ])

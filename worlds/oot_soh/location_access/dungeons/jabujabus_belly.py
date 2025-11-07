@@ -293,5 +293,5 @@ def set_region_rules(world: "SohWorld") -> None:
     connect_regions(Regions.JABU_JABUS_BELLY_BOSS_ROOM, world, [
         # (Regions.JABU_JABUS_BELLY_BOSS_EXIT, lambda bundle: False),  # readd for MQ stuff
         (Regions.ZORAS_FOUNTAIN, lambda bundle: has_item(
-            Events.JABU_JABUS_BELLY_COMPLETED, bundle))
+            Events.JABU_JABUS_BELLY_COMPLETED, bundle), SOHBossWarpEntranceNames.JABU_JABUS_BOSS_WARP_ENTRANCE, SOHEntranceGroups.OTHER, EntranceType.ONE_WAY)
     ])

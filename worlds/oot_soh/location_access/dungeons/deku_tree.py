@@ -329,5 +329,5 @@ def set_region_rules(world: "SohWorld") -> None:
     connect_regions(Regions.DEKU_TREE_BOSS_ROOM, world, [
         (Regions.DEKU_TREE_BOSS_EXIT, lambda bundle: True),
         (Regions.KF_OUTSIDE_DEKU_TREE, lambda bundle: has_item(
-            Events.DEKU_TREE_COMPLETED, bundle))
+            Events.DEKU_TREE_COMPLETED, bundle), SOHBossWarpEntranceNames.DEKU_TREE_BOSS_WARP_ENTRANCE, SOHEntranceGroups.OTHER, EntranceType.ONE_WAY)
     ])

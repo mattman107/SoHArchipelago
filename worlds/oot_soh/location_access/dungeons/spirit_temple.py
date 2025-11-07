@@ -233,5 +233,5 @@ def set_region_rules(world: "SohWorld") -> None:
     connect_regions(Regions.SPIRIT_TEMPLE_BOSS_ROOM, world, [
         (Regions.SPIRIT_TEMPLE_BOSS_ENTRYWAY, lambda bundle: False),
         (Regions.DESERT_COLOSSUS, lambda bundle: has_item(
-            Events.SPIRIT_TEMPLE_COMPLETED, bundle))
+            Events.SPIRIT_TEMPLE_COMPLETED, bundle), SOHBossWarpEntranceNames.SPIRIT_TEMPLE_BOSS_WARP_ENTRANCE, SOHEntranceGroups.OTHER, EntranceType.ONE_WAY)
     ])

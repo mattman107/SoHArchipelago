@@ -541,5 +541,5 @@ def set_region_rules(world: "SohWorld") -> None:
     connect_regions(Regions.FOREST_TEMPLE_BOSS_ROOM, world, [
         (Regions.FOREST_TEMPLE_BOSS_ENTRYWAY, lambda bundle: False),
         (Regions.SACRED_FOREST_MEADOW, lambda bundle: has_item(
-            Events.FOREST_TEMPLE_COMPLETED, bundle))
+            Events.FOREST_TEMPLE_COMPLETED, bundle), SOHBossWarpEntranceNames.FOREST_TEMPLE_BOSS_WARP_ENTRANCE, SOHEntranceGroups.OTHER, EntranceType.ONE_WAY)
     ])

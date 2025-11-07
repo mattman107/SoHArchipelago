@@ -589,5 +589,5 @@ def set_region_rules(world: "SohWorld") -> None:
     connect_regions(Regions.WATER_TEMPLE_BOSS_ROOM, world, [
         (Regions.WATER_TEMPLE_BOSS_ENTRYWAY, lambda bundle: False),
         (Regions.LAKE_HYLIA, lambda bundle: has_item(
-            Events.WATER_TEMPLE_COMPLETED, bundle))
+            Events.WATER_TEMPLE_COMPLETED, bundle), SOHBossWarpEntranceNames.WATER_TEMPLE_BOSS_WARP_ENTRANCE, SOHEntranceGroups.OTHER, EntranceType.ONE_WAY)
     ])

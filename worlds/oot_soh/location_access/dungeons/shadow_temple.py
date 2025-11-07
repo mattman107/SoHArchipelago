@@ -207,5 +207,5 @@ def set_region_rules(world: "SohWorld") -> None:
     connect_regions(Regions.SHADOW_TEMPLE_BOSS_ROOM, world, [
         (Regions.SHADOW_TEMPLE_BOSS_ENTRYWAY, lambda bundle: False),
         (Regions.GRAVEYARD_WARP_PAD_REGION, lambda bundle: has_item(
-            Events.SHADOW_TEMPLE_COMPLETED, bundle))
+            Events.SHADOW_TEMPLE_COMPLETED, bundle), SOHBossWarpEntranceNames.SHADOW_TEMPLE_BOSS_WARP_ENTRANCE, SOHEntranceGroups.OTHER, EntranceType.ONE_WAY)
     ])

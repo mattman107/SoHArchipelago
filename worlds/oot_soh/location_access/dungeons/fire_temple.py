@@ -555,5 +555,5 @@ def set_region_rules(world: "SohWorld") -> None:
     connect_regions(Regions.FIRE_TEMPLE_BOSS_ROOM, world, [
         (Regions.FIRE_TEMPLE_BOSS_ENTRYWAY, lambda bundle: False),
         (Regions.DMC_CENTRAL_LOCAL, lambda bundle: has_item(
-            Events.FIRE_TEMPLE_COMPLETED, bundle))
+            Events.FIRE_TEMPLE_COMPLETED, bundle), SOHBossWarpEntranceNames.FIRE_TEMPLE_BOSS_WARP_ENTRANCE, SOHEntranceGroups.OTHER, EntranceType.ONE_WAY)
     ])
