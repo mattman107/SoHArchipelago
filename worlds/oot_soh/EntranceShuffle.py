@@ -44,6 +44,7 @@ mixed_group_lookup = {group: [all for all in (SOHEntranceGroups.OTHER, SOHEntran
                                               SOHEntranceGroups.THEIVES_HIDEOUT_ENTRANCE, SOHEntranceGroups.GROTTO, SOHEntranceGroups.OWL_DROP, SOHEntranceGroups.WARP_SONG)] 
                                               for group in (SOHEntranceGroups.OTHER, SOHEntranceGroups.BOSS_ENTRANCE, SOHEntranceGroups.DUNGEON_ENTRANCE, SOHEntranceGroups.OVERWORLD, SOHEntranceGroups.INTERIOR, 
                                                             SOHEntranceGroups.THEIVES_HIDEOUT_ENTRANCE, SOHEntranceGroups.GROTTO, SOHEntranceGroups.OWL_DROP, SOHEntranceGroups.WARP_SONG)}
+                                                            
 
 # This is allowing us to brute force the problem of GER failing. May be a necessary evil as it doesn't do swap or automatic retries itself.
 OOT_SOH_GER_RETRIES_AMOUNT: int = 1000
@@ -72,6 +73,29 @@ def get_target_groups(group: int) -> list[int]:
     
     return [pair_type | age for pair_type in default_group_lookup[type]]
 
+def get_target_groups_mixed_entrance_pools(group: int) -> list[int]:
+    type = group & SOHEntranceGroups.TYPE_MASK
+    age = group & SOHEntranceGroups.AGE_MASK
+
+    if(age == SOHEntranceGroups.ANY_AGE):
+        return [pair_type | ages for pair_type in mixed_group_lookup[type] for ages in (SOHEntranceGroups.ANY_AGE, SOHEntranceGroups.CHILD, SOHEntranceGroups.ADULT, SOHEntranceGroups.CHILD_ONLY, SOHEntranceGroups.ADULT_ONLY, SOHEntranceGroups.BOTH_AGE)]
+    
+    if(age == SOHEntranceGroups.BOTH_AGE):
+        return [pair_type | ages for pair_type in mixed_group_lookup[type] for ages in (SOHEntranceGroups.BOTH_AGE, SOHEntranceGroups.ADULT, SOHEntranceGroups.CHILD, SOHEntranceGroups.ANY_AGE)]
+    
+    if(age == SOHEntranceGroups.CHILD):
+        return [pair_type | ages for pair_type in mixed_group_lookup[type] for ages in (SOHEntranceGroups.CHILD, SOHEntranceGroups.CHILD_ONLY, SOHEntranceGroups.ADULT, SOHEntranceGroups.BOTH_AGE, SOHEntranceGroups.ANY_AGE)]
+    
+    if(age == SOHEntranceGroups.ADULT):
+        return [pair_type | ages for pair_type in mixed_group_lookup[type] for ages in (SOHEntranceGroups.ADULT, SOHEntranceGroups.ADULT_ONLY, SOHEntranceGroups.CHILD, SOHEntranceGroups.BOTH_AGE, SOHEntranceGroups.ANY_AGE)]
+    
+    if(age == SOHEntranceGroups.ADULT_ONLY):
+        return [pair_type | ages for pair_type in mixed_group_lookup[type] for ages in (SOHEntranceGroups.ADULT_ONLY, SOHEntranceGroups.ADULT, SOHEntranceGroups.ANY_AGE)]
+    
+    if(age == SOHEntranceGroups.CHILD_ONLY):
+        return [pair_type | ages for pair_type in mixed_group_lookup[type] for ages in (SOHEntranceGroups.CHILD_ONLY, SOHEntranceGroups.CHILD, SOHEntranceGroups.ANY_AGE)]
+    
+    return [pair_type | age for pair_type in mixed_group_lookup[type]]
 
 def get_target_groups_age_restrictive(group: int) -> list[int]:
     type = group & SOHEntranceGroups.TYPE_MASK
@@ -100,6 +124,8 @@ def randomize_entrances_soh(world: "SohWorld", entrances_to_shuffle: set[SOHBoss
 
     if ageRestricted:
         target_group_lookup = bake_target_group_lookup(world, get_target_groups_age_restrictive)
+    elif world.options.mixed_entrances_pools:
+        target_group_lookup = bake_target_group_lookup(world, get_target_groups_mixed_entrance_pools)
     else:
         target_group_lookup = bake_target_group_lookup(world, get_target_groups)
 
