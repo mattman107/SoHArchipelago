@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING, Callable
 from BaseClasses import Location, Region
 from .Enums import SOHBossEntranceExitNames, SOHBossEntranceNames, SOHDungeonExitNames, SOHDungeonEntranceNames, Locations, SOHEntranceGroups, Regions, SOHBossWarpEntranceNames
 from .Locations import SohLocation
-from entrance_rando import disconnect_entrance_for_randomization, randomize_entrances, bake_target_group_lookup
+from entrance_rando import disconnect_entrance_for_randomization, randomize_entrances, bake_target_group_lookup, EntranceRandomizationError
 from entrance_rando import ERPlacementState, Entrance
 from .LogicHelpers import rule_wrapper
 from worlds.generic.Rules import set_rule
@@ -45,6 +45,8 @@ mixed_group_lookup = {group: [all for all in (SOHEntranceGroups.OTHER, SOHEntran
                                               for group in (SOHEntranceGroups.OTHER, SOHEntranceGroups.BOSS_ENTRANCE, SOHEntranceGroups.DUNGEON_ENTRANCE, SOHEntranceGroups.OVERWORLD, SOHEntranceGroups.INTERIOR, 
                                                             SOHEntranceGroups.THEIVES_HIDEOUT_ENTRANCE, SOHEntranceGroups.GROTTO, SOHEntranceGroups.OWL_DROP, SOHEntranceGroups.WARP_SONG)}
 
+# This is allowing us to brute force the problem of GER failing. May be a necessary evil as it doesn't do swap or automatic retries itself.
+OOT_SOH_GER_RETRIES_AMOUNT: int = 1000
 
 def get_target_groups(group: int) -> list[int]:
     type = group & SOHEntranceGroups.TYPE_MASK
@@ -101,8 +103,16 @@ def randomize_entrances_soh(world: "SohWorld", entrances_to_shuffle: set[SOHBoss
     else:
         target_group_lookup = bake_target_group_lookup(world, get_target_groups)
 
-    randomize_entrances(
-        world, coupled, target_group_lookup, True, on_connect=on_connect)
+    for i in range(OOT_SOH_GER_RETRIES_AMOUNT):
+        try:
+            randomize_entrances(
+                world, coupled, target_group_lookup, False, on_connect=on_connect)
+            break
+        except EntranceRandomizationError as error:
+            if i >= OOT_SOH_GER_RETRIES_AMOUNT - 1:
+                raise EntranceRandomizationError(f"OOT SOH: failed GER after {OOT_SOH_GER_RETRIES_AMOUNT} "
+                                                     f"attempts. Final error here: \n\n{error}")
+    
 
 
 # This should probably be double checked by someone who knows how to properly remove a location from a region and give it a new parent region

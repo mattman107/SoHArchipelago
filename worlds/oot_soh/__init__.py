@@ -180,23 +180,17 @@ class SohWorld(World):
         entrances_to_shuffle = set()
         # Reverse decoupled option for randomize_entrances because it is asking if you wanted coupled
         # Update this when it is figured out why decoupled doesn't work with the current groupings
-        coupled = True#(not self.options.decouple_entrances)
+        coupled = (not self.options.decouple_entrances)
 
         # Boss Entrances
         if self.options.shuffle_boss_entrances.value > 0:
             for entranceName in SOHBossEntranceNames:
                 entrances_to_shuffle.add(entranceName)
 
-                region = self.get_region(str(boss_indirect_condition_matching[entranceName][0]))
-                entrance = self.get_entrance(str(boss_indirect_condition_matching[entranceName][1]))
-                self.multiworld.register_indirect_condition(region, entrance)
-
 
             if self.options.shuffle_boss_entrances.value == 1:
                 randomize_entrances_soh(self, entrances_to_shuffle, ageRestricted=True)
                 entrances_to_shuffle.clear()
-
-        print(self.multiworld.indirect_connections)
 
         # Dungeon Entrances
         if self.options.shuffle_dungeon_entrances.value > 0:
@@ -207,11 +201,6 @@ class SohWorld(World):
             for entranceName in SOHDungeonEntranceNames:
                 if entranceName != SOHDungeonEntranceNames.GANONS_CASTLE_DUNGEON_ENTRANCE or self.options.shuffle_dungeon_entrances == 2:
                     entrances_to_shuffle.add(entranceName)
-
-            # randomize_entrances_soh(
-            #     self, entrances_to_shuffle, on_connect_soh_sheik_at_colossus, coupled)
-
-            # entrances_to_shuffle.clear()
 
         randomize_entrances_soh(
                 self, entrances_to_shuffle, on_connect_soh_sheik_at_colossus, coupled)
