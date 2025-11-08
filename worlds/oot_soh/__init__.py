@@ -12,12 +12,13 @@ from .Regions import create_regions_and_locations, place_locked_items, dungeon_r
 from .Enums import *
 from .ItemPool import create_item_pool, create_filler_item_pool, create_triforce_pieces, get_filler_item
 from . import RegionAgeAccess
-from .ShopItems import fill_shop_items, generate_scrub_prices, set_price_rules, all_shop_locations
+from .ShopItems import fill_shop_items, generate_scrub_prices, generate_merchant_prices, set_price_rules, all_shop_locations
 from Fill import fill_restrictive
 from .Presets import oot_soh_options_presets
 from .UniversalTracker import setup_options_from_slot_data
 from settings import Group, Bool
 from Options import OptionError
+from .LogicHelpers import wallet_capacities
 from .EntranceShuffle import randomize_entrances_soh, on_connect_soh_sheik_at_colossus, boss_indirect_condition_matching
 from entrance_rando import bake_target_group_lookup
 
@@ -68,6 +69,7 @@ class SohWorld(World):
     location_name_groups = location_name_groups
 
     # Universal Tracker stuff, does not do anything in normal gen
+    glitches_item_name = Items.GLITCHED
     using_ut: bool  # so we can check if we're using UT only once
     passthrough: dict[str, Any]  # slot data that got passed through
     ut_can_gen_without_yaml = True  # class var that tells it to ignore the player yaml
@@ -79,6 +81,7 @@ class SohWorld(World):
         self.shop_prices = dict[str, int]()
         self.shop_vanilla_items = dict[str, str]()
         self.scrub_prices = dict[str, int]()
+        self.merchant_prices = dict[str, int]()
         self.triforce_pieces_required: int = 0
 
         apworld_manifest = orjson.loads(pkgutil.get_data(
@@ -100,6 +103,12 @@ class SohWorld(World):
         if self.options.door_of_time.value == 0 and self.options.shuffle_dungeon_rewards.value == 0:
             self.options.starting_age.value = 0
 
+        # Check if Tycoon Wallet is shuffled and if price settings are above what Giants Wallet can hold. Max/Min Prices need to be adjusted to fit in Giants Wallet.
+        if not self.options.shuffle_tycoon_wallet.value:
+            for option in (self.options.shuffle_shops_minimum_price, self.options.shuffle_shops_maximum_price, self.options.shuffle_scrubs_minimum_price, self.options.shuffle_scrubs_maximum_price, self.options.shuffle_merchants_minimum_price, self.options.shuffle_merchants_maximum_price):
+                if option.value > wallet_capacities[Items.GIANT_WALLET]:
+                    option.value = wallet_capacities[Items.GIANT_WALLET]
+
         # If maximum price is below minimum, set max to minimum.
         if self.options.shuffle_shops_minimum_price.value > self.options.shuffle_shops_maximum_price.value:
             self.options.shuffle_shops_maximum_price.value = self.options.shuffle_shops_minimum_price.value
@@ -107,11 +116,11 @@ class SohWorld(World):
         if self.options.shuffle_scrubs_minimum_price.value > self.options.shuffle_scrubs_maximum_price.value:
             self.options.shuffle_scrubs_maximum_price.value = self.options.shuffle_scrubs_minimum_price.value
 
-
     def create_regions(self) -> None:
         create_regions_and_locations(self)
         place_locked_items(self)
         generate_scrub_prices(self)
+        generate_merchant_prices(self)
         for location in self.get_locations():
             location.name = str(location.name)
         for region in self.get_regions():
@@ -344,6 +353,7 @@ class SohWorld(World):
             "shuffle_fish": self.options.shuffle_fish.value,
             "shuffle_scrubs": self.options.shuffle_scrubs.value,
             "scrub_prices": self.scrub_prices,
+            "merchant_prices": self.merchant_prices,
             "shuffle_beehives": self.options.shuffle_beehives.value,
             "shuffle_cows": self.options.shuffle_cows.value,
             "shuffle_pots": self.options.shuffle_pots.value,
@@ -387,5 +397,7 @@ class SohWorld(World):
             "ice_trap_filler_replacement": self.options.ice_trap_filler_replacement.value,
             "no_logic": self.options.true_no_logic.value,
             "apworld_version": self.apworld_version,
+            "enable_all_tricks": self.options.enable_all_tricks.value,
+            "tricks_in_logic": self.options.tricks_in_logic.value
             # Need to figure out how to get the randomized entrances to Ship
         }
