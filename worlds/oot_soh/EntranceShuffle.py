@@ -1,5 +1,5 @@
 from typing import TYPE_CHECKING, Callable
-from BaseClasses import Location, Region
+from BaseClasses import Location, Region, Entrance
 from .Enums import SOHBossEntranceExitNames, SOHBossEntranceNames, SOHDungeonExitNames, SOHDungeonEntranceNames, Locations, SOHEntranceGroups, Regions, SOHBossWarpEntranceNames
 from .Locations import SohLocation
 from entrance_rando import disconnect_entrance_for_randomization, randomize_entrances, bake_target_group_lookup, EntranceRandomizationError
@@ -47,7 +47,7 @@ mixed_group_lookup = {group: [all for all in (SOHEntranceGroups.OTHER, SOHEntran
                                                             
 
 # This is allowing us to brute force the problem of GER failing. May be a necessary evil as it doesn't do swap or automatic retries itself.
-OOT_SOH_GER_RETRIES_AMOUNT: int = 1000
+OOT_SOH_GER_RETRIES_AMOUNT: int = 10
 
 def get_target_groups(group: int) -> list[int]:
     type = group & SOHEntranceGroups.TYPE_MASK
@@ -118,27 +118,34 @@ def get_target_groups_age_restrictive(group: int) -> list[int]:
 
 # Might need to return the ER Placement state at the end
 def randomize_entrances_soh(world: "SohWorld", entrances_to_shuffle: set[SOHBossEntranceNames | SOHDungeonEntranceNames | SOHDungeonExitNames], on_connect: Callable[[ERPlacementState, list[Entrance], list[Entrance]], bool | None] | None = None, coupled: bool = True, ageRestricted: bool = False) -> None:
+    temp_entrances: list[Entrance] = list()
     for entranceEnum in entrances_to_shuffle:
         disconnect_entrance_for_randomization(world.multiworld.get_entrance(
             entranceEnum.value, world.player), one_way_target_name=entrance_matching[entranceEnum].value if entranceEnum in entrance_matching else None)
 
     if ageRestricted:
         target_group_lookup = bake_target_group_lookup(world, get_target_groups_age_restrictive)
-    elif world.options.mixed_entrances_pools:
+    elif False:#world.options.mixed_entrances_pools:
         target_group_lookup = bake_target_group_lookup(world, get_target_groups_mixed_entrance_pools)
     else:
         target_group_lookup = bake_target_group_lookup(world, get_target_groups)
+    
 
     for i in range(OOT_SOH_GER_RETRIES_AMOUNT):
         try:
-            randomize_entrances(
-                world, coupled, target_group_lookup, False, on_connect=on_connect)
+            er_state = randomize_entrances(world, coupled, target_group_lookup, False, on_connect=on_connect)
+            world.er_pairings += er_state.pairings
+            print(f"Took {i} attempts to get GER working.")
             break
         except EntranceRandomizationError as error:
             if i >= OOT_SOH_GER_RETRIES_AMOUNT - 1:
                 raise EntranceRandomizationError(f"OOT SOH: failed GER after {OOT_SOH_GER_RETRIES_AMOUNT} "
                                                      f"attempts. Final error here: \n\n{error}")
-    
+            # need to disconnect all entrances that are supposed to be shuffled
+            for entranceEnum in entrances_to_shuffle:
+                _exit: Entrance = world.multiworld.get_entrance(entranceEnum.value, world.player)
+                if (_exit.randomization_group in target_group_lookup and _exit.parent_region and _exit.connected_region and _exit.name not in world.er_pairings):
+                    disconnect_entrance_for_randomization(_exit, one_way_target_name=entrance_matching[entranceEnum].value if entranceEnum in entrance_matching else None)
 
 
 # This should probably be double checked by someone who knows how to properly remove a location from a region and give it a new parent region

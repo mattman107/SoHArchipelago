@@ -27,7 +27,7 @@ def set_region_rules(world: "SohWorld") -> None:
     connect_regions(Regions.DODONGOS_CAVERN_ENTRYWAY, world, [
         (Regions.DODONGOS_CAVERN_BEGINNING, lambda bundle: True),
         (Regions.DEATH_MOUNTAIN_TRAIL, lambda bundle: True, SOHDungeonExitNames.DODONGOS_CAVERN_DUNGEON_EXIT,
-         SOHEntranceGroups.DUNGEON_ENTRANCE | SOHEntranceGroups.BOTH_AGE, EntranceType.TWO_WAY),
+         SOHEntranceGroups.DUNGEON_ENTRANCE | SOHEntranceGroups.ADULT, EntranceType.TWO_WAY),
     ])
     # Dodongos Cavern Beginning
     # Connections

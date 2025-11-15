@@ -212,7 +212,7 @@ def set_region_rules(world: "SohWorld") -> None:
     # Connections
     connect_regions(Regions.KF_OUTSIDE_DEKU_TREE, world, [
         (Regions.DEKU_TREE_ENTRYWAY, lambda bundle: is_child(bundle) or (world.options.shuffle_dungeon_entrances.value > 0 and (world.options.closed_forest.value == 2 or has_item(
-            LocalEvents.MIDO_SWORD_AND_SHIELD, bundle))), SOHDungeonEntranceNames.DEKU_TREE_DUNGEON_ENTRANCE, SOHEntranceGroups.DUNGEON_ENTRANCE | SOHEntranceGroups.CHILD, EntranceType.TWO_WAY),
+            LocalEvents.MIDO_SWORD_AND_SHIELD, bundle))), SOHDungeonEntranceNames.DEKU_TREE_DUNGEON_ENTRANCE, SOHEntranceGroups.DUNGEON_ENTRANCE | SOHEntranceGroups.ANY_AGE, EntranceType.TWO_WAY),
         (Regions.KOKIRI_FOREST, lambda bundle:  (is_adult(bundle) and
                                                  (can_pass_enemy(bundle, Enemies.BIG_SKULLTULA) or
                                                   has_item(Events.FOREST_TEMPLE_COMPLETED, bundle)))

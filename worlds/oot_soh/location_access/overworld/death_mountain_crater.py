@@ -162,7 +162,7 @@ def set_region_rules(world: "SohWorld") -> None:
         (Regions.DMC_UPPER_NEARBY, lambda bundle: is_adult(bundle)
          and has_item(LocalEvents.DMC_BEAN_PLANTED, bundle)),
         (Regions.FIRE_TEMPLE_ENTRYWAY, lambda bundle: (is_child(bundle) and hearts(bundle) >= 3 and world.options.shuffle_dungeon_entrances.value > 0) or (
-            is_adult(bundle) and fire_timer(bundle) >= 24), SOHDungeonEntranceNames.FIRE_TEMPLE_DUNGEON_ENTRANCE, SOHEntranceGroups.DUNGEON_ENTRANCE | SOHEntranceGroups.ADULT, EntranceType.TWO_WAY),
+            is_adult(bundle) and fire_timer(bundle) >= 24), SOHDungeonEntranceNames.FIRE_TEMPLE_DUNGEON_ENTRANCE, SOHEntranceGroups.DUNGEON_ENTRANCE | SOHEntranceGroups.ANY_AGE, EntranceType.TWO_WAY),
         (Regions.DMC_DISTANT_PLATFORM, lambda bundle: (fire_timer(bundle) >=
          48 or hearts(bundle) >= 2) and can_use(Items.DISTANT_SCARECROW, bundle)),
     ])

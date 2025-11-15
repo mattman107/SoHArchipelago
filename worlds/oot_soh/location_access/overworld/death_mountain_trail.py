@@ -67,7 +67,7 @@ def set_region_rules(world: "SohWorld") -> None:
         (Regions.DEATH_MOUNTAIN_SUMMIT, lambda bundle: blast_or_smash(bundle) or (is_adult(bundle) and ((has_item(LocalEvents.DMT_BEAN_PLANTED, bundle)
          and has_item(Items.GORONS_BRACELET, bundle)) or (can_use(Items.HOVER_BOOTS, bundle) and can_do_trick(Tricks.DMT_CLIMB_HOVERS, bundle))))),
         (Regions.DODONGOS_CAVERN_ENTRYWAY, lambda bundle: has_explosives(bundle) or has_item(Items.GORONS_BRACELET, bundle) or is_adult(
-            bundle), SOHDungeonEntranceNames.DODONGOS_CAVERN_DUNGEON_ENTRANCE, SOHEntranceGroups.DUNGEON_ENTRANCE | SOHEntranceGroups.BOTH_AGE, EntranceType.TWO_WAY),
+            bundle), SOHDungeonEntranceNames.DODONGOS_CAVERN_DUNGEON_ENTRANCE, SOHEntranceGroups.DUNGEON_ENTRANCE | SOHEntranceGroups.ANY_AGE, EntranceType.TWO_WAY),
         (Regions.DMT_STORMS_GROTTO, lambda bundle: can_open_storms_grotto(bundle))
     ])
 

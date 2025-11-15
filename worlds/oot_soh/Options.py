@@ -910,20 +910,22 @@ class ShuffleDungeonEntrances(Choice):
     option_on_plus_ganon = 2
     default = 0
 
-
+#currently doesn't work
 class DecoupleEntrances(Toggle):
     """
     Decouple entrances when shuffling them. This means that you are no longer guaranteed to end up back where you came from when you go back through an entrance.
     This also adds the one way entrance from Gerudo Valley to Lake Hylia in the pool of overworld entrances when they are shuffled.
     """
     display_name = "Decouple Entrances"
+    visibility = Visibility.none
 
-
+#currently doesn't work
 class MixedEntrancePools(Toggle):
     """
     Shuffle entrances into a mixed pool instead of separate ones. Has no effect on pools whose entrances aren't shuffled, and "Shuffle Boss Entrances" must be set to "Full" to include them.
     """
     display_name = "Mixed Entrances Pools"
+    visibility = Visibility.none
 
 
 @dataclass

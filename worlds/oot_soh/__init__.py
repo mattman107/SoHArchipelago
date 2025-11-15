@@ -67,6 +67,7 @@ class SohWorld(World):
     item_name_to_id = item_table
     item_name_groups = item_name_groups
     location_name_groups = location_name_groups
+    er_pairings: List[tuple[str, str]] = []
 
     # Universal Tracker stuff, does not do anything in normal gen
     glitches_item_name = Items.GLITCHED
@@ -180,20 +181,23 @@ class SohWorld(World):
         entrances_to_shuffle = set()
         # Reverse decoupled option for randomize_entrances because it is asking if you wanted coupled
         # Update this when it is figured out why decoupled doesn't work with the current groupings
-        coupled = (not self.options.decouple_entrances)
+        coupled = True #(not self.options.decouple_entrances)
 
         # Boss Entrances
-        if self.options.shuffle_boss_entrances.value > 0:
+        if self.options.shuffle_boss_entrances:
             for entranceName in SOHBossEntranceNames:
                 entrances_to_shuffle.add(entranceName)
 
-
-            if self.options.shuffle_boss_entrances.value == 1:
+            if self.options.shuffle_boss_entrances == "age_restricted":
                 randomize_entrances_soh(self, entrances_to_shuffle, ageRestricted=True)
+                entrances_to_shuffle.clear()
+            else:
+                # Need this else here. Mixed entrances doesn't work
+                randomize_entrances_soh(self, entrances_to_shuffle)
                 entrances_to_shuffle.clear()
 
         # Dungeon Entrances
-        if self.options.shuffle_dungeon_entrances.value > 0:
+        if self.options.shuffle_dungeon_entrances:
             for entranceName in SOHDungeonExitNames:
                 if entranceName != SOHDungeonExitNames.GANONS_CASTLE_DUNGEON_EXIT or self.options.shuffle_dungeon_entrances == 2:
                     entrances_to_shuffle.add(entranceName)
