@@ -98,7 +98,7 @@ def set_region_rules(world: "SohWorld") -> None:
     connect_regions(Regions.ZORAS_DOMAIN_ISLAND, world, [
         (Regions.ZORAS_DOMAIN, lambda bundle: is_adult(
             bundle) or has_item(Items.BRONZE_SCALE, bundle)),
-        (Regions.ZD_STORMS_GROTTO, lambda bundle: can_open_storms_grotto(bundle)),
+        (Regions.ZD_STORMS_GROTTO, lambda bundle: can_open_storms_grotto(bundle), SOHGrottoEntranceNames.ZD_STORMS_GROTTO_ENTRANCE, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE),
     ])
 
     # ZD Behind King Zora
@@ -156,5 +156,5 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.ZD_STORMS_GROTTO, world, [
-        (Regions.ZORAS_DOMAIN_ISLAND, lambda bundle: True),
+        (Regions.ZORAS_DOMAIN_ISLAND, lambda bundle: True, SOHGrottoExitNames.ZD_STORMS_GROTTO_EXIT, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE),
     ])

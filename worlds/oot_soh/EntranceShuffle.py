@@ -125,7 +125,7 @@ def randomize_entrances_soh(world: "SohWorld", entrances_to_shuffle: set[SOHBoss
 
     if ageRestricted:
         target_group_lookup = bake_target_group_lookup(world, get_target_groups_age_restrictive)
-    elif False:#world.options.mixed_entrances_pools:
+    elif world.options.mixed_entrances_pools:
         target_group_lookup = bake_target_group_lookup(world, get_target_groups_mixed_entrance_pools)
     else:
         target_group_lookup = bake_target_group_lookup(world, get_target_groups)

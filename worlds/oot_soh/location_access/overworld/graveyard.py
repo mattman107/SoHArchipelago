@@ -70,12 +70,12 @@ def set_region_rules(world: "SohWorld") -> None:
     # Connections
     connect_regions(Regions.THE_GRAVEYARD, world, [
         (Regions.GRAVEYARD_SHIELD_GRAVE,
-         lambda bundle: is_adult(bundle) or at_night(bundle)),
+         lambda bundle: is_adult(bundle) or at_night(bundle), SOHGrottoEntranceNames.GRAVEYARD_SHEILD_GRAVE_ENTRANCE, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ADULT_ONLY),
         (Regions.GRAVEYARD_COMPOSERS_GRAVE,
-         lambda bundle: can_use(Items.ZELDAS_LULLABY, bundle)),
+         lambda bundle: can_use(Items.ZELDAS_LULLABY, bundle), SOHGrottoEntranceNames.GRAVEYARD_COMPOSERS_GRAVE_ENTRANCE, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE),
         (Regions.GRAVEYARD_HEART_PIECE_GRAVE,
-         lambda bundle: is_adult(bundle) or at_night(bundle)),
-        (Regions.GRAVEYARD_DAMPES_GRAVE, lambda bundle: is_adult(bundle)),
+         lambda bundle: is_adult(bundle) or at_night(bundle), SOHGrottoEntranceNames.GRAVEYARD_HEART_PIECE_GRAVE_ENTRANCE, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE),
+        (Regions.GRAVEYARD_DAMPES_GRAVE, lambda bundle: is_adult(bundle), SOHGrottoEntranceNames.GRAVEYARD_DAMPES_GRAVE_ENTRANCE, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ADULT_ONLY),
         (Regions.GRAVEYARD_DAMPES_HOUSE, lambda bundle: is_adult(bundle)
          and can_open_overworld_door(Items.DAMPES_HUT_KEY, bundle)),
         (Regions.KAKARIKO_VILLAGE, lambda bundle: True),
@@ -89,7 +89,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.GRAVEYARD_SHIELD_GRAVE, world, [
-        (Regions.THE_GRAVEYARD, lambda bundle: True),
+        (Regions.THE_GRAVEYARD, lambda bundle: True, SOHGrottoExitNames.GRAVEYARD_SHEILD_GRAVE_EXIT, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE),
         (Regions.GRAVEYARD_SHIELD_GRAVE_BACK,
          lambda bundle: can_break_mud_walls(bundle))
     ])
@@ -119,7 +119,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.GRAVEYARD_HEART_PIECE_GRAVE, world, [
-        (Regions.THE_GRAVEYARD, lambda bundle: True)
+        (Regions.THE_GRAVEYARD, lambda bundle: True, SOHGrottoExitNames.GRAVEYARD_HEART_PIECE_GRAVE_EXIT, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE)
     ])
 
     # The Graveyard Composers Grave
@@ -134,7 +134,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.GRAVEYARD_COMPOSERS_GRAVE, world, [
-        (Regions.THE_GRAVEYARD, lambda bundle: True)
+        (Regions.THE_GRAVEYARD, lambda bundle: True, SOHGrottoExitNames.GRAVEYARD_COMPOSERS_GRAVE_EXIT, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE)
     ])
 
     # The Graveyard Dampes Grave
@@ -173,7 +173,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.GRAVEYARD_DAMPES_GRAVE, world, [
-        (Regions.THE_GRAVEYARD, lambda bundle: True),
+        (Regions.THE_GRAVEYARD, lambda bundle: True, SOHGrottoExitNames.GRAVEYARD_DAMPES_GRAVE_EXIT, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ADULT),
         (Regions.KAK_WINDMILL, lambda bundle: (is_adult(bundle) and can_use(
             Items.SONG_OF_TIME, bundle)) or (is_child(bundle) and can_ground_jump(bundle)))
     ])

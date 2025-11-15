@@ -64,7 +64,7 @@ def set_region_rules(world: "SohWorld") -> None:
          SOHEntranceGroups.DUNGEON_ENTRANCE | SOHEntranceGroups.ANY_AGE, EntranceType.TWO_WAY),
         (Regions.WASTELAND_NEAR_COLOSSUS, lambda bundle: True),
         (Regions.COLOSSUS_GROTTO, lambda bundle: can_use(
-            Items.SILVER_GAUNTLETS, bundle))
+            Items.SILVER_GAUNTLETS, bundle), SOHGrottoEntranceNames.COLOSSUS_GROTTO_ENTRANCE, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ADULT_ONLY)
     ])
 
     # Desert Colossus Oasis
@@ -123,5 +123,5 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.COLOSSUS_GROTTO, world, [
-        (Regions.DESERT_COLOSSUS, lambda bundle: True)
+        (Regions.DESERT_COLOSSUS, lambda bundle: True, SOHGrottoExitNames.COLOSSUS_GROTTO_EXIT, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE)
     ])

@@ -167,7 +167,7 @@ def set_region_rules(world: "SohWorld") -> None:
         (Regions.LH_LAB, lambda bundle: can_open_overworld_door(
             Items.HYLIA_LAB_KEY, bundle)),
         (Regions.LH_FROM_WATER_TEMPLE, lambda bundle: True),
-        (Regions.LH_GROTTO, lambda bundle: True),
+        (Regions.LH_GROTTO, lambda bundle: True, SOHGrottoEntranceNames.LH_GROTTO_ENTRANCE, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE),
     ])
 
     # LH from Shortcut
@@ -333,5 +333,5 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.LH_GROTTO, world, [
-        (Regions.LAKE_HYLIA, lambda bundle: True)
+        (Regions.LAKE_HYLIA, lambda bundle: True, SOHGrottoExitNames.LH_GROTTO_EXIT, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE)
     ])

@@ -910,6 +910,14 @@ class ShuffleDungeonEntrances(Choice):
     option_on_plus_ganon = 2
     default = 0
 
+
+class ShuffleGrottoEntrances(Toggle):
+    """
+    Shuffle the pool of grotto entrances, including all graves, small Fairy fountains and Deku Theatre.
+    """
+    display_name = "Grotto Entrances Shuffle"
+
+
 #currently doesn't work
 class DecoupleEntrances(Toggle):
     """
@@ -1018,6 +1026,7 @@ class SohOptions(PerGameCommonOptions):
     enable_all_tricks: EnableAllTricks
     shuffle_dungeon_entrances: ShuffleDungeonEntrances
     shuffle_boss_entrances: ShuffleDungeonBossEntrances
+    shuffle_grotto_entrances: ShuffleGrottoEntrances
     decouple_entrances: DecoupleEntrances
     mixed_entrances_pools: MixedEntrancePools
 
@@ -1052,6 +1061,7 @@ soh_option_groups = [
     OptionGroup("Shuffle Entrances", [
         ShuffleDungeonEntrances,
         ShuffleDungeonBossEntrances,
+        ShuffleGrottoEntrances,
         DecoupleEntrances,
         MixedEntrancePools
         # Overworld Entrances

@@ -144,7 +144,7 @@ def set_region_rules(world: "SohWorld") -> None:
         (Regions.KAK_POTION_SHOP_FRONT,
          lambda bundle: (at_day(bundle) or is_child(bundle)) and can_open_overworld_door(
              Items.KAK_POTION_SHOP_KEY, bundle)),
-        (Regions.KAK_REDEAD_GROTTO, lambda bundle: can_open_bomb_grotto(bundle)),
+        (Regions.KAK_REDEAD_GROTTO, lambda bundle: can_open_bomb_grotto(bundle), SOHGrottoEntranceNames.KAK_REDEAD_GROTTO_ENTRANCE, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE),
         (Regions.KAK_IMPAS_LEDGE, lambda bundle: (is_child(bundle) and at_day(bundle)) or (
             is_adult(bundle) and can_do_trick(Tricks.VISIBLE_COLLISION, bundle))),
         (Regions.KAK_WATCHTOWER,
@@ -218,7 +218,7 @@ def set_region_rules(world: "SohWorld") -> None:
     # Connections
     connect_regions(Regions.KAK_BACKYARD, world, [
         (Regions.KAKARIKO_VILLAGE, lambda bundle: True),
-        (Regions.KAK_OPEN_GROTTO, lambda bundle: True),
+        (Regions.KAK_OPEN_GROTTO, lambda bundle: True, SOHGrottoEntranceNames.KAK_OPEN_GROTTO_ENTRANCE, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE),
         (Regions.KAK_GRANNYS_POTION_SHOP,
          lambda bundle: is_adult(bundle) and can_open_overworld_door(Items.GRANNYS_POTION_SHOP_KEY, bundle)),
         (Regions.KAK_POTION_SHOP_BACK,
@@ -380,7 +380,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.KAK_REDEAD_GROTTO, world, [
-        (Regions.KAKARIKO_VILLAGE, lambda bundle: True),
+        (Regions.KAKARIKO_VILLAGE, lambda bundle: True, SOHGrottoExitNames.KAK_REDEAD_GROTTO_EXIT, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE),
     ])
 
     # Kak Open Grotto
@@ -414,7 +414,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.KAK_OPEN_GROTTO, world, [
-        (Regions.KAK_BACKYARD, lambda bundle: True),
+        (Regions.KAK_BACKYARD, lambda bundle: True, SOHGrottoExitNames.KAK_OPEN_GROTTO_EXIT, SOHEntranceGroups.GROTTO | SOHEntranceGroups.CHILD),
     ])
 
     # Kak Behind Gate

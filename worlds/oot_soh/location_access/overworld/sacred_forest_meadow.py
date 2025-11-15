@@ -16,7 +16,7 @@ def set_region_rules(world: "SohWorld") -> None:
         (Regions.LW_BEYOND_MIDO, lambda bundle: True),
         (Regions.SACRED_FOREST_MEADOW, lambda bundle: is_adult(
             bundle) or can_kill_enemy(bundle, Enemies.WOLFOS)),
-        (Regions.SFM_WOLFOS_GROTTO, lambda bundle: can_open_bomb_grotto(bundle)),
+        (Regions.SFM_WOLFOS_GROTTO, lambda bundle: can_open_bomb_grotto(bundle), SOHGrottoEntranceNames.SFM_WOLFOS_GROTTO_ENTRANCE, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE),
     ])
 
     # Sacred Forest Meadow
@@ -50,8 +50,8 @@ def set_region_rules(world: "SohWorld") -> None:
         (Regions.SFM_ENTRYWAY, lambda bundle: True),
         (Regions.FOREST_TEMPLE_ENTRYWAY, lambda bundle: can_use(Items.HOOKSHOT, bundle),
          SOHDungeonEntranceNames.FOREST_TEMPLE_DUNGEON_ENTRANCE, SOHEntranceGroups.DUNGEON_ENTRANCE | SOHEntranceGroups.ADULT_ONLY, EntranceType.TWO_WAY),
-        (Regions.SFM_FAIRY_GROTTO, lambda bundle: True),
-        (Regions.SFM_STORMS_GROTTO, lambda bundle: can_open_storms_grotto(bundle)),
+        (Regions.SFM_FAIRY_GROTTO, lambda bundle: True, SOHGrottoEntranceNames.SFM_FAIRY_GROTTO_ENTRANCE, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE),
+        (Regions.SFM_STORMS_GROTTO, lambda bundle: can_open_storms_grotto(bundle), SOHGrottoEntranceNames.SFM_STORMS_GROTTO_ENTRANCE, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE),
     ])
 
     # SFM Fairy Grotto
@@ -73,7 +73,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.SFM_FAIRY_GROTTO, world, [
-        (Regions.SACRED_FOREST_MEADOW, lambda bundle: True),
+        (Regions.SACRED_FOREST_MEADOW, lambda bundle: True, SOHGrottoExitNames.SFM_FAIRY_GROTTO_EXIT, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE),
     ])
 
     # SFM Wolfos Grotto
@@ -84,7 +84,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.SFM_WOLFOS_GROTTO, world, [
-        (Regions.SACRED_FOREST_MEADOW, lambda bundle: True),
+        (Regions.SACRED_FOREST_MEADOW, lambda bundle: True, SOHGrottoExitNames.SFM_WOLFOS_GROTTO_EXIT, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE),
     ])
 
     # SFM Storms Grotto
@@ -99,5 +99,5 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.SFM_STORMS_GROTTO, world, [
-        (Regions.SACRED_FOREST_MEADOW, lambda bundle: True),
+        (Regions.SACRED_FOREST_MEADOW, lambda bundle: True, SOHGrottoExitNames.SFM_STORMS_GROTTO_EXIT, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE),
     ])

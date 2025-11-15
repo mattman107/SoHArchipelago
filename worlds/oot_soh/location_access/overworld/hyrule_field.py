@@ -180,16 +180,16 @@ def set_region_rules(world: "SohWorld") -> None:
         (Regions.KAKARIKO_VILLAGE, lambda bundle: True),
         (Regions.ZR_FRONT, lambda bundle: True),
         (Regions.LON_LON_RANCH, lambda bundle: True),
-        (Regions.HF_SOUTHEAST_GROTTO, lambda bundle: (blast_or_smash(bundle))),
-        (Regions.HF_OPEN_GROTTO, lambda bundle: True),
+        (Regions.HF_SOUTHEAST_GROTTO, lambda bundle: (blast_or_smash(bundle)), SOHGrottoEntranceNames.HF_SOUTHEAST_GROTTO_ENTRANCE, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE),
+        (Regions.HF_OPEN_GROTTO, lambda bundle: True, SOHGrottoEntranceNames.HF_OPEN_GROTTO_ENTRANCE, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE),
         (Regions.HF_INSIDE_FENCE_GROTTO, lambda bundle: (
-            can_open_bomb_grotto(bundle))),
+            can_open_bomb_grotto(bundle)), SOHGrottoEntranceNames.HF_INSIDE_FENCE_GROTTO_ENTRANCE, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE),
         (Regions.HF_COW_GROTTO, lambda bundle: ((can_use(Items.MEGATON_HAMMER,
-         bundle) or is_child(bundle)) and can_open_bomb_grotto(bundle))),
-        (Regions.HF_NEAR_MARKET_GROTTO, lambda bundle: (blast_or_smash(bundle))),
-        (Regions.HF_FAIRY_GROTTO, lambda bundle: (blast_or_smash(bundle))),
-        (Regions.HF_NEAR_KAK_GROTTO, lambda bundle: (can_open_bomb_grotto(bundle))),
-        (Regions.HF_TEKTITE_GROTTO, lambda bundle: (can_open_bomb_grotto(bundle))),
+         bundle) or is_child(bundle)) and can_open_bomb_grotto(bundle)), SOHGrottoEntranceNames.HF_COW_GROTTO_ENTRANCE, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE),
+        (Regions.HF_NEAR_MARKET_GROTTO, lambda bundle: (blast_or_smash(bundle)), SOHGrottoEntranceNames.HF_NEAR_MARKET_GROTTO_ENTRANCE, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE),
+        (Regions.HF_FAIRY_GROTTO, lambda bundle: (blast_or_smash(bundle)), SOHGrottoEntranceNames.HF_FAIRY_GROTTO_ENTRANCE, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE),
+        (Regions.HF_NEAR_KAK_GROTTO, lambda bundle: (can_open_bomb_grotto(bundle)), SOHGrottoEntranceNames.HF_NEAR_KAK_GROTTO_ENTRANCE, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE),
+        (Regions.HF_TEKTITE_GROTTO, lambda bundle: (can_open_bomb_grotto(bundle)), SOHGrottoEntranceNames.HF_TEKTITE_GROTTO_ENTRANCE, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE),
     ])
 
     # HF Southeast Grotto
@@ -227,7 +227,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.HF_SOUTHEAST_GROTTO, world, [
-        (Regions.HYRULE_FIELD, lambda bundle: True)
+        (Regions.HYRULE_FIELD, lambda bundle: True, SOHGrottoExitNames.HF_SOUTHEAST_GROTTO_EXIT, SOHEntranceGroups.GROTTO | SOHEntranceGroups.CHILD)
     ])
 
     # HF Open Grotto
@@ -261,7 +261,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.HF_OPEN_GROTTO, world, [
-        (Regions.HYRULE_FIELD, lambda bundle: True)
+        (Regions.HYRULE_FIELD, lambda bundle: True, SOHGrottoExitNames.HF_OPEN_GROTTO_EXIT, SOHEntranceGroups.GROTTO | SOHEntranceGroups.CHILD)
     ])
 
     # HF Inside Fence Grotto
@@ -275,13 +275,13 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.HF_INSIDE_FENCE_GROTTO, world, [
-        (Regions.HYRULE_FIELD, lambda bundle: True)
+        (Regions.HYRULE_FIELD, lambda bundle: True, SOHGrottoExitNames.HF_INSIDE_FENCE_GROTTO_EXIT, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE)
     ])
 
     # HF Cow Grotto
     # Connections
     connect_regions(Regions.HF_COW_GROTTO, world, [
-        (Regions.HYRULE_FIELD, lambda bundle: True),
+        (Regions.HYRULE_FIELD, lambda bundle: True, SOHGrottoExitNames.HF_COW_GROTTO_EXIT, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE),
         (Regions.HF_COW_GROTTO_BEHIND_WEBS,
          lambda bundle: (has_fire_source(bundle)))
     ])
@@ -350,7 +350,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.HF_NEAR_MARKET_GROTTO, world, [
-        (Regions.HYRULE_FIELD, lambda bundle: True)
+        (Regions.HYRULE_FIELD, lambda bundle: True, SOHGrottoExitNames.HF_NEAR_MARKET_GROTTO_EXIT, SOHEntranceGroups.GROTTO | SOHEntranceGroups.CHILD)
     ])
 
     # HF Fairy Grotto
@@ -372,7 +372,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.HF_FAIRY_GROTTO, world, [
-        (Regions.HYRULE_FIELD, lambda bundle: True)
+        (Regions.HYRULE_FIELD, lambda bundle: True, SOHGrottoExitNames.HF_FAIRY_GROTTO_EXIT, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE)
     ])
 
     # HF Near Kak Grotto
@@ -383,7 +383,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.HF_NEAR_KAK_GROTTO, world, [
-        (Regions.HYRULE_FIELD, lambda bundle: True)
+        (Regions.HYRULE_FIELD, lambda bundle: True, SOHGrottoExitNames.HF_NEAR_KAK_GROTTO_EXIT, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE)
     ])
 
     # HF Tektite Grotto
@@ -394,5 +394,5 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.HF_TEKTITE_GROTTO, world, [
-        (Regions.HYRULE_FIELD, lambda bundle: True)
+        (Regions.HYRULE_FIELD, lambda bundle: True, SOHGrottoExitNames.HF_TEKTITE_GROTTO_EXIT, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE)
     ])

@@ -192,9 +192,17 @@ class SohWorld(World):
                 randomize_entrances_soh(self, entrances_to_shuffle, ageRestricted=True)
                 entrances_to_shuffle.clear()
             else:
-                # Need this else here. Mixed entrances doesn't work
+                # Need this else here. Mixed entrances doesn't work for entrances locked behind another yet. Boss entrances are behind dungeon entrances
                 randomize_entrances_soh(self, entrances_to_shuffle)
                 entrances_to_shuffle.clear()
+
+        # Grotto Entrances
+        if self.options.shuffle_grotto_entrances:
+            for entranceName in SOHGrottoExitNames:
+                    entrances_to_shuffle.add(entranceName)
+
+            for entranceName in SOHGrottoEntranceNames:
+                    entrances_to_shuffle.add(entranceName)
 
         # Dungeon Entrances
         if self.options.shuffle_dungeon_entrances:

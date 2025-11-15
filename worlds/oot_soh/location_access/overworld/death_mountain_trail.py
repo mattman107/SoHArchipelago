@@ -68,7 +68,7 @@ def set_region_rules(world: "SohWorld") -> None:
          and has_item(Items.GORONS_BRACELET, bundle)) or (can_use(Items.HOVER_BOOTS, bundle) and can_do_trick(Tricks.DMT_CLIMB_HOVERS, bundle))))),
         (Regions.DODONGOS_CAVERN_ENTRYWAY, lambda bundle: has_explosives(bundle) or has_item(Items.GORONS_BRACELET, bundle) or is_adult(
             bundle), SOHDungeonEntranceNames.DODONGOS_CAVERN_DUNGEON_ENTRANCE, SOHEntranceGroups.DUNGEON_ENTRANCE | SOHEntranceGroups.ANY_AGE, EntranceType.TWO_WAY),
-        (Regions.DMT_STORMS_GROTTO, lambda bundle: can_open_storms_grotto(bundle))
+        (Regions.DMT_STORMS_GROTTO, lambda bundle: can_open_storms_grotto(bundle), SOHGrottoEntranceNames.DMT_STORMS_GROTTO_ENTRANCE, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE)
     ])
 
     # Death Mountain Summit
@@ -98,7 +98,7 @@ def set_region_rules(world: "SohWorld") -> None:
         (Regions.DEATH_MOUNTAIN_TRAIL, lambda bundle: True),
         (Regions.DMC_UPPER_LOCAL, lambda bundle: True),
         (Regions.DMT_OWL_FLIGHT, lambda bundle: is_child(bundle)),
-        (Regions.DMT_COW_GROTTO, lambda bundle: blast_or_smash(bundle)),
+        (Regions.DMT_COW_GROTTO, lambda bundle: blast_or_smash(bundle), SOHGrottoEntranceNames.DMT_COW_GROTTO_ENTRANCE, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE),
         (Regions.DMT_GREAT_FAIRY_FOUNTAIN, lambda bundle: blast_or_smash(bundle))
     ])
 
@@ -133,7 +133,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.DMT_COW_GROTTO, world, [
-        (Regions.DEATH_MOUNTAIN_SUMMIT, lambda bundle: True)
+        (Regions.DEATH_MOUNTAIN_SUMMIT, lambda bundle: True, SOHGrottoExitNames.DMT_COW_GROTTO_EXIT, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE)
     ])
 
     # Death Mountain Trail Storms Grotto
@@ -167,7 +167,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.DMT_STORMS_GROTTO, world, [
-        (Regions.DEATH_MOUNTAIN_TRAIL, lambda bundle: True)
+        (Regions.DEATH_MOUNTAIN_TRAIL, lambda bundle: True, SOHGrottoExitNames.DMT_STORMS_GROTTO_EXIT, SOHEntranceGroups.GROTTO | SOHEntranceGroups.CHILD)
     ])
 
     # Death Mountain Trail Great Fairy Fountain

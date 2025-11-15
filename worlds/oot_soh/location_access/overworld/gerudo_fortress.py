@@ -68,7 +68,7 @@ def set_region_rules(world: "SohWorld") -> None:
         (Regions.GF_TOP_OF_UPPER_VINES,
          lambda bundle: can_use(Items.LONGSHOT, bundle)),
         (Regions.GF_STORMS_GROTTO, lambda bundle: is_adult(
-            bundle) and can_open_storms_grotto(bundle)),
+            bundle) and can_open_storms_grotto(bundle), SOHGrottoEntranceNames.GF_STORMS_GROTTO_ENTRANCE, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ADULT_ONLY),
     ])
 
     # GF Outside GTG
@@ -356,5 +356,5 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.GF_STORMS_GROTTO, world, [
-        (Regions.GF_NEAR_GROTTO, lambda bundle: True),
+        (Regions.GF_NEAR_GROTTO, lambda bundle: True, SOHGrottoExitNames.GF_STORMS_GROTTO_EXIT, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE),
     ])

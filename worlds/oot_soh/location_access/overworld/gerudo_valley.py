@@ -102,7 +102,7 @@ def set_region_rules(world: "SohWorld") -> None:
         (Regions.GV_LOWER_STREAM,
          lambda bundle: has_item(Items.BRONZE_SCALE, bundle) or can_use(Items.IRON_BOOTS, bundle)),
         (Regions.GV_OCTOROK_GROTTO, lambda bundle: can_use(
-            Items.SILVER_GAUNTLETS, bundle)),
+            Items.SILVER_GAUNTLETS, bundle), SOHGrottoEntranceNames.GV_OCTOROK_GROTTO_ENTRANCE, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ADULT_ONLY),
         (Regions.GV_CRATE_LEDGE, lambda bundle: can_use(Items.LONGSHOT, bundle))
     ])
 
@@ -152,7 +152,7 @@ def set_region_rules(world: "SohWorld") -> None:
              Events.RESCUED_ALL_CARPENTERS, bundle)),
         (Regions.GV_CARPENTER_TENT, lambda bundle: is_adult(bundle)),
         (Regions.GV_STORMS_GROTTO, lambda bundle: is_adult(
-            bundle) and can_open_storms_grotto(bundle)),
+            bundle) and can_open_storms_grotto(bundle), SOHGrottoEntranceNames.GV_STORMS_GROTTO_ENTRANCE, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ADULT_ONLY),
         (Regions.GV_CRATE_LEDGE,
          lambda bundle: can_do_trick(Tricks.DAMAGE_BOOST_SIMPLE, bundle) and has_explosives(bundle)),
     ])
@@ -193,7 +193,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.GV_OCTOROK_GROTTO, world, [
-        (Regions.GV_GROTTO_LEDGE, lambda bundle: True),
+        (Regions.GV_GROTTO_LEDGE, lambda bundle: True, SOHGrottoExitNames.GV_OCTOROK_GROTTO_EXIT, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE),
     ])
 
     # GV Storms Grotto
@@ -208,5 +208,5 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.GV_STORMS_GROTTO, world, [
-        (Regions.GV_FORTRESS_SIDE, lambda bundle: True),
+        (Regions.GV_FORTRESS_SIDE, lambda bundle: True, SOHGrottoExitNames.GV_STORMS_GROTTO_EXIT, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE),
     ])

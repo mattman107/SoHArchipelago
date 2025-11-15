@@ -47,7 +47,7 @@ def add_locations(parent_region: Regions, world: "SohWorld",
 
 
 def connect_regions(parent_region: Regions, world: "SohWorld",
-                    child_regions: list[tuple[Regions, Callable[[tuple[CollectionState, Regions, "SohWorld"]], bool], SOHBossEntranceNames | SOHDungeonExitNames | SOHBossWarpEntranceNames | SOHBossEntranceExitNames, int, EntranceType]]) -> None:
+                    child_regions: list[tuple[Regions, Callable[[tuple[CollectionState, Regions, "SohWorld"]], bool], SOHBossEntranceNames | SOHDungeonExitNames | SOHBossWarpEntranceNames | SOHGrottoEntranceNames | SOHGrottoExitNames, int, EntranceType]]) -> None:
     for region in child_regions:
         regionName = region[0]
         entranceName = None
@@ -63,6 +63,9 @@ def connect_regions(parent_region: Regions, world: "SohWorld",
             entrance.randomization_group = region[3]
         if len(region) > 4:
             entrance.randomization_type = region[4]
+        else:
+            #Default to EntranceType.Two_Way
+            entrance.randomization_type = EntranceType.TWO_WAY
 
 
 def add_events(parent_region: Regions, world: "SohWorld",

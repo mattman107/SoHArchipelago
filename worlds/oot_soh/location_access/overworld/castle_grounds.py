@@ -69,7 +69,7 @@ def set_region_rules(world: "SohWorld") -> None:
     connect_regions(Regions.HYRULE_CASTLE_GROUNDS, world, [
         (Regions.CASTLE_GROUNDS, lambda bundle: True),
         (Regions.HC_GREAT_FAIRY_FOUNTAIN, lambda bundle: blast_or_smash(bundle)),
-        (Regions.HC_STORMS_GROTTO, lambda bundle: can_open_storms_grotto(bundle))
+        (Regions.HC_STORMS_GROTTO, lambda bundle: can_open_storms_grotto(bundle), SOHGrottoEntranceNames.HC_STORMS_GROTTO_ENTRANCE, SOHEntranceGroups.GROTTO | SOHEntranceGroups.CHILD_ONLY)
     ])
     if not world.options.skip_child_zelda:
         connect_regions(Regions.HYRULE_CASTLE_GROUNDS, world, [
@@ -109,7 +109,7 @@ def set_region_rules(world: "SohWorld") -> None:
     # Hyrule Castle Storms Grotto
     # Connections
     connect_regions(Regions.HC_STORMS_GROTTO, world, [
-        (Regions.CASTLE_GROUNDS, lambda bundle: True),
+        (Regions.CASTLE_GROUNDS, lambda bundle: True, SOHGrottoExitNames.HC_STORMS_GROTTO_EXIT, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE),
         (Regions.HC_STORMS_GROTTO_BEHIND_WALLS,
          lambda bundle: can_break_mud_walls(bundle)),
         (Regions.HC_STORMS_SKULLTULA, lambda bundle: can_use(

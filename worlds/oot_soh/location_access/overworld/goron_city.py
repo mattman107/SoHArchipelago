@@ -139,7 +139,7 @@ def set_region_rules(world: "SohWorld") -> None:
     # Goron City Grotto Platform
     # Connections
     connect_regions(Regions.GC_GROTTO_PLATFORM, world, [
-        (Regions.GC_GROTTO, lambda bundle: True),
+        (Regions.GC_GROTTO, lambda bundle: True, SOHGrottoEntranceNames.GC_GROTTO_ENTRANCE, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ADULT_ONLY),
         (Regions.GORON_CITY, lambda bundle: effective_health(bundle) > 2 or can_use_any([Items.GORON_TUNIC, Items.NAYRUS_LOVE], bundle) or (
             (is_child(bundle) or can_use(Items.SONG_OF_TIME, bundle)) and can_use(Items.LONGSHOT, bundle)))
     ])
@@ -174,5 +174,5 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.GC_GROTTO, world, [
-        (Regions.GC_GROTTO_PLATFORM, lambda bundle: True)
+        (Regions.GC_GROTTO_PLATFORM, lambda bundle: True, SOHGrottoExitNames.GC_GROTTO_EXIT, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE)
     ])

@@ -113,7 +113,7 @@ def set_region_rules(world: "SohWorld") -> None:
         (Regions.LW_BEYOND_MIDO,
          lambda bundle: is_child(bundle) or can_use(Items.SARIAS_SONG, bundle) or can_do_trick(Tricks.LW_MIDO_BACKFLIP,
                                                                                                bundle)),
-        (Regions.LW_NEAR_SHORTCUTS_GROTTO, lambda bundle: blast_or_smash(bundle)),
+        (Regions.LW_NEAR_SHORTCUTS_GROTTO, lambda bundle: blast_or_smash(bundle), SOHGrottoEntranceNames.LW_NEAR_SHORTCUTS_GROTTO_ENTRANCE, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE),
     ])
 
     # LW Beyond Mido
@@ -161,8 +161,8 @@ def set_region_rules(world: "SohWorld") -> None:
         (Regions.LOST_WOODS, lambda bundle: is_child(
             bundle) or can_use(Items.SARIAS_SONG, bundle)),
         (Regions.SFM_ENTRYWAY, lambda bundle: True),
-        (Regions.DEKU_THEATER, lambda bundle: True),
-        (Regions.LW_SCRUBS_GROTTO, lambda bundle: blast_or_smash(bundle)),
+        (Regions.DEKU_THEATER, lambda bundle: True, SOHGrottoEntranceNames.DEKU_THEATER_ENTRANCE, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE),
+        (Regions.LW_SCRUBS_GROTTO, lambda bundle: blast_or_smash(bundle), SOHGrottoEntranceNames.LW_SCRUBS_GROTTO_ENTRANCE, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE),
     ])
 
     # LW Near Shortcuts Grotto
@@ -201,7 +201,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.LW_NEAR_SHORTCUTS_GROTTO, world, [
-        (Regions.LOST_WOODS, lambda bundle: True),
+        (Regions.LOST_WOODS, lambda bundle: True, SOHGrottoExitNames.LW_NEAR_SHORTCUTS_GROTTO_EXIT, SOHEntranceGroups.GROTTO | SOHEntranceGroups.CHILD),
     ])
 
     # Deku Theater
@@ -214,7 +214,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.DEKU_THEATER, world, [
-        (Regions.LOST_WOODS, lambda bundle: True),
+        (Regions.LOST_WOODS, lambda bundle: True, SOHGrottoExitNames.DEKU_THEATER_EXIT, SOHEntranceGroups.GROTTO | SOHEntranceGroups.CHILD_ONLY),
     ])
 
     # LW Scrubs Grotto
@@ -229,8 +229,8 @@ def set_region_rules(world: "SohWorld") -> None:
          lambda bundle: can_use(Items.SUNS_SONG, bundle)),
     ])
     # Connections
-    connect_regions(Regions.LW_BEYOND_MIDO, world, [
-        (Regions.LW_BEYOND_MIDO, lambda bundle: True),
+    connect_regions(Regions.LW_SCRUBS_GROTTO, world, [
+        (Regions.LW_BEYOND_MIDO, lambda bundle: True, SOHGrottoExitNames.LW_SCRUBS_GROTTO_EXIT, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE),
     ])
 
     # LW Bridge From Forest

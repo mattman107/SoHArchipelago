@@ -182,7 +182,7 @@ def set_region_rules(world: "SohWorld") -> None:
         (Regions.LOST_WOODS, lambda bundle: True),
         (Regions.LW_BRIDGE_FROM_FOREST, lambda bundle: world.options.closed_forest.value >= 1 or is_adult(bundle) or
          has_item(Events.DEKU_TREE_COMPLETED, bundle)),
-        (Regions.KF_STORMS_GROTTO, lambda bundle: can_open_storms_grotto(bundle))
+        (Regions.KF_STORMS_GROTTO, lambda bundle: can_open_storms_grotto(bundle), SOHGrottoEntranceNames.KF_STORMS_GROTTO_ENTRANCE, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE)
     ])
 
     # KF Outside Deku Tree
@@ -331,5 +331,5 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.KF_STORMS_GROTTO, world, [
-        (Regions.KOKIRI_FOREST, lambda bundle: True)
+        (Regions.KOKIRI_FOREST, lambda bundle: True, SOHGrottoExitNames.KF_STORMS_GROTTO_EXIT, SOHEntranceGroups.GROTTO | SOHEntranceGroups.CHILD)
     ])

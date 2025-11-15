@@ -58,7 +58,7 @@ def set_region_rules(world: "SohWorld") -> None:
             Items.STABLES_KEY, bundle)),
         (Regions.LLR_TOWER, lambda bundle: can_open_overworld_door(
             Items.BACK_TOWER_KEY, bundle)),
-        (Regions.LLR_GROTTO, lambda bundle: is_child(bundle)),
+        (Regions.LLR_GROTTO, lambda bundle: is_child(bundle), SOHGrottoEntranceNames.LLR_GROTTO_ENTRANCE, SOHEntranceGroups.GROTTO | SOHEntranceGroups.CHILD_ONLY),
     ])
 
     # LLR Talons House
@@ -116,5 +116,5 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.LLR_GROTTO, world, [
-        (Regions.LON_LON_RANCH, lambda bundle: True)
+        (Regions.LON_LON_RANCH, lambda bundle: True, SOHGrottoExitNames.LLR_GROTTO_EXIT, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE)
     ])

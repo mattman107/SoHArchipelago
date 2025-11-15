@@ -25,7 +25,7 @@ def set_region_rules(world: "SohWorld") -> None:
         (Regions.DMC_UPPER_LOCAL, lambda bundle: fire_timer(bundle) >= 48),
         (Regions.DEATH_MOUNTAIN_SUMMIT, lambda bundle: True),
         (Regions.DMC_UPPER_GROTTO, lambda bundle: blast_or_smash(
-            bundle) and (fire_timer(bundle) >= 8 or hearts(bundle) >= 3)),
+            bundle) and (fire_timer(bundle) >= 8 or hearts(bundle) >= 3), SOHGrottoEntranceNames.DMC_UPPER_GROTTO_ENTRANCE, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE),
     ])
 
     # Death Mountain Crater Upper Local
@@ -87,7 +87,7 @@ def set_region_rules(world: "SohWorld") -> None:
         (Regions.DMC_GREAT_FAIRY_FOUNTAIN,
          lambda bundle: can_use(Items.MEGATON_HAMMER, bundle)),
         (Regions.DMC_HAMMER_GROTTO, lambda bundle: is_adult(
-            bundle) and can_use(Items.MEGATON_HAMMER, bundle))
+            bundle) and can_use(Items.MEGATON_HAMMER, bundle), SOHGrottoEntranceNames.DMC_HAMMER_GROTTO_ENTRANCE, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ADULT_ONLY)
     ])
 
     # Death Mountain Crater Lower Local
@@ -213,7 +213,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.DMC_UPPER_GROTTO, world, [
-        (Regions.DMC_UPPER_LOCAL, lambda bundle: True)
+        (Regions.DMC_UPPER_LOCAL, lambda bundle: True, SOHGrottoExitNames.DMC_UPPER_GROTTO_EXIT, SOHEntranceGroups.GROTTO | SOHEntranceGroups.CHILD)
     ])
 
     # Death Mountain Crater Hammer Grotto
@@ -230,7 +230,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.DMC_HAMMER_GROTTO, world, [
-        (Regions.DMC_LOWER_LOCAL, lambda bundle: True)
+        (Regions.DMC_LOWER_LOCAL, lambda bundle: True, SOHGrottoExitNames.DMC_HAMMER_GROTTO_EXIT, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE)
     ])
 
     # Death Mountain Crater Distant Platform
