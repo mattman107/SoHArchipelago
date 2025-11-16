@@ -918,6 +918,20 @@ class ShuffleGrottoEntrances(Toggle):
     display_name = "Grotto Entrances Shuffle"
 
 
+class ShuffleOwlDropEntrances(Toggle):
+    """
+    Randomized where Kaepora Gaebora (the Owl) drops you at when you talk to him at Lake Hylia or at the top of Death Mountain Trail.
+    """
+    display_name = " Shuffle Owl Drop Entrances"   
+
+
+class ShuffleWarpSongEntrances(Toggle):
+    """
+    Randomized where each of the 6 warp songs leads to.
+    """
+    display_name = "Shuffle Warp Song Entrances"    
+
+
 #currently doesn't work
 class DecoupleEntrances(Toggle):
     """
@@ -927,7 +941,7 @@ class DecoupleEntrances(Toggle):
     display_name = "Decouple Entrances"
     visibility = Visibility.none
 
-#currently doesn't work
+#currently doesn't work with entrances that are behind other randomized entrances
 class MixedEntrancePools(Toggle):
     """
     Shuffle entrances into a mixed pool instead of separate ones. Has no effect on pools whose entrances aren't shuffled, and "Shuffle Boss Entrances" must be set to "Full" to include them.
@@ -1027,6 +1041,8 @@ class SohOptions(PerGameCommonOptions):
     shuffle_dungeon_entrances: ShuffleDungeonEntrances
     shuffle_boss_entrances: ShuffleDungeonBossEntrances
     shuffle_grotto_entrances: ShuffleGrottoEntrances
+    shuffle_warp_song_entrances: ShuffleWarpSongEntrances
+    shuffle_owl_drop_entrances: ShuffleOwlDropEntrances
     decouple_entrances: DecoupleEntrances
     mixed_entrances_pools: MixedEntrancePools
 
@@ -1062,13 +1078,12 @@ soh_option_groups = [
         ShuffleDungeonEntrances,
         ShuffleDungeonBossEntrances,
         ShuffleGrottoEntrances,
+        ShuffleWarpSongEntrances,
+        ShuffleOwlDropEntrances,
         DecoupleEntrances,
         MixedEntrancePools
         # Overworld Entrances
         # Interior Entrances
-        # Grotto Entrances
-        # Owl Drops
-        # Warp Songs
         # Overworld Spawns
     ]),
     OptionGroup("Shuffle Items", [

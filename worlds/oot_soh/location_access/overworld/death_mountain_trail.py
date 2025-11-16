@@ -105,7 +105,7 @@ def set_region_rules(world: "SohWorld") -> None:
     # Death Mountain Trail Owl Flight
     # Connections
     connect_regions(Regions.DMT_OWL_FLIGHT, world, [
-        (Regions.KAK_IMPAS_ROOFTOP, lambda bundle: True)
+        (Regions.KAK_IMPAS_ROOFTOP, lambda bundle: True, Regions.DMT_OWL_FLIGHT)
     ])
 
     # Death Mountain Trail Cow Grotto

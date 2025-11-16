@@ -208,7 +208,7 @@ def set_region_rules(world: "SohWorld") -> None:
     # LH Owl Flight
     # Connections
     connect_regions(Regions.LH_OWL_FLIGHT, world, [
-        (Regions.HYRULE_FIELD, lambda bundle: True),
+        (Regions.HYRULE_FIELD, lambda bundle: True, Regions.LH_OWL_FLIGHT),
     ])
 
     # LH Lab

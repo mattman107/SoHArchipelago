@@ -78,40 +78,40 @@ def set_region_rules(world: "SohWorld") -> None:
     # Connections
     connect_regions(Regions.MINUET_OF_FOREST_WARP, world, [
         (Regions.SACRED_FOREST_MEADOW, lambda bundle: can_use(
-            Items.MINUET_OF_FOREST, bundle))
+            Items.MINUET_OF_FOREST, bundle), Regions.MINUET_OF_FOREST_WARP)
     ])
 
     # Bolero of Fire Warp
     # Connections
     connect_regions(Regions.BOLERO_OF_FIRE_WARP, world, [
         (Regions.DMC_CENTRAL_LOCAL, lambda bundle: can_use(
-            Items.BOLERO_OF_FIRE, bundle))
+            Items.BOLERO_OF_FIRE, bundle), Regions.BOLERO_OF_FIRE_WARP)
     ])
 
     # Serenade of Water Warp
     # Connections
     connect_regions(Regions.SERENADE_OF_WATER_WARP, world, [
         (Regions.LAKE_HYLIA, lambda bundle: can_use(
-            Items.SERENADE_OF_WATER, bundle))
+            Items.SERENADE_OF_WATER, bundle), Regions.SERENADE_OF_WATER_WARP)
     ])
 
     # Requiem of Spirit Warp
     # Connections
     connect_regions(Regions.REQUIEM_OF_SPIRIT_WARP, world, [
         (Regions.DESERT_COLOSSUS, lambda bundle: can_use(
-            Items.REQUIEM_OF_SPIRIT, bundle))
+            Items.REQUIEM_OF_SPIRIT, bundle), Regions.REQUIEM_OF_SPIRIT_WARP)
     ])
 
     # Nocturne of Shadow Warp
     # Connections
     connect_regions(Regions.NOCTURNE_OF_SHADOW_WARP, world, [
         (Regions.GRAVEYARD_WARP_PAD_REGION, lambda bundle: can_use(
-            Items.NOCTURNE_OF_SHADOW, bundle))
+            Items.NOCTURNE_OF_SHADOW, bundle), Regions.NOCTURNE_OF_SHADOW_WARP)
     ])
 
     # Prelude of Light Warp
     # Connections
     connect_regions(Regions.PRELUDE_OF_LIGHT_WARP, world, [
         (Regions.TEMPLE_OF_TIME, lambda bundle: can_use(
-            Items.PRELUDE_OF_LIGHT, bundle))
+            Items.PRELUDE_OF_LIGHT, bundle), Regions.PRELUDE_OF_LIGHT_WARP)
     ])

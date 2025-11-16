@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Callable
 from BaseClasses import Location, Region, Entrance
-from .Enums import SOHBossEntranceExitNames, SOHBossEntranceNames, SOHDungeonExitNames, SOHDungeonEntranceNames, Locations, SOHEntranceGroups, Regions, SOHBossWarpEntranceNames
+from .Enums import SOHBossEntranceExitNames, SOHBossEntranceNames, SOHDungeonExitNames, SOHDungeonEntranceNames, Locations, SOHEntranceGroups, Regions, SOHBossWarpEntranceNames, SOHGrottoEntranceNames, SOHGrottoExitNames
 from .Locations import SohLocation
 from entrance_rando import disconnect_entrance_for_randomization, randomize_entrances, bake_target_group_lookup, EntranceRandomizationError
 from entrance_rando import ERPlacementState, Entrance
@@ -41,9 +41,9 @@ default_group_lookup = {
 
 
 mixed_group_lookup = {group: [all for all in (SOHEntranceGroups.OTHER, SOHEntranceGroups.BOSS_ENTRANCE, SOHEntranceGroups.DUNGEON_ENTRANCE, SOHEntranceGroups.OVERWORLD, SOHEntranceGroups.INTERIOR, 
-                                              SOHEntranceGroups.THEIVES_HIDEOUT_ENTRANCE, SOHEntranceGroups.GROTTO, SOHEntranceGroups.OWL_DROP, SOHEntranceGroups.WARP_SONG)] 
+                                              SOHEntranceGroups.THEIVES_HIDEOUT_ENTRANCE, SOHEntranceGroups.GROTTO)] 
                                               for group in (SOHEntranceGroups.OTHER, SOHEntranceGroups.BOSS_ENTRANCE, SOHEntranceGroups.DUNGEON_ENTRANCE, SOHEntranceGroups.OVERWORLD, SOHEntranceGroups.INTERIOR, 
-                                                            SOHEntranceGroups.THEIVES_HIDEOUT_ENTRANCE, SOHEntranceGroups.GROTTO, SOHEntranceGroups.OWL_DROP, SOHEntranceGroups.WARP_SONG)}
+                                                            SOHEntranceGroups.THEIVES_HIDEOUT_ENTRANCE, SOHEntranceGroups.GROTTO)}
                                                             
 
 # This is allowing us to brute force the problem of GER failing. May be a necessary evil as it doesn't do swap or automatic retries itself.
@@ -116,9 +116,57 @@ def get_target_groups_age_restrictive(group: int) -> list[int]:
     return [pair_type | age for pair_type in default_group_lookup[type]]
 
 
+# Special Randomization for one ways like Owl Drop and Warp Songs 
+def randomize_soh_one_way_entrances(world: "SohWorld") -> None:
+    if world.options.shuffle_owl_drop_entrances or world.options.shuffle_warp_song_entrances:
+        one_way_entrance_names = list()
+        one_way_exit_region_names = list()
+
+        if world.options.shuffle_owl_drop_entrances:
+            one_way_entrance_names += [Regions.LH_OWL_FLIGHT, Regions.DMT_OWL_FLIGHT]
+
+        if world.options.shuffle_warp_song_entrances:
+            # SOH Seems to put these at random places, except for glitchless. They enforce Graveyard, Crater, and Colossus Warp pads be assigned when glitchless.
+            one_way_entrance_names +=[Regions.MINUET_OF_FOREST_WARP, Regions.BOLERO_OF_FIRE_WARP, Regions.SERENADE_OF_WATER_WARP, Regions.NOCTURNE_OF_SHADOW_WARP, Regions.REQUIEM_OF_SPIRIT_WARP, Regions.PRELUDE_OF_LIGHT_WARP]
+            one_way_exit_region_names += [Regions.DMC_CENTRAL_LOCAL, Regions.DESERT_COLOSSUS, Regions.GRAVEYARD_WARP_PAD_REGION]
+
+        # Remove the existing exit
+        for name in one_way_entrance_names:
+            entrance = world.get_entrance(str(name))
+            entrance.connected_region.entrances.remove(entrance)
+            entrance.connected_region = None
+
+        # Get enough entrances to connect up
+        # TODO This will need to be updated as we make more named entrances
+        all_named_entrances = list(SOHDungeonEntranceNames) + list(SOHDungeonExitNames) + list(SOHGrottoExitNames) + list(SOHGrottoEntranceNames) 
+        world.random.shuffle(all_named_entrances)
+        for entrance_name in all_named_entrances:
+            if len(one_way_entrance_names) == len(one_way_exit_region_names):
+                break
+                
+            if entrance_name not in one_way_exit_region_names:
+                one_way_exit_region_names.append(entrance_name)
+
+        # Randomize the the entrance name list and iterate through 
+        world.random.shuffle(one_way_exit_region_names)
+
+        index: int = 0
+        for entrance_name in one_way_entrance_names:
+            entrance = world.get_entrance(str(entrance_name))
+        
+            if one_way_exit_region_names[index] in all_named_entrances:
+                connected_region_name = world.get_entrance(str(one_way_exit_region_names[index])).parent_region.name
+            else:
+                connected_region_name = str(one_way_exit_region_names[index])
+
+            entrance.connected_region = world.get_region(connected_region_name)
+            entrance.connected_region.entrances.append(entrance)
+            
+            index += 1
+
+
 # Might need to return the ER Placement state at the end
 def randomize_entrances_soh(world: "SohWorld", entrances_to_shuffle: set[SOHBossEntranceNames | SOHDungeonEntranceNames | SOHDungeonExitNames], on_connect: Callable[[ERPlacementState, list[Entrance], list[Entrance]], bool | None] | None = None, coupled: bool = True, ageRestricted: bool = False) -> None:
-    temp_entrances: list[Entrance] = list()
     for entranceEnum in entrances_to_shuffle:
         disconnect_entrance_for_randomization(world.multiworld.get_entrance(
             entranceEnum.value, world.player), one_way_target_name=entrance_matching[entranceEnum].value if entranceEnum in entrance_matching else None)

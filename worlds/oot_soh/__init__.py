@@ -19,7 +19,7 @@ from .UniversalTracker import setup_options_from_slot_data
 from settings import Group, Bool
 from Options import OptionError
 from .LogicHelpers import wallet_capacities
-from .EntranceShuffle import randomize_entrances_soh, on_connect_soh_sheik_at_colossus, boss_indirect_condition_matching
+from .EntranceShuffle import randomize_entrances_soh, on_connect_soh_sheik_at_colossus, randomize_soh_one_way_entrances
 from entrance_rando import bake_target_group_lookup
 
 import logging
@@ -178,6 +178,9 @@ class SohWorld(World):
             set_price_rules(self)
 
     def connect_entrances(self):
+        # Do quircky one ways separate from the rest
+        randomize_soh_one_way_entrances(self)
+
         entrances_to_shuffle = set()
         # Reverse decoupled option for randomize_entrances because it is asking if you wanted coupled
         # Update this when it is figured out why decoupled doesn't work with the current groupings
@@ -214,8 +217,9 @@ class SohWorld(World):
                 if entranceName != SOHDungeonEntranceNames.GANONS_CASTLE_DUNGEON_ENTRANCE or self.options.shuffle_dungeon_entrances == 2:
                     entrances_to_shuffle.add(entranceName)
 
-        randomize_entrances_soh(
-                self, entrances_to_shuffle, on_connect_soh_sheik_at_colossus, coupled)
+        if len(entrances_to_shuffle) > 0:
+            randomize_entrances_soh(
+                    self, entrances_to_shuffle, on_connect_soh_sheik_at_colossus, coupled)
 
         return super().connect_entrances()
 
