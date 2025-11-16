@@ -6,6 +6,7 @@ from entrance_rando import disconnect_entrance_for_randomization, randomize_entr
 from entrance_rando import ERPlacementState, Entrance
 from .LogicHelpers import rule_wrapper
 from worlds.generic.Rules import set_rule
+from enum import StrEnum
 
 if TYPE_CHECKING:
     from . import SohWorld
@@ -22,16 +23,6 @@ entrance_matching = {
     SOHBossEntranceNames.SPIRIT_TEMPLE_BOSS_ENTRANCE: SOHBossEntranceExitNames.SPIRIT_TEMPLE_BOSS_EXIT,
 }
 
-boss_indirect_condition_matching = {
-    SOHBossEntranceNames.DEKU_TREE_BOSS_ENTRANCE: (Regions.DEKU_TREE_BOSS_ROOM, SOHBossWarpEntranceNames.DEKU_TREE_BOSS_WARP_ENTRANCE),
-    SOHBossEntranceNames.DODONGOS_CAVERN_BOSS_ENTRANCE: (Regions.DODONGOS_CAVERN_BOSS_ROOM, SOHBossWarpEntranceNames.DODONGOS_CAVERN_BOSS_WARP_ENTRANCE),
-    SOHBossEntranceNames.JABU_JABUS_BOSS_ENTRANCE: (Regions.JABU_JABUS_BELLY_BOSS_ROOM, SOHBossWarpEntranceNames.JABU_JABUS_BOSS_WARP_ENTRANCE),
-    SOHBossEntranceNames.FOREST_TEMPLE_BOSS_ENTRANCE: (Regions.FOREST_TEMPLE_BOSS_ROOM, SOHBossWarpEntranceNames.FOREST_TEMPLE_BOSS_WARP_ENTRANCE),
-    SOHBossEntranceNames.FIRE_TEMPLE_BOSS_ENTRANCE: (Regions.FIRE_TEMPLE_BOSS_ROOM, SOHBossWarpEntranceNames.FIRE_TEMPLE_BOSS_WARP_ENTRANCE),
-    SOHBossEntranceNames.WATER_TEMPLE_BOSS_ENTRANCE: (Regions.WATER_TEMPLE_BOSS_ROOM, SOHBossWarpEntranceNames.WATER_TEMPLE_BOSS_WARP_ENTRANCE),
-    SOHBossEntranceNames.SHADOW_TEMPLE_BOSS_ENTRANCE: (Regions.SHADOW_TEMPLE_BOSS_ROOM, SOHBossWarpEntranceNames.SHADOW_TEMPLE_BOSS_WARP_ENTRANCE),
-    SOHBossEntranceNames.SPIRIT_TEMPLE_BOSS_ENTRANCE: (Regions.SPIRIT_TEMPLE_BOSS_ROOM, SOHBossWarpEntranceNames.SPIRIT_TEMPLE_BOSS_WARP_ENTRANCE),
-}
 
 default_group_lookup = {
     SOHEntranceGroups.DUNGEON_ENTRANCE: [SOHEntranceGroups.DUNGEON_ENTRANCE],
@@ -118,9 +109,11 @@ def get_target_groups_age_restrictive(group: int) -> list[int]:
 
 # Special Randomization for one ways like Owl Drop and Warp Songs 
 def randomize_soh_one_way_entrances(world: "SohWorld") -> None:
-    if world.options.shuffle_owl_drop_entrances or world.options.shuffle_warp_song_entrances:
+    if world.options.shuffle_owl_drop_entrances or world.options.shuffle_warp_song_entrances or world.options.shuffle_overworld_spawns:
         one_way_entrance_names = list()
-        one_way_exit_region_names = list()
+        one_way_entrance_exit_names = list()
+        # TODO This will need to be updated as we make more named entrances
+        all_named_entrances = list(SOHDungeonEntranceNames) + list(SOHDungeonExitNames) + list(SOHGrottoExitNames) + list(SOHGrottoEntranceNames) 
 
         if world.options.shuffle_owl_drop_entrances:
             one_way_entrance_names += [Regions.LH_OWL_FLIGHT, Regions.DMT_OWL_FLIGHT]
@@ -128,7 +121,7 @@ def randomize_soh_one_way_entrances(world: "SohWorld") -> None:
         if world.options.shuffle_warp_song_entrances:
             # SOH Seems to put these at random places, except for glitchless. They enforce Graveyard, Crater, and Colossus Warp pads be assigned when glitchless.
             one_way_entrance_names +=[Regions.MINUET_OF_FOREST_WARP, Regions.BOLERO_OF_FIRE_WARP, Regions.SERENADE_OF_WATER_WARP, Regions.NOCTURNE_OF_SHADOW_WARP, Regions.REQUIEM_OF_SPIRIT_WARP, Regions.PRELUDE_OF_LIGHT_WARP]
-            one_way_exit_region_names += [Regions.DMC_CENTRAL_LOCAL, Regions.DESERT_COLOSSUS, Regions.GRAVEYARD_WARP_PAD_REGION]
+            one_way_entrance_exit_names += [Regions.DMC_CENTRAL_LOCAL, Regions.DESERT_COLOSSUS, Regions.GRAVEYARD_WARP_PAD_REGION]
 
         # Remove the existing exit
         for name in one_way_entrance_names:
@@ -137,32 +130,55 @@ def randomize_soh_one_way_entrances(world: "SohWorld") -> None:
             entrance.connected_region = None
 
         # Get enough entrances to connect up
-        # TODO This will need to be updated as we make more named entrances
-        all_named_entrances = list(SOHDungeonEntranceNames) + list(SOHDungeonExitNames) + list(SOHGrottoExitNames) + list(SOHGrottoEntranceNames) 
         world.random.shuffle(all_named_entrances)
         for entrance_name in all_named_entrances:
-            if len(one_way_entrance_names) == len(one_way_exit_region_names):
+            if len(one_way_entrance_names) == len(one_way_entrance_exit_names):
                 break
                 
-            if entrance_name not in one_way_exit_region_names:
-                one_way_exit_region_names.append(entrance_name)
+            if entrance_name not in one_way_entrance_exit_names:
+                one_way_entrance_exit_names.append(entrance_name)
 
-        # Randomize the the entrance name list and iterate through 
-        world.random.shuffle(one_way_exit_region_names)
+        if len(one_way_entrance_names) > 0:
+            # Randomize the the entrance name list
+            world.random.shuffle(one_way_entrance_exit_names)
+            # For Owl Drop/ Song Warps
+            soh_one_way_entrance_connections(world, one_way_entrance_names, one_way_entrance_exit_names, all_named_entrances)
 
-        index: int = 0
-        for entrance_name in one_way_entrance_names:
-            entrance = world.get_entrance(str(entrance_name))
+        # Handle Overworld Spawns separately
+        if world.options.shuffle_overworld_spawns:
+            one_way_entrance_names = [Regions.CHILD_SPAWN, Regions.ADULT_SPAWN]
+
+            # Remove special cases for child/adult spawns
+            # Problematic if they shuffle swim
+            if world.options.shuffle_swim:
+                all_named_entrances.remove(SOHDungeonEntranceNames.WATER_TEMPLE_DUNGEON_ENTRANCE)
+                all_named_entrances.remove(SOHDungeonExitNames.WATER_TEMPLE_DUNGEON_EXIT)
+                all_named_entrances.remove(SOHGrottoEntranceNames.ZD_STORMS_GROTTO_ENTRANCE)
+                all_named_entrances.remove(SOHGrottoExitNames.ZD_STORMS_GROTTO_EXIT)
+
+            # Problematic because they have to brave lava to get out
+            all_named_entrances.remove(SOHGrottoEntranceNames.GC_GROTTO_ENTRANCE)
+            all_named_entrances.remove(SOHGrottoExitNames.GC_GROTTO_EXIT)
+
+            world.random.shuffle(all_named_entrances)
+
+            soh_one_way_entrance_connections(world, one_way_entrance_names, all_named_entrances, all_named_entrances)
         
-            if one_way_exit_region_names[index] in all_named_entrances:
-                connected_region_name = world.get_entrance(str(one_way_exit_region_names[index])).parent_region.name
-            else:
-                connected_region_name = str(one_way_exit_region_names[index])
 
-            entrance.connected_region = world.get_region(connected_region_name)
-            entrance.connected_region.entrances.append(entrance)
-            
-            index += 1
+def soh_one_way_entrance_connections(world: "SohWorld", entrance_names: list, exit_names: list, potential_entrance_names: list):
+    index: int = 0
+    for entrance_name in entrance_names:
+        entrance = world.get_entrance(str(entrance_name))
+
+        if exit_names[index] in potential_entrance_names:
+            connected_region_name = world.get_entrance(str(exit_names[index])).parent_region.name
+        else:
+            connected_region_name = str(exit_names[index])
+
+        entrance.connected_region = world.get_region(connected_region_name)
+        entrance.connected_region.entrances.append(entrance)
+        
+        index += 1
 
 
 # Might need to return the ER Placement state at the end

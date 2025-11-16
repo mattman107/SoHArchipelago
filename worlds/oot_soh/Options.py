@@ -922,15 +922,23 @@ class ShuffleOwlDropEntrances(Toggle):
     """
     Randomized where Kaepora Gaebora (the Owl) drops you at when you talk to him at Lake Hylia or at the top of Death Mountain Trail.
     """
-    display_name = " Shuffle Owl Drop Entrances"   
+    display_name = " Shuffle Owl Drop Entrances"
 
 
 class ShuffleWarpSongEntrances(Toggle):
     """
     Randomized where each of the 6 warp songs leads to.
     """
-    display_name = "Shuffle Warp Song Entrances"    
+    display_name = "Shuffle Warp Song Entrances"
 
+
+class ShuffleOverworldSpawns(Toggle):
+    """
+    Randomized where you start as Child or Adult when loading a save in the Overworld. This means you may not necessarily spawn inside Link's House or Temple of Time.
+    This stays consistent after saving and loading the game.
+    Keep in mind you man need to temporarily disable the "Remember Save Location" time saver to be able to use the spawn positions, especially if they are the only logical way to get to certain areas.
+    """
+    display_name = "Shuffle Overworld Spawns"
 
 #currently doesn't work
 class DecoupleEntrances(Toggle):
@@ -1043,6 +1051,7 @@ class SohOptions(PerGameCommonOptions):
     shuffle_grotto_entrances: ShuffleGrottoEntrances
     shuffle_warp_song_entrances: ShuffleWarpSongEntrances
     shuffle_owl_drop_entrances: ShuffleOwlDropEntrances
+    shuffle_overworld_spawns: ShuffleOverworldSpawns
     decouple_entrances: DecoupleEntrances
     mixed_entrances_pools: MixedEntrancePools
 

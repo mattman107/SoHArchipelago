@@ -65,13 +65,13 @@ def set_region_rules(world: "SohWorld") -> None:
     # Child Spawn
     # Connections
     connect_regions(Regions.CHILD_SPAWN, world, [
-        (Regions.KF_LINKS_HOUSE, lambda bundle: True)
+        (Regions.KF_LINKS_HOUSE, lambda bundle: True, Regions.CHILD_SPAWN)
     ])
 
     # Adult Spawn
     # Connections
     connect_regions(Regions.ADULT_SPAWN, world, [
-        (Regions.TEMPLE_OF_TIME, lambda bundle: True)
+        (Regions.TEMPLE_OF_TIME, lambda bundle: True, Regions.ADULT_SPAWN)
     ])
 
     # Minuet of Forest Warp
