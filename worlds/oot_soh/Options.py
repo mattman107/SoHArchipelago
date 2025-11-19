@@ -932,6 +932,22 @@ class ShuffleWarpSongEntrances(Toggle):
     display_name = "Shuffle Warp Song Entrances"
 
 
+class ShuffleInteriorEntrances(Choice):
+    """
+    Shuffle the pool of interior entrances which contains most houses and all Great Fairies
+    All - An extended version of 'Simple' with some extra places:
+    - Windmill
+    - Link's House
+    - Temple of Time
+    - Kakariko Potion Shop
+    """
+    display_name = "Shuffle Interior Entrances"
+    option_off = 0
+    option_simple = 1
+    option_all = 2
+    default = 0
+
+
 class ShuffleOverworldSpawns(Toggle):
     """
     Randomized where you start as Child or Adult when loading a save in the Overworld. This means you may not necessarily spawn inside Link's House or Temple of Time.
@@ -1052,6 +1068,7 @@ class SohOptions(PerGameCommonOptions):
     shuffle_warp_song_entrances: ShuffleWarpSongEntrances
     shuffle_owl_drop_entrances: ShuffleOwlDropEntrances
     shuffle_overworld_spawns: ShuffleOverworldSpawns
+    shuffle_interior_entrances: ShuffleInteriorEntrances
     decouple_entrances: DecoupleEntrances
     mixed_entrances_pools: MixedEntrancePools
 
@@ -1086,14 +1103,14 @@ soh_option_groups = [
     OptionGroup("Shuffle Entrances", [
         ShuffleDungeonEntrances,
         ShuffleDungeonBossEntrances,
+        ShuffleInteriorEntrances,
         ShuffleGrottoEntrances,
         ShuffleWarpSongEntrances,
         ShuffleOwlDropEntrances,
+        ShuffleOverworldSpawns,
         DecoupleEntrances,
         MixedEntrancePools
         # Overworld Entrances
-        # Interior Entrances
-        # Overworld Spawns
     ]),
     OptionGroup("Shuffle Items", [
         # Shuffle Songs -- idk if this or the other ones here will be an actual option here, delete if not

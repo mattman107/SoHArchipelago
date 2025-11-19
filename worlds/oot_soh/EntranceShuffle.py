@@ -148,6 +148,12 @@ def randomize_soh_one_way_entrances(world: "SohWorld") -> None:
         if world.options.shuffle_overworld_spawns:
             one_way_entrance_names = [Regions.CHILD_SPAWN, Regions.ADULT_SPAWN]
 
+            # Remove the existing exit
+            for name in one_way_entrance_names:
+                entrance = world.get_entrance(str(name))
+                entrance.connected_region.entrances.remove(entrance)
+                entrance.connected_region = None
+
             # Remove special cases for child/adult spawns
             # Problematic if they shuffle swim
             if world.options.shuffle_swim:
@@ -159,6 +165,9 @@ def randomize_soh_one_way_entrances(world: "SohWorld") -> None:
             # Problematic because they have to brave lava to get out
             all_named_entrances.remove(SOHGrottoEntranceNames.GC_GROTTO_ENTRANCE)
             all_named_entrances.remove(SOHGrottoExitNames.GC_GROTTO_EXIT)
+            # Can't cross bridge with nothing or as child
+            all_named_entrances.remove(SOHDungeonEntranceNames.FIRE_TEMPLE_DUNGEON_ENTRANCE)
+            all_named_entrances.remove(SOHDungeonExitNames.FIRE_TEMPLE_DUNGEON_EXIT)
 
             world.random.shuffle(all_named_entrances)
 
