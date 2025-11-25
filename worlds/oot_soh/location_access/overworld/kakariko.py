@@ -346,7 +346,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.KAK_POTION_SHOP_FRONT, world, [
-        (Regions.KAKARIKO_VILLAGE, lambda bundle: True, SOHSpecialInteriorExitNames.KAK_POTION_SHOP_FRONT_EXIT, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ANY_AGE),
+        (Regions.KAKARIKO_VILLAGE, lambda bundle: True, SOHSpecialInteriorExitNames.KAK_POTION_SHOP_FRONT_EXIT, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ADULT),
         (Regions.KAK_POTION_SHOP_BACK, lambda bundle: is_adult(bundle)),
     ])
 

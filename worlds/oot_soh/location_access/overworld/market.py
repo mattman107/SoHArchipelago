@@ -268,7 +268,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.MARKET_SHOOTING_GALLERY, world, [
-        (Regions.MARKET, lambda bundle: True, SOHInteriorExitNames.MARKET_SHOOTING_GALLERY_EXIT, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.CHILD_ONLY)
+        (Regions.MARKET, lambda bundle: True, SOHInteriorExitNames.MARKET_SHOOTING_GALLERY_EXIT, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.CHILD)
     ])
 
     # Market Bombchu Bowling

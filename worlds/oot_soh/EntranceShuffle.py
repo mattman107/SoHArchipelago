@@ -20,7 +20,7 @@ entrance_matching = {
     SOHBossEntranceNames.FIRE_TEMPLE_BOSS_ENTRANCE: SOHBossEntranceExitNames.FIRE_TEMPLE_BOSS_EXIT,
     SOHBossEntranceNames.WATER_TEMPLE_BOSS_ENTRANCE: SOHBossEntranceExitNames.WATER_TEMPLE_BOSS_EXIT,
     SOHBossEntranceNames.SHADOW_TEMPLE_BOSS_ENTRANCE: SOHBossEntranceExitNames.SHADOW_TEMPLE_BOSS_EXIT,
-    SOHBossEntranceNames.SPIRIT_TEMPLE_BOSS_ENTRANCE: SOHBossEntranceExitNames.SPIRIT_TEMPLE_BOSS_EXIT,
+    SOHBossEntranceNames.SPIRIT_TEMPLE_BOSS_ENTRANCE: SOHBossEntranceExitNames.SPIRIT_TEMPLE_BOSS_EXIT
 }
 
 
@@ -39,7 +39,7 @@ mixed_group_lookup = {group: [all for all in (SOHEntranceGroups.OTHER, SOHEntran
                                                             
 
 # This is allowing us to brute force the problem of GER failing. May be a necessary evil as it doesn't do swap or automatic retries itself.
-OOT_SOH_GER_RETRIES_AMOUNT: int = 1000
+OOT_SOH_GER_RETRIES_AMOUNT: int = 50
 
 def get_target_groups(group: int) -> list[int]:
     type = group & SOHEntranceGroups.TYPE_MASK
@@ -192,7 +192,7 @@ def soh_one_way_entrance_connections(world: "SohWorld", entrance_names: list, ex
 
 
 # Might need to return the ER Placement state at the end
-def randomize_entrances_soh(world: "SohWorld", entrances_to_shuffle: set[SOHBossEntranceNames | SOHDungeonEntranceNames | SOHDungeonExitNames], on_connect: Callable[[ERPlacementState, list[Entrance], list[Entrance]], bool | None] | None = None, coupled: bool = True, ageRestricted: bool = False) -> None:
+def randomize_entrances_soh(world: "SohWorld", entrances_to_shuffle: set[SOHBossEntranceNames | SOHDungeonEntranceNames | SOHDungeonExitNames | SOHInteriorEntranceNames | SOHInteriorExitNames | SOHSpecialInteriorEntranceNames | SOHSpecialInteriorExitNames], on_connect: Callable[[ERPlacementState, list[Entrance], list[Entrance]], bool | None] | None = None, coupled: bool = True, ageRestricted: bool = False) -> None:
     for entranceEnum in entrances_to_shuffle:
         disconnect_entrance_for_randomization(world.multiworld.get_entrance(
             entranceEnum.value, world.player), one_way_target_name=entrance_matching[entranceEnum].value if entranceEnum in entrance_matching else None)
@@ -209,7 +209,8 @@ def randomize_entrances_soh(world: "SohWorld", entrances_to_shuffle: set[SOHBoss
         try:
             er_state = randomize_entrances(world, coupled, target_group_lookup, False, on_connect=on_connect)
             world.er_pairings += er_state.pairings
-            print(f"Took {i} attempts to get GER working.")
+            # print(world.er_pairings)
+            # print(f"Took {i} attempts to get GER working.")
             break
         except EntranceRandomizationError as error:
             if i >= OOT_SOH_GER_RETRIES_AMOUNT - 1:

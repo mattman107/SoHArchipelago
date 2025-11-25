@@ -72,7 +72,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.LLR_TALONS_HOUSE, world, [
-        (Regions.LON_LON_RANCH, lambda bundle: True, SOHInteriorExitNames.LLR_TALONS_HOUSE_EXIT, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ANY_AGE)
+        (Regions.LON_LON_RANCH, lambda bundle: True, SOHInteriorExitNames.LLR_TALONS_HOUSE_EXIT, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.CHILD)
     ])
 
     # LLR Stables
@@ -99,7 +99,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.LLR_TOWER, world, [
-        (Regions.LON_LON_RANCH, lambda bundle: True, SOHInteriorExitNames.LLR_TOWER_EXIT, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.CHILD_ONLY)
+        (Regions.LON_LON_RANCH, lambda bundle: True, SOHInteriorExitNames.LLR_TOWER_EXIT, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.CHILD)
     ])
 
     # LLR Grotto

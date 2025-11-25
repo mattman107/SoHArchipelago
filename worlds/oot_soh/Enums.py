@@ -4119,7 +4119,7 @@ class SOHSpecialInteriorExitNames(StrEnum):
     KAK_POTION_SHOP_FRONT_EXIT = "Kak Potion Shop Front Exit"
     KAK_POTION_SHOP_BACK_EXIT = "Kak Potion Shop Back Exit"
 
-    
+
 class TokenCounts(IntEnum):
     DUNGEON = 44
     OVERWORLD = 56

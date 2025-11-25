@@ -20,7 +20,6 @@ from settings import Group, Bool
 from Options import OptionError
 from .LogicHelpers import wallet_capacities
 from .EntranceShuffle import randomize_entrances_soh, on_connect_soh, randomize_soh_one_way_entrances
-from entrance_rando import bake_target_group_lookup
 
 import logging
 logger = logging.getLogger("SOH_OOT")

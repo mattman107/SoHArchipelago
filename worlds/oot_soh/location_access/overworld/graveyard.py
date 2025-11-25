@@ -74,7 +74,7 @@ def set_region_rules(world: "SohWorld") -> None:
         (Regions.GRAVEYARD_COMPOSERS_GRAVE,
          lambda bundle: can_use(Items.ZELDAS_LULLABY, bundle), SOHGrottoEntranceNames.GRAVEYARD_COMPOSERS_GRAVE_ENTRANCE, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE),
         (Regions.GRAVEYARD_HEART_PIECE_GRAVE,
-         lambda bundle: is_adult(bundle) or at_night(bundle), SOHGrottoEntranceNames.GRAVEYARD_HEART_PIECE_GRAVE_ENTRANCE, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE),
+         lambda bundle: is_adult(bundle) or at_night(bundle), SOHGrottoEntranceNames.GRAVEYARD_HEART_PIECE_GRAVE_ENTRANCE, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ADULT_ONLY),
         (Regions.GRAVEYARD_DAMPES_GRAVE, lambda bundle: is_adult(bundle), SOHGrottoEntranceNames.GRAVEYARD_DAMPES_GRAVE_ENTRANCE, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ADULT_ONLY),
         (Regions.GRAVEYARD_DAMPES_HOUSE, lambda bundle: is_adult(bundle)
          and can_open_overworld_door(Items.DAMPES_HUT_KEY, bundle), SOHInteriorEntranceNames.GRAVEYARD_DAMPES_HOUSE_ENTRANCE, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ADULT_ONLY),

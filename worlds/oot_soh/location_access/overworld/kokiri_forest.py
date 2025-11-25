@@ -230,7 +230,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.KF_LINKS_HOUSE, world, [
-        (Regions.KOKIRI_FOREST, lambda bundle: True, SOHSpecialInteriorExitNames.KF_LINKS_HOUSE_EXIT, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ANY_AGE)
+        (Regions.KOKIRI_FOREST, lambda bundle: True, SOHSpecialInteriorExitNames.KF_LINKS_HOUSE_EXIT, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.BOTH_AGE)
     ])
 
     # KF Mido's House
