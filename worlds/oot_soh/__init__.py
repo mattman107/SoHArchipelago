@@ -20,6 +20,7 @@ from settings import Group, Bool
 from Options import OptionError
 from .LogicHelpers import wallet_capacities
 from .EntranceShuffle import randomize_entrances_soh, on_connect_soh, randomize_soh_one_way_entrances
+from .location_access.overworld.graveyard import connect_dampes_grave_windmill
 
 import logging
 logger = logging.getLogger("SOH_OOT")
@@ -289,6 +290,9 @@ class SohWorld(World):
         if len(entrances_to_shuffle) > 0:
             randomize_entrances_soh(
                     self, entrances_to_shuffle, on_connect_soh, coupled)
+
+        # Connect Dampes After randomization so GER doesn't get any funny ideas
+        connect_dampes_grave_windmill(self)
 
         return super().connect_entrances()
 

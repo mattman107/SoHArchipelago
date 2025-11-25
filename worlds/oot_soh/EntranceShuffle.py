@@ -39,7 +39,7 @@ mixed_group_lookup = {group: [all for all in (SOHEntranceGroups.OTHER, SOHEntran
                                                             
 
 # This is allowing us to brute force the problem of GER failing. May be a necessary evil as it doesn't do swap or automatic retries itself.
-OOT_SOH_GER_RETRIES_AMOUNT: int = 50
+OOT_SOH_GER_RETRIES_AMOUNT: int = 10
 
 def get_target_groups(group: int) -> list[int]:
     type = group & SOHEntranceGroups.TYPE_MASK

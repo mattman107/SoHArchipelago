@@ -174,8 +174,9 @@ def set_region_rules(world: "SohWorld") -> None:
     # Connections
     connect_regions(Regions.GRAVEYARD_DAMPES_GRAVE, world, [
         (Regions.THE_GRAVEYARD, lambda bundle: True, SOHGrottoExitNames.GRAVEYARD_DAMPES_GRAVE_EXIT, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ADULT),
-        (Regions.KAK_WINDMILL, lambda bundle: (is_adult(bundle) and can_use(
-            Items.SONG_OF_TIME, bundle)) or (is_child(bundle) and can_ground_jump(bundle)))
+        # Doing this connection in __init__ connect_entrances for ER reasons
+        # (Regions.KAK_WINDMILL, lambda bundle: (is_adult(bundle) and can_use(
+        #     Items.SONG_OF_TIME, bundle)) or (is_child(bundle) and can_ground_jump(bundle)))
     ])
 
     # The Graveyard Dampes House
@@ -202,4 +203,9 @@ def set_region_rules(world: "SohWorld") -> None:
         (Regions.THE_GRAVEYARD, lambda bundle: True),
         (Regions.SHADOW_TEMPLE_ENTRYWAY, lambda bundle: can_use(Items.DINS_FIRE, bundle) or (can_do_trick(Tricks.GY_SHADOW_FIRE_ARROWS, bundle) and is_adult(
             bundle) and can_use(Items.FIRE_ARROW, bundle)), SOHDungeonEntranceNames.SHADOW_TEMPLE_DUNGEON_ENTRANCE, SOHEntranceGroups.DUNGEON_ENTRANCE | SOHEntranceGroups.ANY_AGE, EntranceType.TWO_WAY)
+    ])
+
+def connect_dampes_grave_windmill(world: "SohWorld"):
+    connect_regions(Regions.GRAVEYARD_DAMPES_GRAVE, world, [
+        (Regions.KAK_WINDMILL, lambda bundle: (is_adult(bundle) and can_use(Items.SONG_OF_TIME, bundle)) or (is_child(bundle) and can_ground_jump(bundle)))
     ])
