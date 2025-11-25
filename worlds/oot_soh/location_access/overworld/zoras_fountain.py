@@ -55,7 +55,7 @@ def set_region_rules(world: "SohWorld") -> None:
         (Regions.JABU_JABUS_BELLY_ENTRYWAY, lambda bundle: is_child(bundle) and (can_use(Items.BOTTLE_WITH_FISH, bundle)
          or world.options.jabu_jabu.value == 1), SOHDungeonEntranceNames.JABU_JABUS_DUNGEON_ENTRANCE, SOHEntranceGroups.DUNGEON_ENTRANCE | SOHEntranceGroups.CHILD_ONLY, EntranceType.TWO_WAY),
         (Regions.ZF_GREAT_FAIRY_FOUNTAIN, lambda bundle: has_explosives(bundle) or (can_do_trick(
-            Tricks.ZF_GREAT_FAIRY_WITHOUT_EXPLOSIVES, bundle) and can_use(Items.MEGATON_HAMMER, bundle) and can_use(Items.SILVER_GAUNTLETS, bundle)))
+            Tricks.ZF_GREAT_FAIRY_WITHOUT_EXPLOSIVES, bundle) and can_use(Items.MEGATON_HAMMER, bundle) and can_use(Items.SILVER_GAUNTLETS, bundle)), SOHInteriorEntranceNames.ZF_GREAT_FAIRY_FOUNTAIN_ENTRANCE, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ANY_AGE)
     ])
 
     # Zora's Fountains Icebergs
@@ -170,5 +170,5 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.ZF_GREAT_FAIRY_FOUNTAIN, world, [
-        (Regions.ZORAS_FOUNTAIN, lambda bundle: True)
+        (Regions.ZORAS_FOUNTAIN, lambda bundle: True, SOHInteriorExitNames.ZF_GREAT_FAIRY_FOUNTAIN_EXIT, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ANY_AGE)
     ])

@@ -165,7 +165,7 @@ def set_region_rules(world: "SohWorld") -> None:
              and (can_use(Items.SCARECROW, bundle)
                   or has_item(LocalEvents.LH_BEAN_PLANTED, bundle)))),
         (Regions.LH_LAB, lambda bundle: can_open_overworld_door(
-            Items.HYLIA_LAB_KEY, bundle)),
+            Items.HYLIA_LAB_KEY, bundle), SOHInteriorEntranceNames.LH_LAB_ENTRANCE, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ANY_AGE),
         (Regions.LH_FROM_WATER_TEMPLE, lambda bundle: True),
         (Regions.LH_GROTTO, lambda bundle: True, SOHGrottoEntranceNames.LH_GROTTO_ENTRANCE, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE),
     ])
@@ -202,7 +202,7 @@ def set_region_rules(world: "SohWorld") -> None:
     connect_regions(Regions.LH_FISHING_ISLAND, world, [
         (Regions.LAKE_HYLIA, lambda bundle: has_item(Items.BRONZE_SCALE, bundle)),
         (Regions.LH_FISHING_HOLE, lambda bundle: can_open_overworld_door(
-            Items.FISHING_HOLE_KEY, bundle)),
+            Items.FISHING_HOLE_KEY, bundle), SOHInteriorEntranceNames.LH_FISHING_POND_ENTRANCE, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ANY_AGE),
     ])
 
     # LH Owl Flight
@@ -234,7 +234,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.LH_LAB, world, [
-        (Regions.LAKE_HYLIA, lambda bundle: True),
+        (Regions.LAKE_HYLIA, lambda bundle: True, SOHInteriorExitNames.LH_LAB_EXIT, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ADULT),
     ])
 
     # LH Fishing HOLE
@@ -316,7 +316,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.LH_FISHING_HOLE, world, [
-        (Regions.LH_FISHING_ISLAND, lambda bundle: True),
+        (Regions.LH_FISHING_ISLAND, lambda bundle: True, SOHInteriorExitNames.LH_FISHING_POND_EXIT, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.BOTH_AGE),
     ])
 
     # LH Grotto

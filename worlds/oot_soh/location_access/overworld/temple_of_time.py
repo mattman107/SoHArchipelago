@@ -38,7 +38,7 @@ def set_region_rules(world: "SohWorld") -> None:
     # Connections
     connect_regions(Regions.TOT_ENTRANCE, world, [
         (Regions.MARKET, lambda bundle: True),
-        (Regions.TEMPLE_OF_TIME, lambda bundle: True)
+        (Regions.TEMPLE_OF_TIME, lambda bundle: True, SOHSpecialInteriorEntranceNames.TEMPLE_OF_TIME_ENTRANCE, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ANY_AGE)
     ])
 
     # Temple of Time
@@ -49,7 +49,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.TEMPLE_OF_TIME, world, [
-        (Regions.TOT_ENTRANCE, lambda bundle: True),
+        (Regions.TOT_ENTRANCE, lambda bundle: True, SOHSpecialInteriorExitNames.TEMPLE_OF_TIME_EXIT, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.BOTH_AGE),
         (Regions.BEYOND_DOOR_OF_TIME,
          lambda bundle: world.options.door_of_time == "open" or
          (can_use(Items.SONG_OF_TIME, bundle) and

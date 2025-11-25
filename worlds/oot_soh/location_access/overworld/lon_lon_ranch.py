@@ -53,11 +53,11 @@ def set_region_rules(world: "SohWorld") -> None:
     connect_regions(Regions.LON_LON_RANCH, world, [
         (Regions.HYRULE_FIELD, lambda bundle: True),
         (Regions.LLR_TALONS_HOUSE, lambda bundle: can_open_overworld_door(
-            Items.TALONS_HOUSE_KEY, bundle)),
+            Items.TALONS_HOUSE_KEY, bundle), SOHInteriorEntranceNames.LLR_TALONS_HOUSE_ENTRANCE, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ANY_AGE),
         (Regions.LLR_STABLES, lambda bundle: can_open_overworld_door(
-            Items.STABLES_KEY, bundle)),
+            Items.STABLES_KEY, bundle), SOHInteriorEntranceNames.LLR_STABLES_ENTRANCE, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ANY_AGE),
         (Regions.LLR_TOWER, lambda bundle: can_open_overworld_door(
-            Items.BACK_TOWER_KEY, bundle)),
+            Items.BACK_TOWER_KEY, bundle), SOHInteriorEntranceNames.LLR_TOWER_ENTRANCE, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ANY_AGE),
         (Regions.LLR_GROTTO, lambda bundle: is_child(bundle), SOHGrottoEntranceNames.LLR_GROTTO_ENTRANCE, SOHEntranceGroups.GROTTO | SOHEntranceGroups.CHILD_ONLY),
     ])
 
@@ -72,7 +72,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.LLR_TALONS_HOUSE, world, [
-        (Regions.LON_LON_RANCH, lambda bundle: True)
+        (Regions.LON_LON_RANCH, lambda bundle: True, SOHInteriorExitNames.LLR_TALONS_HOUSE_EXIT, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ANY_AGE)
     ])
 
     # LLR Stables
@@ -85,7 +85,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.LLR_STABLES, world, [
-        (Regions.LON_LON_RANCH, lambda bundle: True)
+        (Regions.LON_LON_RANCH, lambda bundle: True, SOHInteriorExitNames.LLR_STABLES_EXIT, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ANY_AGE)
     ])
 
     # LLR Tower
@@ -99,7 +99,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.LLR_TOWER, world, [
-        (Regions.LON_LON_RANCH, lambda bundle: True)
+        (Regions.LON_LON_RANCH, lambda bundle: True, SOHInteriorExitNames.LLR_TOWER_EXIT, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.CHILD_ONLY)
     ])
 
     # LLR Grotto

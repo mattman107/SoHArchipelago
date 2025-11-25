@@ -82,7 +82,7 @@ def set_region_rules(world: "SohWorld") -> None:
         (Regions.GC_WOODS_WARP, lambda bundle: has_item(
             LocalEvents.GC_WOODS_WARP_OPEN, bundle)),
         (Regions.GC_SHOP, lambda bundle: (is_adult(bundle) and has_item(LocalEvents.GC_STOP_ROLLING_GORON_AS_ADULT, bundle)) or (is_child(bundle) and (
-            blast_or_smash(bundle) or has_item(Items.GORONS_BRACELET, bundle) or has_item(LocalEvents.GC_CHILD_FIRE_LIT, bundle) or can_use(Items.FAIRY_BOW, bundle)))),
+            blast_or_smash(bundle) or has_item(Items.GORONS_BRACELET, bundle) or has_item(LocalEvents.GC_CHILD_FIRE_LIT, bundle) or can_use(Items.FAIRY_BOW, bundle))), SOHInteriorEntranceNames.GC_SHOP_ENTRANCE, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ANY_AGE),
         (Regions.GC_DARUNIAS_CHAMBER, lambda bundle: (is_adult(bundle) and has_item(LocalEvents.GC_STOP_ROLLING_GORON_AS_ADULT,
          bundle)) or (is_child(bundle) and has_item(LocalEvents.GC_DARUNIAS_DOOR_OPENED_AS_CHILD, bundle))),
         (Regions.GC_GROTTO_PLATFORM, lambda bundle: is_adult(bundle) and ((can_use(Items.SONG_OF_TIME, bundle) and ((effective_health(bundle) > 2) or can_use(Items.GORON_TUNIC, bundle) or can_use(Items.LONGSHOT, bundle) or can_use(Items.NAYRUS_LOVE, bundle))) or (effective_health(
@@ -158,7 +158,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.GC_SHOP, world, [
-        (Regions.GORON_CITY, lambda bundle: True)
+        (Regions.GORON_CITY, lambda bundle: True, SOHInteriorExitNames.GC_SHOP_EXIT, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ANY_AGE)
     ])
 
     # Goron City Grotto

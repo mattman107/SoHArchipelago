@@ -89,7 +89,7 @@ def set_region_rules(world: "SohWorld") -> None:
          lambda bundle: has_item(Events.DELIVER_LETTER, bundle) or world.options.zoras_fountain.value == 2 or (
              world.options.zoras_fountain.value == 1 and is_adult(bundle)) or (
              can_do_trick(Tricks.ZD_KING_ZORA_SKIP, bundle) and is_adult(bundle))),
-        (Regions.ZD_SHOP, lambda bundle: is_child(bundle) or blue_fire(bundle)),
+        (Regions.ZD_SHOP, lambda bundle: is_child(bundle) or blue_fire(bundle), SOHInteriorEntranceNames.ZD_SHOP_ENTRANCE, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ANY_AGE),
         (Regions.ZORAS_DOMAIN_ISLAND, lambda bundle: True),
     ])
 
@@ -134,7 +134,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.ZD_SHOP, world, [
-        (Regions.ZORAS_DOMAIN, lambda bundle: True),
+        (Regions.ZORAS_DOMAIN, lambda bundle: True, SOHInteriorExitNames.ZD_SHOP_EXIT, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ANY_AGE),
     ])
 
     # ZD Storms Grotto

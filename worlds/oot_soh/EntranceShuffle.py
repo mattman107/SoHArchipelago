@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Callable
 from BaseClasses import Location, Region, Entrance
-from .Enums import SOHBossEntranceExitNames, SOHBossEntranceNames, SOHDungeonExitNames, SOHDungeonEntranceNames, Locations, SOHEntranceGroups, Regions, SOHBossWarpEntranceNames, SOHGrottoEntranceNames, SOHGrottoExitNames
+from .Enums import SOHBossEntranceExitNames, SOHBossEntranceNames, SOHDungeonExitNames, SOHDungeonEntranceNames, Locations, SOHEntranceGroups, Regions, SOHBossWarpEntranceNames, SOHGrottoEntranceNames, SOHGrottoExitNames, SOHInteriorEntranceNames, SOHInteriorExitNames, SOHSpecialInteriorEntranceNames, SOHSpecialInteriorExitNames
 from .Locations import SohLocation
 from entrance_rando import disconnect_entrance_for_randomization, randomize_entrances, bake_target_group_lookup, EntranceRandomizationError
 from entrance_rando import ERPlacementState, Entrance
@@ -28,6 +28,7 @@ default_group_lookup = {
     SOHEntranceGroups.DUNGEON_ENTRANCE: [SOHEntranceGroups.DUNGEON_ENTRANCE],
     SOHEntranceGroups.BOSS_ENTRANCE: [SOHEntranceGroups.BOSS_ENTRANCE],
     SOHEntranceGroups.GROTTO: [SOHEntranceGroups.GROTTO],
+    SOHEntranceGroups.INTERIOR: [SOHEntranceGroups.INTERIOR],
 }
 
 
@@ -38,7 +39,7 @@ mixed_group_lookup = {group: [all for all in (SOHEntranceGroups.OTHER, SOHEntran
                                                             
 
 # This is allowing us to brute force the problem of GER failing. May be a necessary evil as it doesn't do swap or automatic retries itself.
-OOT_SOH_GER_RETRIES_AMOUNT: int = 10
+OOT_SOH_GER_RETRIES_AMOUNT: int = 1000
 
 def get_target_groups(group: int) -> list[int]:
     type = group & SOHEntranceGroups.TYPE_MASK
@@ -113,7 +114,7 @@ def randomize_soh_one_way_entrances(world: "SohWorld") -> None:
         one_way_entrance_names = list()
         one_way_entrance_exit_names = list()
         # TODO This will need to be updated as we make more named entrances
-        all_named_entrances = list(SOHDungeonEntranceNames) + list(SOHDungeonExitNames) + list(SOHGrottoExitNames) + list(SOHGrottoEntranceNames) 
+        all_named_entrances = list(SOHDungeonEntranceNames) + list(SOHDungeonExitNames) + list(SOHGrottoExitNames) + list(SOHGrottoEntranceNames) + list(SOHInteriorEntranceNames) + list(SOHInteriorExitNames) + list(SOHSpecialInteriorExitNames) + list(SOHSpecialInteriorEntranceNames)
 
         if world.options.shuffle_owl_drop_entrances:
             one_way_entrance_names += [Regions.LH_OWL_FLIGHT, Regions.DMT_OWL_FLIGHT]
@@ -222,7 +223,11 @@ def randomize_entrances_soh(world: "SohWorld", entrances_to_shuffle: set[SOHBoss
 
 
 # This should probably be double checked by someone who knows how to properly remove a location from a region and give it a new parent region
-def on_connect_soh_sheik_at_colossus(er_state: ERPlacementState, placed_exits: list[Entrance], paired_entrances: list[Entrance]) -> bool:
+def on_connect_soh(er_state: ERPlacementState, placed_exits: list[Entrance], paired_entrances: list[Entrance]) -> bool:
+    # Force a rescan of all reachable regions 
+    er_state.collection_state._soh_stale[er_state.world.player] = True
+    
+    # Sheik at colossus logic fix
     if er_state.world.options.decouple_entrances and len(paired_entrances) >= 2 and paired_entrances[1].name == SOHDungeonEntranceNames.SPIRIT_TEMPLE_DUNGEON_ENTRNACE:
         world: SohWorld = er_state.world
         def locationRule(bundle): return True

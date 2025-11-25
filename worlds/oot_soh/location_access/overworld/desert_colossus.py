@@ -59,7 +59,7 @@ def set_region_rules(world: "SohWorld") -> None:
         (Regions.DESERT_COLOSSUS_OASIS, lambda bundle: can_use(Items.SONG_OF_STORMS, bundle) and (
             has_item(Items.BRONZE_SCALE, bundle) or can_use(Items.IRON_BOOTS, bundle))),
         (Regions.COLOSSUS_GREAT_FAIRY_FOUNTAIN,
-         lambda bundle: has_explosives(bundle)),
+         lambda bundle: has_explosives(bundle), SOHInteriorEntranceNames.COLOSSUS_GREAT_FAIRY_FOUNTAIN_ENTRANCE, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ANY_AGE),
         (Regions.SPIRIT_TEMPLE_ENTRYWAY, lambda bundle: True, SOHDungeonEntranceNames.SPIRIT_TEMPLE_DUNGEON_ENTRNACE,
          SOHEntranceGroups.DUNGEON_ENTRANCE | SOHEntranceGroups.ANY_AGE, EntranceType.TWO_WAY),
         (Regions.WASTELAND_NEAR_COLOSSUS, lambda bundle: True),
@@ -108,7 +108,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.COLOSSUS_GREAT_FAIRY_FOUNTAIN, world, [
-        (Regions.DESERT_COLOSSUS, lambda bundle: True)
+        (Regions.DESERT_COLOSSUS, lambda bundle: True, SOHInteriorExitNames.COLOSSUS_GREAT_FAIRY_FOUNTAIN_EXIT, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ANY_AGE)
     ])
 
     # Desert Colossus Great Fairy Fountain

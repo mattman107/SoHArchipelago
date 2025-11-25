@@ -19,7 +19,7 @@ from .UniversalTracker import setup_options_from_slot_data
 from settings import Group, Bool
 from Options import OptionError
 from .LogicHelpers import wallet_capacities
-from .EntranceShuffle import randomize_entrances_soh, on_connect_soh_sheik_at_colossus, randomize_soh_one_way_entrances
+from .EntranceShuffle import randomize_entrances_soh, on_connect_soh, randomize_soh_one_way_entrances
 from entrance_rando import bake_target_group_lookup
 
 import logging
@@ -249,10 +249,10 @@ class SohWorld(World):
             if self.options.shuffle_boss_entrances == "age_restricted":
                 randomize_entrances_soh(self, entrances_to_shuffle, ageRestricted=True)
                 entrances_to_shuffle.clear()
-            else:
-                # Need this else here. Mixed entrances doesn't work for entrances locked behind another yet. Boss entrances are behind dungeon entrances
-                randomize_entrances_soh(self, entrances_to_shuffle)
-                entrances_to_shuffle.clear()
+            # else:
+            #     # Need this else here. Mixed entrances doesn't work for entrances locked behind another yet. Boss entrances are behind dungeon entrances
+            #     randomize_entrances_soh(self, entrances_to_shuffle)
+            #     entrances_to_shuffle.clear()
 
         # Grotto Entrances
         if self.options.shuffle_grotto_entrances:
@@ -260,6 +260,21 @@ class SohWorld(World):
                     entrances_to_shuffle.add(entranceName)
 
             for entranceName in SOHGrottoEntranceNames:
+                    entrances_to_shuffle.add(entranceName)
+
+        # Interior Entrances
+        if self.options.shuffle_interior_entrances:
+            if self.options.shuffle_interior_entrances == "all":
+                for entranceName in SOHSpecialInteriorExitNames:
+                    entrances_to_shuffle.add(entranceName)
+
+                for entranceName in SOHSpecialInteriorEntranceNames:
+                        entrances_to_shuffle.add(entranceName)
+                        
+            for entranceName in SOHInteriorExitNames:
+                    entrances_to_shuffle.add(entranceName)
+
+            for entranceName in SOHInteriorEntranceNames:
                     entrances_to_shuffle.add(entranceName)
 
         # Dungeon Entrances
@@ -274,7 +289,7 @@ class SohWorld(World):
 
         if len(entrances_to_shuffle) > 0:
             randomize_entrances_soh(
-                    self, entrances_to_shuffle, on_connect_soh_sheik_at_colossus, coupled)
+                    self, entrances_to_shuffle, on_connect_soh, coupled)
 
         return super().connect_entrances()
 

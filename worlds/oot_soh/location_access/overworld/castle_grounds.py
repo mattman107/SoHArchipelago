@@ -68,7 +68,7 @@ def set_region_rules(world: "SohWorld") -> None:
     # Connections
     connect_regions(Regions.HYRULE_CASTLE_GROUNDS, world, [
         (Regions.CASTLE_GROUNDS, lambda bundle: True),
-        (Regions.HC_GREAT_FAIRY_FOUNTAIN, lambda bundle: blast_or_smash(bundle)),
+        (Regions.HC_GREAT_FAIRY_FOUNTAIN, lambda bundle: blast_or_smash(bundle), SOHInteriorEntranceNames.HC_GREAT_FAIRY_FOUNTAIN_ENTRANCE, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.CHILD_ONLY),
         (Regions.HC_STORMS_GROTTO, lambda bundle: can_open_storms_grotto(bundle), SOHGrottoEntranceNames.HC_STORMS_GROTTO_ENTRANCE, SOHEntranceGroups.GROTTO | SOHEntranceGroups.CHILD_ONLY)
     ])
     if not world.options.skip_child_zelda:
@@ -103,7 +103,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.HC_GREAT_FAIRY_FOUNTAIN, world, [
-        (Regions.CASTLE_GROUNDS, lambda bundle: True)
+        (Regions.CASTLE_GROUNDS, lambda bundle: True, SOHInteriorExitNames.HC_GREAT_FAIRY_FOUNTAIN_EXIT, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ANY_AGE)
     ])
 
     # Hyrule Castle Storms Grotto
@@ -168,7 +168,7 @@ def set_region_rules(world: "SohWorld") -> None:
     connect_regions(Regions.GANONS_CASTLE_GROUNDS, world, [
         (Regions.CASTLE_GROUNDS, lambda bundle: at_night(bundle)),
         (Regions.OGC_GREAT_FAIRY_FOUNTAIN, lambda bundle: can_use(
-            Items.GOLDEN_GAUNTLETS, bundle) and at_night(bundle)),
+            Items.GOLDEN_GAUNTLETS, bundle) and at_night(bundle), SOHInteriorEntranceNames.OGC_GREAT_FAIRY_FOUNTAIN_ENTRANCE, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ADULT_ONLY),
         (Regions.GANONS_CASTLE_LEDGE, lambda bundle: has_item(
             LocalEvents.HC_OGC_RAINBOW_BRIDGE_BUILT, bundle))
     ])
@@ -181,7 +181,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.OGC_GREAT_FAIRY_FOUNTAIN, world, [
-        (Regions.CASTLE_GROUNDS, lambda bundle: True)
+        (Regions.CASTLE_GROUNDS, lambda bundle: True, SOHInteriorExitNames.OGC_GREAT_FAIRY_FOUNTAIN_EXIT, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ANY_AGE)
     ])
 
     # Deviation from Ship, but makes ER easier

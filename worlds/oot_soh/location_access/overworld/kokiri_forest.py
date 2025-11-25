@@ -167,12 +167,12 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.KOKIRI_FOREST, world, [
-        (Regions.KF_LINKS_HOUSE, lambda bundle: True),
-        (Regions.KF_MIDOS_HOUSE, lambda bundle: True),
-        (Regions.KF_SARIAS_HOUSE, lambda bundle: True),
-        (Regions.KF_HOUSE_OF_TWINS, lambda bundle: True),
-        (Regions.KF_KNOW_IT_ALL_HOUSE, lambda bundle: True),
-        (Regions.KF_KOKIRI_SHOP, lambda bundle: True),
+        (Regions.KF_LINKS_HOUSE, lambda bundle: True, SOHSpecialInteriorEntranceNames.KF_LINKS_HOUSE_ENTRANCE, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ANY_AGE),
+        (Regions.KF_MIDOS_HOUSE, lambda bundle: True, SOHInteriorEntranceNames.KF_MIDOS_HOUSE_ENTRANCE, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ANY_AGE),
+        (Regions.KF_SARIAS_HOUSE, lambda bundle: True, SOHInteriorEntranceNames.KF_SARIAS_HOUSE_ENTRANCE, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ANY_AGE),
+        (Regions.KF_HOUSE_OF_TWINS, lambda bundle: True, SOHInteriorEntranceNames.KF_TWINS_HOUSE_ENTRANCE, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ANY_AGE),
+        (Regions.KF_KNOW_IT_ALL_HOUSE, lambda bundle: True, SOHInteriorEntranceNames.KF_KNOW_IT_ALL_HOUSE_ENTRANCE, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ANY_AGE),
+        (Regions.KF_KOKIRI_SHOP, lambda bundle: True, SOHInteriorEntranceNames.KF_KOKIRI_SHOP_ENTRANCE, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ANY_AGE),
         (Regions.KF_OUTSIDE_DEKU_TREE, lambda bundle: (is_adult(bundle) and
                                                        (can_pass_enemy(bundle, Enemies.BIG_SKULLTULA) or
                                                         has_item(Events.FOREST_TEMPLE_COMPLETED, bundle)))
@@ -230,7 +230,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.KF_LINKS_HOUSE, world, [
-        (Regions.KOKIRI_FOREST, lambda bundle: True)
+        (Regions.KOKIRI_FOREST, lambda bundle: True, SOHSpecialInteriorExitNames.KF_LINKS_HOUSE_EXIT, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ANY_AGE)
     ])
 
     # KF Mido's House
@@ -243,7 +243,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.KF_MIDOS_HOUSE, world, [
-        (Regions.KOKIRI_FOREST, lambda bundle: True)
+        (Regions.KOKIRI_FOREST, lambda bundle: True, SOHInteriorExitNames.KF_MIDOS_HOUSE_EXIT, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ANY_AGE)
     ])
 
     # KF Saria's House
@@ -256,7 +256,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.KF_SARIAS_HOUSE, world, [
-        (Regions.KOKIRI_FOREST, lambda bundle: True)
+        (Regions.KOKIRI_FOREST, lambda bundle: True, SOHInteriorExitNames.KF_SARIAS_HOUSE_EXIT, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ANY_AGE)
     ])
 
     # KF House of Twins
@@ -268,7 +268,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.KF_HOUSE_OF_TWINS, world, [
-        (Regions.KOKIRI_FOREST, lambda bundle: True)
+        (Regions.KOKIRI_FOREST, lambda bundle: True, SOHInteriorExitNames.KF_TWINS_HOUSE_EXIT, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ANY_AGE)
     ])
 
     # KF Know it All House
@@ -280,7 +280,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.KF_KNOW_IT_ALL_HOUSE, world, [
-        (Regions.KOKIRI_FOREST, lambda bundle: True)
+        (Regions.KOKIRI_FOREST, lambda bundle: True, SOHInteriorExitNames.KF_KNOW_IT_ALL_HOUSE_EXIT, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ANY_AGE)
     ])
 
     # KF Kokiri Shop
@@ -297,7 +297,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.KF_KOKIRI_SHOP, world, [
-        (Regions.KOKIRI_FOREST, lambda bundle: True)
+        (Regions.KOKIRI_FOREST, lambda bundle: True, SOHInteriorExitNames.KF_KOKIRI_SHOP_EXIT, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ANY_AGE)
     ])
 
     # KF Storms Grotto

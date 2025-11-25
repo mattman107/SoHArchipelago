@@ -972,13 +972,12 @@ class DecoupleEntrances(Toggle):
     display_name = "Decouple Entrances"
     visibility = Visibility.none
 
-#currently doesn't work with entrances that are behind other randomized entrances
+
 class MixedEntrancePools(Toggle):
     """
     Shuffle entrances into a mixed pool instead of separate ones. Has no effect on pools whose entrances aren't shuffled, and "Shuffle Boss Entrances" must be set to "Full" to include them.
     """
     display_name = "Mixed Entrances Pools"
-    visibility = Visibility.none
 
 
 @dataclass

@@ -22,7 +22,7 @@ def set_region_rules(world: "SohWorld") -> None:
             is_adult(bundle) or at_day(bundle))),
         (Regions.MARKET, lambda bundle: True),
         (Regions.MARKET_GUARD_HOUSE, lambda bundle: can_open_overworld_door(
-            Items.GUARD_HOUSE_KEY, bundle))
+            Items.GUARD_HOUSE_KEY, bundle), SOHInteriorEntranceNames.MARKET_GUARD_HOUSE_ENTRANCE, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ANY_AGE)
     ])
 
     # Market
@@ -59,17 +59,17 @@ def set_region_rules(world: "SohWorld") -> None:
         (Regions.TOT_ENTRANCE, lambda bundle: True),
         (Regions.CASTLE_GROUNDS, lambda bundle: True),
         (Regions.MARKET_BAZAAR, lambda bundle: (is_child(bundle) and at_day(
-            bundle) and can_open_overworld_door(Items.MARKET_BAZAAR_KEY, bundle))),
+            bundle) and can_open_overworld_door(Items.MARKET_BAZAAR_KEY, bundle)), SOHInteriorEntranceNames.MARKET_BAZAAR_ENTRANCE, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.CHILD_ONLY),
         (Regions.MARKET_MASK_SHOP, lambda bundle: (is_child(bundle) and at_day(
-            bundle) and can_open_overworld_door(Items.MASK_SHOP_KEY, bundle))),
+            bundle) and can_open_overworld_door(Items.MASK_SHOP_KEY, bundle)), SOHInteriorEntranceNames.MARKET_MASK_SHOP_ENTRANCE, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.CHILD_ONLY),
         (Regions.MARKET_SHOOTING_GALLERY, lambda bundle: (is_child(bundle) and at_day(
-            bundle) and can_open_overworld_door(Items.MARKET_SHOOTING_GALLERY_KEY, bundle))),
+            bundle) and can_open_overworld_door(Items.MARKET_SHOOTING_GALLERY_KEY, bundle)), SOHInteriorEntranceNames.MARKET_SHOOTING_GALLERY_ENTRANCE, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.CHILD_ONLY),
         (Regions.MARKET_BOMBCHU_BOWLING, lambda bundle: (is_child(bundle)
-         and can_open_overworld_door(Items.BOMBCHU_BOWLING_KEY, bundle))),
+         and can_open_overworld_door(Items.BOMBCHU_BOWLING_KEY, bundle)), SOHInteriorEntranceNames.MARKET_BOMBCHU_BOWLING_ENTRANCE, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.CHILD_ONLY),
         (Regions.MARKET_TREASURE_CHEST_GAME, lambda bundle: (is_child(bundle) and at_night(
-            bundle) and can_open_overworld_door(Items.TREASURE_CHEST_GAME_BUILDING_KEY, bundle))),
+            bundle) and can_open_overworld_door(Items.TREASURE_CHEST_GAME_BUILDING_KEY, bundle)), SOHInteriorEntranceNames.MARKET_TREASURE_CHEST_GAME_ENTRANCE, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.CHILD_ONLY),
         (Regions.MARKET_POTION_SHOP, lambda bundle: (is_child(bundle) and at_day(
-            bundle) and can_open_overworld_door(Items.MARKET_POTION_SHOP_KEY, bundle))),
+            bundle) and can_open_overworld_door(Items.MARKET_POTION_SHOP_KEY, bundle)), SOHInteriorEntranceNames.MARKET_POTION_SHOP_ENTRANCE, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.CHILD_ONLY),
         (Regions.MARKET_BACK_ALLEY, lambda bundle: is_child(bundle))
     ])
 
@@ -78,11 +78,11 @@ def set_region_rules(world: "SohWorld") -> None:
     connect_regions(Regions.MARKET_BACK_ALLEY, world, [
         (Regions.MARKET, lambda bundle: True),
         (Regions.MARKET_BOMBCHU_SHOP, lambda bundle: (at_night(bundle)
-         and can_open_overworld_door(Items.BOMBCHU_SHOP_KEY, bundle))),
+         and can_open_overworld_door(Items.BOMBCHU_SHOP_KEY, bundle)), SOHInteriorEntranceNames.MARKET_BOMBCHU_SHOP_ENTRANCE, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.CHILD_ONLY),
         (Regions.MARKET_DOG_LADY_HOUSE, lambda bundle: (
             can_open_overworld_door(Items.RICHARDS_HOUSE_KEY, bundle))),
         (Regions.MARKET_MAN_IN_GREEN_HOUSE, lambda bundle: (at_night(bundle)
-         and can_open_overworld_door(Items.ALLEY_HOUSE_KEY, bundle)))
+         and can_open_overworld_door(Items.ALLEY_HOUSE_KEY, bundle)), SOHInteriorEntranceNames.MARKET_MAN_IN_GREEN_HOUSE_ENTRANCE, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.CHILD_ONLY)
     ])
 
     # Market Guard House
@@ -221,7 +221,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.MARKET_GUARD_HOUSE, world, [
-        (Regions.MARKET_ENTRANCE, lambda bundle: True)
+        (Regions.MARKET_ENTRANCE, lambda bundle: True, SOHInteriorExitNames.MARKET_GUARD_HOUSE_EXIT, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.BOTH_AGE)
     ])
 
     # Market Bazaar
@@ -238,7 +238,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.MARKET_BAZAAR, world, [
-        (Regions.MARKET, lambda bundle: True)
+        (Regions.MARKET, lambda bundle: True, SOHInteriorExitNames.MARKET_BAZAAR_EXIT, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ANY_AGE)
     ])
 
     # Market Mask Shop
@@ -257,7 +257,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.MARKET_MASK_SHOP, world, [
-        (Regions.MARKET, lambda bundle: True)
+        (Regions.MARKET, lambda bundle: True, SOHInteriorExitNames.MARKET_MASK_SHOP_EXIT, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ANY_AGE)
     ])
 
     # Market Shooting Gallery
@@ -268,7 +268,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.MARKET_SHOOTING_GALLERY, world, [
-        (Regions.MARKET, lambda bundle: True)
+        (Regions.MARKET, lambda bundle: True, SOHInteriorExitNames.MARKET_SHOOTING_GALLERY_EXIT, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.CHILD_ONLY)
     ])
 
     # Market Bombchu Bowling
@@ -286,7 +286,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.MARKET_BOMBCHU_BOWLING, world, [
-        (Regions.MARKET, lambda bundle: True)
+        (Regions.MARKET, lambda bundle: True, SOHInteriorExitNames.MARKET_BOMBCHU_BOWLING_EXIT, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ANY_AGE)
     ])
 
     # Market Potion Shop
@@ -303,7 +303,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.MARKET_POTION_SHOP, world, [
-        (Regions.MARKET, lambda bundle: True)
+        (Regions.MARKET, lambda bundle: True, SOHInteriorExitNames.MARKET_POTION_SHOP_EXIT, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ANY_AGE)
     ])
 
     # Market Treasure Chest Game
@@ -314,7 +314,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.MARKET_TREASURE_CHEST_GAME, world, [
-        (Regions.MARKET, lambda bundle: True)
+        (Regions.MARKET, lambda bundle: True, SOHInteriorExitNames.MARKET_TREASURE_CHEST_GAME_EXIT, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ANY_AGE)
     ])
 
     # Market Bombchu Shop
@@ -331,7 +331,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.MARKET_BOMBCHU_SHOP, world, [
-        (Regions.MARKET_BACK_ALLEY, lambda bundle: True)
+        (Regions.MARKET_BACK_ALLEY, lambda bundle: True, SOHInteriorExitNames.MARKET_BOMBCHU_SHOP_EXIT, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ANY_AGE)
     ])
 
     # Market Dog Lady House
@@ -359,5 +359,5 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.MARKET_MAN_IN_GREEN_HOUSE, world, [
-        (Regions.MARKET_BACK_ALLEY, lambda bundle: True)
+        (Regions.MARKET_BACK_ALLEY, lambda bundle: True, SOHInteriorExitNames.MARKET_MAN_IN_GREEN_HOUSE_EXIT, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ANY_AGE)
     ])

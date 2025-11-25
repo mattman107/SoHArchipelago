@@ -77,7 +77,7 @@ def set_region_rules(world: "SohWorld") -> None:
          lambda bundle: is_adult(bundle) or at_night(bundle), SOHGrottoEntranceNames.GRAVEYARD_HEART_PIECE_GRAVE_ENTRANCE, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE),
         (Regions.GRAVEYARD_DAMPES_GRAVE, lambda bundle: is_adult(bundle), SOHGrottoEntranceNames.GRAVEYARD_DAMPES_GRAVE_ENTRANCE, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ADULT_ONLY),
         (Regions.GRAVEYARD_DAMPES_HOUSE, lambda bundle: is_adult(bundle)
-         and can_open_overworld_door(Items.DAMPES_HUT_KEY, bundle)),
+         and can_open_overworld_door(Items.DAMPES_HUT_KEY, bundle), SOHInteriorEntranceNames.GRAVEYARD_DAMPES_HOUSE_ENTRANCE, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ADULT_ONLY),
         (Regions.KAKARIKO_VILLAGE, lambda bundle: True),
         (Regions.GRAVEYARD_WARP_PAD_REGION, lambda bundle: False)
     ])
@@ -181,7 +181,7 @@ def set_region_rules(world: "SohWorld") -> None:
     # The Graveyard Dampes House
     # Connections
     connect_regions(Regions.GRAVEYARD_DAMPES_HOUSE, world, [
-        (Regions.THE_GRAVEYARD, lambda bundle: True)
+        (Regions.THE_GRAVEYARD, lambda bundle: True, SOHInteriorExitNames.GRAVEYARD_DAMPES_HOUSE_EXIT, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ANY_AGE)
     ])
 
     # The Graveyard Warp Pad Region

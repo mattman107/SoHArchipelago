@@ -99,7 +99,7 @@ def set_region_rules(world: "SohWorld") -> None:
         (Regions.DMC_UPPER_LOCAL, lambda bundle: True),
         (Regions.DMT_OWL_FLIGHT, lambda bundle: is_child(bundle)),
         (Regions.DMT_COW_GROTTO, lambda bundle: blast_or_smash(bundle), SOHGrottoEntranceNames.DMT_COW_GROTTO_ENTRANCE, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE),
-        (Regions.DMT_GREAT_FAIRY_FOUNTAIN, lambda bundle: blast_or_smash(bundle))
+        (Regions.DMT_GREAT_FAIRY_FOUNTAIN, lambda bundle: blast_or_smash(bundle), SOHInteriorEntranceNames.DMT_GREAT_FAIRY_FOUNTAIN_ENTRANCE, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ANY_AGE)
     ])
 
     # Death Mountain Trail Owl Flight
@@ -178,5 +178,5 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.DMT_GREAT_FAIRY_FOUNTAIN, world, [
-        (Regions.DEATH_MOUNTAIN_SUMMIT, lambda bundle: True)
+        (Regions.DEATH_MOUNTAIN_SUMMIT, lambda bundle: True, SOHInteriorExitNames.DMT_GREAT_FAIRY_FOUNTAIN_EXIT, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ANY_AGE)
     ])

@@ -150,7 +150,7 @@ def set_region_rules(world: "SohWorld") -> None:
          lambda bundle: is_child(bundle) or can_use(Items.EPONA, bundle) or can_use(Items.LONGSHOT,
                                                                                     bundle) or world.options.fortress_carpenters.value == 2 or has_item(
              Events.RESCUED_ALL_CARPENTERS, bundle)),
-        (Regions.GV_CARPENTER_TENT, lambda bundle: is_adult(bundle)),
+        (Regions.GV_CARPENTER_TENT, lambda bundle: is_adult(bundle), SOHInteriorEntranceNames.GV_CARPENTER_TENT_ENTRANCE, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ADULT_ONLY),
         (Regions.GV_STORMS_GROTTO, lambda bundle: is_adult(
             bundle) and can_open_storms_grotto(bundle), SOHGrottoEntranceNames.GV_STORMS_GROTTO_ENTRANCE, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ADULT_ONLY),
         (Regions.GV_CRATE_LEDGE,
@@ -160,7 +160,7 @@ def set_region_rules(world: "SohWorld") -> None:
     # GV Carpenter Tent
     # Connections
     connect_regions(Regions.GV_CARPENTER_TENT, world, [
-        (Regions.GV_FORTRESS_SIDE, lambda bundle: True),
+        (Regions.GV_FORTRESS_SIDE, lambda bundle: True, SOHInteriorExitNames.GV_CARPENTER_TENT_EXIT, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ANY_AGE),
     ])
 
     # GV Octorok Grotto

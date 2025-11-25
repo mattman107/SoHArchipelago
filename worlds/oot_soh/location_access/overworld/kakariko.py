@@ -124,18 +124,18 @@ def set_region_rules(world: "SohWorld") -> None:
     connect_regions(Regions.KAKARIKO_VILLAGE, world, [
         (Regions.HYRULE_FIELD, lambda bundle: True),
         (Regions.KAK_CARPENTER_BOSS_HOUSE,
-         lambda bundle: can_open_overworld_door(Items.BOSS_HOUSE_KEY, bundle)),
+         lambda bundle: can_open_overworld_door(Items.BOSS_HOUSE_KEY, bundle), SOHInteriorEntranceNames.KAK_CARPENTER_BOSS_HOUSE_ENTRANCE, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ANY_AGE),
         (Regions.KAK_HOUSE_OF_SKULLTULA, lambda bundle: can_open_overworld_door(
-            Items.SKULLTULA_HOUSE_KEY, bundle)),
+            Items.SKULLTULA_HOUSE_KEY, bundle), SOHInteriorEntranceNames.KAK_HOUSE_OF_SKULLTULA_ENTRANCE, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ANY_AGE),
         (Regions.KAK_IMPAS_HOUSE, lambda bundle: can_open_overworld_door(
-            Items.IMPAS_HOUSE_KEY, bundle)),
+            Items.IMPAS_HOUSE_KEY, bundle), SOHInteriorEntranceNames.KAK_IMPAS_HOUSE_ENTRANCE, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ANY_AGE),
         (Regions.KAK_WINDMILL, lambda bundle: can_open_overworld_door(
-            Items.WINDMILL_KEY, bundle)),
+            Items.WINDMILL_KEY, bundle), SOHSpecialInteriorEntranceNames.KAK_WINDMILL_ENTRANCE, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ANY_AGE),
         (Regions.KAK_BAZAAR,
-         lambda bundle: is_adult(bundle) and at_day(bundle) and can_open_overworld_door(Items.KAK_BAZAAR_KEY, bundle)),
+         lambda bundle: is_adult(bundle) and at_day(bundle) and can_open_overworld_door(Items.KAK_BAZAAR_KEY, bundle), SOHInteriorEntranceNames.KAK_BAZAAR_ENTRANCE, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ADULT_ONLY),
         (Regions.KAK_SHOOTING_GALLERY,
          lambda bundle: is_adult(bundle) and at_day(bundle) and can_open_overworld_door(Items.KAK_SHOOTING_GALLERY_KEY,
-                                                                                        bundle)),
+                                                                                        bundle), SOHInteriorEntranceNames.KAK_SHOOTING_GALLERY_ENTRANCE, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ADULT_ONLY),
         (Regions.KAK_WELL,
          lambda bundle: is_adult(bundle) or has_item(Events.DRAIN_WELL, bundle) or can_use(Items.IRON_BOOTS,
                                                                                            bundle) or (
@@ -143,7 +143,7 @@ def set_region_rules(world: "SohWorld") -> None:
                  bundle) and has_item(Items.BRONZE_SCALE, bundle) and can_jump_slash(bundle))),
         (Regions.KAK_POTION_SHOP_FRONT,
          lambda bundle: (at_day(bundle) or is_child(bundle)) and can_open_overworld_door(
-             Items.KAK_POTION_SHOP_KEY, bundle)),
+             Items.KAK_POTION_SHOP_KEY, bundle), SOHSpecialInteriorEntranceNames.KAK_POTION_SHOP_FRONT_ENTRANCE, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ANY_AGE),
         (Regions.KAK_REDEAD_GROTTO, lambda bundle: can_open_bomb_grotto(bundle), SOHGrottoEntranceNames.KAK_REDEAD_GROTTO_ENTRANCE, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE),
         (Regions.KAK_IMPAS_LEDGE, lambda bundle: (is_child(bundle) and at_day(bundle)) or (
             is_adult(bundle) and can_do_trick(Tricks.VISIBLE_COLLISION, bundle))),
@@ -166,7 +166,7 @@ def set_region_rules(world: "SohWorld") -> None:
     # Kak Impas Ledge
     # Connections
     connect_regions(Regions.KAK_IMPAS_LEDGE, world, [
-        (Regions.KAK_IMPAS_HOUSE_BACK, lambda bundle: True),
+        (Regions.KAK_IMPAS_HOUSE_BACK, lambda bundle: True, SOHInteriorEntranceNames.KAK_IMPAS_HOUSE_BACK_ENTRANCE, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ADULT_ONLY),
         (Regions.KAKARIKO_VILLAGE, lambda bundle: True),
     ])
 
@@ -220,10 +220,10 @@ def set_region_rules(world: "SohWorld") -> None:
         (Regions.KAKARIKO_VILLAGE, lambda bundle: True),
         (Regions.KAK_OPEN_GROTTO, lambda bundle: True, SOHGrottoEntranceNames.KAK_OPEN_GROTTO_ENTRANCE, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE),
         (Regions.KAK_GRANNYS_POTION_SHOP,
-         lambda bundle: is_adult(bundle) and can_open_overworld_door(Items.GRANNYS_POTION_SHOP_KEY, bundle)),
+         lambda bundle: is_adult(bundle) and can_open_overworld_door(Items.GRANNYS_POTION_SHOP_KEY, bundle), SOHInteriorEntranceNames.KAK_ODD_POTION_BUILDING_ENTRANCE, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ADULT_ONLY),
         (Regions.KAK_POTION_SHOP_BACK,
          lambda bundle: is_adult(bundle) and at_day(bundle) and can_open_overworld_door(Items.KAK_POTION_SHOP_KEY,
-                                                                                        bundle)),
+                                                                                        bundle), SOHSpecialInteriorEntranceNames.KAK_POTION_SHOP_BACK_ENTRANCE, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ADULT_ONLY),
     ])
 
     # Kak Carpenter Boss House
@@ -235,7 +235,7 @@ def set_region_rules(world: "SohWorld") -> None:
         ])
     # Connections
     connect_regions(Regions.KAK_CARPENTER_BOSS_HOUSE, world, [
-        (Regions.KAKARIKO_VILLAGE, lambda bundle: True),
+        (Regions.KAKARIKO_VILLAGE, lambda bundle: True, SOHInteriorExitNames.KAK_CARPENTER_BOSS_HOUSE_EXIT, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ADULT),
     ])
 
     # Kak House of Skulltula
@@ -256,13 +256,13 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.KAK_HOUSE_OF_SKULLTULA, world, [
-        (Regions.KAKARIKO_VILLAGE, lambda bundle: True),
+        (Regions.KAKARIKO_VILLAGE, lambda bundle: True, SOHInteriorExitNames.KAK_HOUSE_OF_SKULLTULA_EXIT, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ANY_AGE),
     ])
 
     # Kak Impas House
     # Connections
     connect_regions(Regions.KAK_IMPAS_HOUSE, world, [
-        (Regions.KAKARIKO_VILLAGE, lambda bundle: True),
+        (Regions.KAKARIKO_VILLAGE, lambda bundle: True, SOHInteriorExitNames.KAK_IMPAS_HOUSE_EXIT, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ANY_AGE),
         (Regions.KAK_COW_CAGE, lambda bundle: can_play_song(Items.EPONAS_SONG, bundle))
     ])
 
@@ -273,7 +273,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.KAK_IMPAS_HOUSE_BACK, world, [
-        (Regions.KAK_IMPAS_LEDGE, lambda bundle: True),
+        (Regions.KAK_IMPAS_LEDGE, lambda bundle: True, SOHInteriorExitNames.KAK_IMPAS_HOUSE_BACK_EXIT, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ANY_AGE),
         (Regions.KAK_COW_CAGE, lambda bundle: can_play_song(Items.EPONAS_SONG, bundle)),
     ])
 
@@ -302,7 +302,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.KAK_WINDMILL, world, [
-        (Regions.KAKARIKO_VILLAGE, lambda bundle: True),
+        (Regions.KAKARIKO_VILLAGE, lambda bundle: True, SOHSpecialInteriorExitNames.KAK_WINDMILL_EXIT, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.BOTH_AGE),
     ])
 
     # Kak Bazaar
@@ -318,7 +318,7 @@ def set_region_rules(world: "SohWorld") -> None:
         (Locations.KAK_BAZAAR_ITEM8, lambda bundle: True),
     ])
     connect_regions(Regions.KAK_BAZAAR, world, [
-        (Regions.KAKARIKO_VILLAGE, lambda bundle: True),
+        (Regions.KAKARIKO_VILLAGE, lambda bundle: True, SOHInteriorExitNames.KAK_BAZAAR_EXIT, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ANY_AGE),
     ])
 
     # Kak Shooting Gallery
@@ -329,7 +329,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.KAK_SHOOTING_GALLERY, world, [
-        (Regions.KAKARIKO_VILLAGE, lambda bundle: True),
+        (Regions.KAKARIKO_VILLAGE, lambda bundle: True, SOHInteriorExitNames.KAK_SHOOTING_GALLERY_EXIT, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ADULT_ONLY),
     ])
 
     # Kak Potion Shop Front
@@ -346,7 +346,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.KAK_POTION_SHOP_FRONT, world, [
-        (Regions.KAKARIKO_VILLAGE, lambda bundle: True),
+        (Regions.KAKARIKO_VILLAGE, lambda bundle: True, SOHSpecialInteriorExitNames.KAK_POTION_SHOP_FRONT_EXIT, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ANY_AGE),
         (Regions.KAK_POTION_SHOP_BACK, lambda bundle: is_adult(bundle)),
     ])
 
@@ -354,7 +354,7 @@ def set_region_rules(world: "SohWorld") -> None:
     # Connections
     connect_regions(Regions.KAK_POTION_SHOP_BACK, world, [
         (Regions.KAK_POTION_SHOP_FRONT, lambda bundle: True),
-        (Regions.KAK_BACKYARD, lambda bundle: is_adult(bundle)),
+        (Regions.KAK_BACKYARD, lambda bundle: is_adult(bundle), SOHSpecialInteriorExitNames.KAK_POTION_SHOP_BACK_EXIT, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ADULT_ONLY),
     ])
 
     # Kak Granny's Potion Shop
@@ -368,7 +368,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.KAK_GRANNYS_POTION_SHOP, world, [
-        (Regions.KAK_BACKYARD, lambda bundle: True)
+        (Regions.KAK_BACKYARD, lambda bundle: True, SOHInteriorExitNames.KAK_ODD_POTION_BUILDING_EXIT, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ADULT_ONLY)
     ])
 
     # Kak Redead Grotto

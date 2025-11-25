@@ -85,7 +85,7 @@ def set_region_rules(world: "SohWorld") -> None:
         (Regions.DMC_LOWER_LOCAL, lambda bundle: fire_timer(bundle) >= 48),
         (Regions.GC_DARUNIAS_CHAMBER, lambda bundle: True),
         (Regions.DMC_GREAT_FAIRY_FOUNTAIN,
-         lambda bundle: can_use(Items.MEGATON_HAMMER, bundle)),
+         lambda bundle: can_use(Items.MEGATON_HAMMER, bundle), SOHInteriorEntranceNames.DMC_GREAT_FAIRY_FOUNTAIN_ENTRANCE, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ADULT_ONLY),
         (Regions.DMC_HAMMER_GROTTO, lambda bundle: is_adult(
             bundle) and can_use(Items.MEGATON_HAMMER, bundle), SOHGrottoEntranceNames.DMC_HAMMER_GROTTO_ENTRANCE, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ADULT_ONLY)
     ])
@@ -175,7 +175,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.DMC_GREAT_FAIRY_FOUNTAIN, world, [
-        (Regions.DMC_LOWER_LOCAL, lambda bundle: True)
+        (Regions.DMC_LOWER_LOCAL, lambda bundle: True, SOHInteriorExitNames.DMC_GREAT_FAIRY_FOUNTAIN_EXIT, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ANY_AGE)
     ])
 
     # Death Mountain Crater Upper Grotto
