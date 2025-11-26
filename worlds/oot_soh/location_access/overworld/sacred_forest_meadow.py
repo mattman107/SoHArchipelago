@@ -13,7 +13,7 @@ def set_region_rules(world: "SohWorld") -> None:
     # SFM Entryway
     # Connections
     connect_regions(Regions.SFM_ENTRYWAY, world, [
-        (Regions.LW_BEYOND_MIDO, lambda bundle: True),
+        (Regions.LW_BEYOND_MIDO, lambda bundle: True, SOHOverworldEntranceNames.SACRED_FOREST_MEADOW_SOUTH_EXIT, SOHEntranceGroups.OVERWORLD),
         (Regions.SACRED_FOREST_MEADOW, lambda bundle: is_adult(
             bundle) or can_kill_enemy(bundle, Enemies.WOLFOS)),
         (Regions.SFM_WOLFOS_GROTTO, lambda bundle: can_open_bomb_grotto(bundle), SOHGrottoEntranceNames.SFM_WOLFOS_GROTTO_ENTRANCE, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE),

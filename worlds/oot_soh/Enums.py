@@ -4173,7 +4173,9 @@ class SOHOverworldEntranceNames(StrEnum):
     ZORAS_DOMAIN_ENTRANCE = "Zoras Domain Entrance"
     ZORAS_RIVER_WATERFALL_EXIT = "Zoras River Waterfall Exit"
     ZORAS_FOUNTAIN_TUNNEL_EXIT = "Zoras Fountain Tunnel Exit"
-    ZORAS_DOMAIN_KING_ZORA_EXIT = "Zoras Domain King Zora Exit" 
+    ZORAS_DOMAIN_KING_ZORA_EXIT = "Zoras Domain King Zora Exit"
+    LAKE_HYLIA_RIVER_EXIT = "Lake Hylia River Exit"
+    LAKE_HYLIA_RIVER_ENTRANCE = "Lake Hylia River Entrance"
 
 
 class SOHThievesHideoutEntranceNames(StrEnum):

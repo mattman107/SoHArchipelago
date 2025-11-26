@@ -122,7 +122,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.KAKARIKO_VILLAGE, world, [
-        (Regions.HYRULE_FIELD, lambda bundle: True),
+        (Regions.HYRULE_FIELD, lambda bundle: True, SOHOverworldEntranceNames.KAKARIKO_VILLAGE_FRONT_GATE, SOHEntranceGroups.OVERWORLD),
         (Regions.KAK_CARPENTER_BOSS_HOUSE,
          lambda bundle: can_open_overworld_door(Items.BOSS_HOUSE_KEY, bundle), SOHInteriorEntranceNames.KAK_CARPENTER_BOSS_HOUSE_ENTRANCE, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ANY_AGE),
         (Regions.KAK_HOUSE_OF_SKULLTULA, lambda bundle: can_open_overworld_door(
@@ -157,7 +157,7 @@ def set_region_rules(world: "SohWorld") -> None:
         (Regions.KAK_IMPAS_ROOFTOP,
          lambda bundle: can_use(Items.HOOKSHOT, bundle) or can_do_trick(Tricks.KAK_ROOFTOP_GS, bundle) and can_use(
              Items.HOVER_BOOTS, bundle)),
-        (Regions.THE_GRAVEYARD, lambda bundle: True),
+        (Regions.THE_GRAVEYARD, lambda bundle: True, SOHOverworldEntranceNames.KAKARIKO_VILLAGE_SOUTHEAST_EXIT, SOHEntranceGroups.OVERWORLD),
         (Regions.KAK_BEHIND_GATE,
          lambda bundle: is_adult(bundle) or has_item(Events.KAKARIKO_GATE_OPEN, bundle)),
         (Regions.KAK_BACKYARD, lambda bundle: is_adult(bundle) or at_day(bundle)),
@@ -423,7 +423,7 @@ def set_region_rules(world: "SohWorld") -> None:
         (Regions.KAKARIKO_VILLAGE,
          lambda bundle: is_adult(bundle) or has_item(Events.KAKARIKO_GATE_OPEN, bundle) or can_do_trick(
              Tricks.VISIBLE_COLLISION, bundle)),
-        (Regions.DEATH_MOUNTAIN, lambda bundle: True)
+        (Regions.DEATH_MOUNTAIN, lambda bundle: True, SOHOverworldEntranceNames.KAKARIKO_VILLAGE_GUARD_GATE, SOHEntranceGroups.OVERWORLD)
     ])
 
     # Kak Well

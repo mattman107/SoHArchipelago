@@ -35,7 +35,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connection
     connect_regions(Regions.GERUDO_VALLEY, world, [
-        (Regions.HYRULE_FIELD, lambda bundle: True),
+        (Regions.HYRULE_FIELD, lambda bundle: True, SOHOverworldEntranceNames.GERUDO_VALLEY_EAST_EXIT, SOHEntranceGroups.OVERWORLD),
         (Regions.GV_UPPER_STREAM,
          lambda bundle: is_child(bundle) or has_item(Items.BRONZE_SCALE, bundle) or take_damage(bundle)),
         (Regions.GV_CRATE_LEDGE, lambda bundle: is_child(
@@ -44,7 +44,7 @@ def set_region_rules(world: "SohWorld") -> None:
         (Regions.GV_FORTRESS_SIDE, lambda bundle: (is_adult(bundle) and (
             can_use(Items.EPONA, bundle) or can_use(Items.LONGSHOT,
                                                     bundle) or world.options.fortress_carpenters.value == 2 or has_item(
-                Events.RESCUED_ALL_CARPENTERS, bundle))) or (is_child(bundle) and can_use(Items.HOOKSHOT, bundle))),
+                Events.RESCUED_ALL_CARPENTERS, bundle))) or (is_child(bundle) and can_use(Items.HOOKSHOT, bundle)), SOHOverworldEntranceNames.GERUDO_VALLEY_WEST_EXIT, SOHEntranceGroups.OVERWORLD),
         (Regions.GV_LOWER_STREAM, lambda bundle: is_child(bundle))
     ])
 
@@ -91,7 +91,7 @@ def set_region_rules(world: "SohWorld") -> None:
     # GV Lower Stream
     # Connections
     connect_regions(Regions.GV_LOWER_STREAM, world, [
-        (Regions.LAKE_HYLIA, lambda bundle: True)
+        (Regions.LAKE_HYLIA, lambda bundle: True, SOHOverworldEntranceNames.LAKE_HYLIA_RIVER_ENTRANCE, SOHEntranceGroups.OVERWORLD, EntranceType.ONE_WAY)
     ])
 
     # GV Grotto Ledge

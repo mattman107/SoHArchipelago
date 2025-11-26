@@ -37,7 +37,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.TOT_ENTRANCE, world, [
-        (Regions.MARKET, lambda bundle: True),
+        (Regions.MARKET, lambda bundle: True, SOHOverworldEntranceNames.TEMPLE_OF_TIME_EXTERIOR_DAY_GOSSIP_STONE_EXIT, SOHEntranceGroups.OVERWORLD),
         (Regions.TEMPLE_OF_TIME, lambda bundle: True, SOHSpecialInteriorEntranceNames.TEMPLE_OF_TIME_ENTRANCE, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ANY_AGE)
     ])
 

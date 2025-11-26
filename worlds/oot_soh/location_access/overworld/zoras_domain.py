@@ -82,9 +82,9 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.ZORAS_DOMAIN, world, [
-        (Regions.ZR_BEHIND_WATERFALL, lambda bundle: True),
+        (Regions.ZR_BEHIND_WATERFALL, lambda bundle: True, SOHOverworldEntranceNames.ZORAS_DOMAIN_ENTRANCE, SOHEntranceGroups.OVERWORLD),
         (Regions.LH_FROM_SHORTCUT, lambda bundle: is_child(bundle) and (
-            has_item(Items.SILVER_SCALE, bundle) or can_use(Items.IRON_BOOTS, bundle))),
+            has_item(Items.SILVER_SCALE, bundle) or can_use(Items.IRON_BOOTS, bundle)), SOHOverworldEntranceNames.ZORAS_DOMAIN_UNDERWATER_SHORTCUT, SOHEntranceGroups.OVERWORLD),
         (Regions.ZD_BEHIND_KING_ZORA,
          lambda bundle: has_item(Events.DELIVER_LETTER, bundle) or world.options.zoras_fountain.value == 2 or (
              world.options.zoras_fountain.value == 1 and is_adult(bundle)) or (
@@ -117,7 +117,7 @@ def set_region_rules(world: "SohWorld") -> None:
         (Regions.ZORAS_DOMAIN,
          lambda bundle: has_item(Events.DELIVER_LETTER, bundle) or world.options.zoras_fountain.value == 2 or (
              world.options.zoras_fountain.value == 1 and is_adult(bundle))),
-        (Regions.ZORAS_FOUNTAIN, lambda bundle: True),
+        (Regions.ZORAS_FOUNTAIN, lambda bundle: True, SOHOverworldEntranceNames.ZORAS_DOMAIN_KING_ZORA_EXIT, SOHEntranceGroups.OVERWORLD),
     ])
 
     # ZD Shop

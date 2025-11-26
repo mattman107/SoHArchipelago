@@ -262,10 +262,18 @@ class SohWorld(World):
             if self.options.shuffle_boss_entrances == "age_restricted":
                 randomize_entrances_soh(self, entrances_to_shuffle, ageRestricted=True)
                 entrances_to_shuffle.clear()
-            # else:
-            #     # Need this else here. Mixed entrances doesn't work for entrances locked behind another yet. Boss entrances are behind dungeon entrances
-            #     randomize_entrances_soh(self, entrances_to_shuffle)
-            #     entrances_to_shuffle.clear()
+
+        # Overworld Entrances
+        if self.options.shuffle_overworld_entrances:
+            for entranceName in SOHOverworldEntranceNames:
+                if not self.options.decouple_entrances and entranceName == SOHOverworldEntranceNames.LAKE_HYLIA_RIVER_ENTRANCE:
+                    continue
+
+                # ignore our one way exit here
+                if entranceName == SOHOverworldEntranceNames.LAKE_HYLIA_RIVER_EXIT:
+                    continue
+
+                entrances_to_shuffle.add(entranceName)
 
         # Grotto Entrances
         if self.options.shuffle_grotto_entrances:

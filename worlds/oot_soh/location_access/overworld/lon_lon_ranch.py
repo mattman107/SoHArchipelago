@@ -51,7 +51,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.LON_LON_RANCH, world, [
-        (Regions.HYRULE_FIELD, lambda bundle: True),
+        (Regions.HYRULE_FIELD, lambda bundle: True, SOHOverworldEntranceNames.LON_LON_RANCH_ENTRANCE, SOHEntranceGroups.OVERWORLD),
         (Regions.LLR_TALONS_HOUSE, lambda bundle: can_open_overworld_door(
             Items.TALONS_HOUSE_KEY, bundle), SOHInteriorEntranceNames.LLR_TALONS_HOUSE_ENTRANCE, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ANY_AGE),
         (Regions.LLR_STABLES, lambda bundle: can_open_overworld_door(

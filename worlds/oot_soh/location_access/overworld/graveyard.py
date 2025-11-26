@@ -78,7 +78,7 @@ def set_region_rules(world: "SohWorld") -> None:
         (Regions.GRAVEYARD_DAMPES_GRAVE, lambda bundle: is_adult(bundle), SOHGrottoEntranceNames.GRAVEYARD_DAMPES_GRAVE_ENTRANCE, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ADULT_ONLY),
         (Regions.GRAVEYARD_DAMPES_HOUSE, lambda bundle: is_adult(bundle)
          and can_open_overworld_door(Items.DAMPES_HUT_KEY, bundle), SOHInteriorEntranceNames.GRAVEYARD_DAMPES_HOUSE_ENTRANCE, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ADULT_ONLY),
-        (Regions.KAKARIKO_VILLAGE, lambda bundle: True),
+        (Regions.KAKARIKO_VILLAGE, lambda bundle: True, SOHOverworldEntranceNames.GRAVEYARD_ENTRANCE, SOHEntranceGroups.OVERWORLD),
         (Regions.GRAVEYARD_WARP_PAD_REGION, lambda bundle: False)
     ])
 

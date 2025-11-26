@@ -76,7 +76,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.GORON_CITY, world, [
-        (Regions.DEATH_MOUNTAIN_TRAIL, lambda bundle: True),
+        (Regions.DEATH_MOUNTAIN_TRAIL, lambda bundle: True, SOHOverworldEntranceNames.GORON_CITY_UPPER_EXIT, SOHEntranceGroups.OVERWORLD),
         (Regions.GC_MEDIGORON, lambda bundle: can_break_mud_walls(
             bundle) or has_item(Items.GORONS_BRACELET, bundle)),
         (Regions.GC_WOODS_WARP, lambda bundle: has_item(
@@ -113,7 +113,7 @@ def set_region_rules(world: "SohWorld") -> None:
     connect_regions(Regions.GC_WOODS_WARP, world, [
         (Regions.GORON_CITY, lambda bundle: has_item(
             LocalEvents.GC_WOODS_WARP_OPEN, bundle)),
-        (Regions.LOST_WOODS, lambda bundle: True)
+        (Regions.LOST_WOODS, lambda bundle: True, SOHOverworldEntranceNames.GORON_CITY_TUNNEL_SHORTCUT, SOHEntranceGroups.OVERWORLD)
     ])
 
     # Goron City Darunias Chamber
@@ -133,7 +133,7 @@ def set_region_rules(world: "SohWorld") -> None:
     # Connections
     connect_regions(Regions.GC_DARUNIAS_CHAMBER, world, [
         (Regions.GORON_CITY, lambda bundle: True),
-        (Regions.DMC_LOWER_LOCAL, lambda bundle: is_adult(bundle))
+        (Regions.DMC_LOWER_LOCAL, lambda bundle: is_adult(bundle), SOHOverworldEntranceNames.GORON_CITY_DARUNIA_ROOM_EXIT, SOHEntranceGroups.OVERWORLD)
     ])
 
     # Goron City Grotto Platform

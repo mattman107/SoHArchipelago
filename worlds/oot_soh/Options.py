@@ -1089,7 +1089,7 @@ class SohOptions(PerGameCommonOptions):
     enable_all_tricks: EnableAllTricks
     shuffle_dungeon_entrances: ShuffleDungeonEntrances
     shuffle_boss_entrances: ShuffleDungeonBossEntrances
-    shuffle_overworld_entances: ShuffleOverworldEntrances
+    shuffle_overworld_entrances: ShuffleOverworldEntrances
     shuffle_theives_hideout_entrances: ShuffleTheivesHideoutEntrances
     shuffle_grotto_entrances: ShuffleGrottoEntrances
     shuffle_warp_song_entrances: ShuffleWarpSongEntrances

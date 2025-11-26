@@ -23,7 +23,7 @@ def set_region_rules(world: "SohWorld") -> None:
     # Castle Grounds
     # Connections
     connect_regions(Regions.CASTLE_GROUNDS, world, [
-        (Regions.MARKET, lambda bundle: True),
+        (Regions.MARKET, lambda bundle: True, SOHOverworldEntranceNames.CASTLE_GROUNDS_SOUTH_EXIT, SOHEntranceGroups.OVERWORLD),
         (Regions.HYRULE_CASTLE_GROUNDS, lambda bundle: is_child(bundle)),
         (Regions.GANONS_CASTLE_GROUNDS, lambda bundle: is_adult(bundle))
     ])

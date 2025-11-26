@@ -173,13 +173,13 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.HYRULE_FIELD, world, [
-        (Regions.LW_BRIDGE, lambda bundle: True),
-        (Regions.LAKE_HYLIA, lambda bundle: True),
-        (Regions.GERUDO_VALLEY, lambda bundle: True),
-        (Regions.MARKET_ENTRANCE, lambda bundle: True),
-        (Regions.KAKARIKO_VILLAGE, lambda bundle: True),
-        (Regions.ZR_FRONT, lambda bundle: True),
-        (Regions.LON_LON_RANCH, lambda bundle: True),
+        (Regions.LW_BRIDGE, lambda bundle: True, SOHOverworldEntranceNames.HYRULE_FIELD_WOODED_EXIT, SOHEntranceGroups.OVERWORLD),
+        (Regions.LAKE_HYLIA, lambda bundle: True, SOHOverworldEntranceNames.HYRULE_FIELD_FENCE_EXIT, SOHEntranceGroups.OVERWORLD),
+        (Regions.GERUDO_VALLEY, lambda bundle: True, SOHOverworldEntranceNames.HYRULE_FIELD_ROCKY_PATH, SOHEntranceGroups.OVERWORLD),
+        (Regions.MARKET_ENTRANCE, lambda bundle: True, SOHOverworldEntranceNames.HYRULE_FIELD_ON_BRIDGE_SPAWN, SOHEntranceGroups.OVERWORLD),
+        (Regions.KAKARIKO_VILLAGE, lambda bundle: True, SOHOverworldEntranceNames.HYRULE_FIELD_STAIRS_EXIT, SOHEntranceGroups.OVERWORLD),
+        (Regions.ZR_FRONT, lambda bundle: True, SOHOverworldEntranceNames.HYRULE_FIELD_RIVER_EXIT, SOHEntranceGroups.OVERWORLD),
+        (Regions.LON_LON_RANCH, lambda bundle: True, SOHOverworldEntranceNames.HYRULE_FIELD_CENTER_EXIT, SOHEntranceGroups.OVERWORLD),
         (Regions.HF_SOUTHEAST_GROTTO, lambda bundle: (blast_or_smash(bundle)), SOHGrottoEntranceNames.HF_SOUTHEAST_GROTTO_ENTRANCE, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE),
         (Regions.HF_OPEN_GROTTO, lambda bundle: True, SOHGrottoEntranceNames.HF_OPEN_GROTTO_ENTRANCE, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE),
         (Regions.HF_INSIDE_FENCE_GROTTO, lambda bundle: (

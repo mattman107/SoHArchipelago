@@ -20,7 +20,8 @@ entrance_matching = {
     SOHBossEntranceNames.FIRE_TEMPLE_BOSS_ENTRANCE: SOHBossEntranceExitNames.FIRE_TEMPLE_BOSS_EXIT,
     SOHBossEntranceNames.WATER_TEMPLE_BOSS_ENTRANCE: SOHBossEntranceExitNames.WATER_TEMPLE_BOSS_EXIT,
     SOHBossEntranceNames.SHADOW_TEMPLE_BOSS_ENTRANCE: SOHBossEntranceExitNames.SHADOW_TEMPLE_BOSS_EXIT,
-    SOHBossEntranceNames.SPIRIT_TEMPLE_BOSS_ENTRANCE: SOHBossEntranceExitNames.SPIRIT_TEMPLE_BOSS_EXIT
+    SOHBossEntranceNames.SPIRIT_TEMPLE_BOSS_ENTRANCE: SOHBossEntranceExitNames.SPIRIT_TEMPLE_BOSS_EXIT,
+    SOHOverworldEntranceNames.LAKE_HYLIA_RIVER_ENTRANCE: SOHOverworldEntranceNames.LAKE_HYLIA_RIVER_EXIT
 }
 
 
@@ -30,7 +31,8 @@ default_group_lookup = {
     SOHEntranceGroups.GROTTO: [SOHEntranceGroups.GROTTO],
     SOHEntranceGroups.INTERIOR: [SOHEntranceGroups.INTERIOR],
     SOHEntranceGroups.THIEVES_HIDEOUT_ENTRANCE: [SOHEntranceGroups.GERUDO_FORTRESS_ENTRANCE],
-    SOHEntranceGroups.GERUDO_FORTRESS_ENTRANCE: [SOHEntranceGroups.THIEVES_HIDEOUT_ENTRANCE]
+    SOHEntranceGroups.GERUDO_FORTRESS_ENTRANCE: [SOHEntranceGroups.THIEVES_HIDEOUT_ENTRANCE],
+    SOHEntranceGroups.OVERWORLD: [SOHEntranceGroups.OVERWORLD]
 }
 
 

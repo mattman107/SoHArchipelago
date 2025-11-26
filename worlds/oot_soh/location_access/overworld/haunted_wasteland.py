@@ -19,7 +19,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.WASTELAND_NEAR_FORTRESS, world, [
-        (Regions.GF_OUTSIDE_GATE, lambda bundle: True),
+        (Regions.GF_OUTSIDE_GATE, lambda bundle: True, SOHOverworldEntranceNames.HAUNTED_WASTELAND_EAST_EXIT, SOHEntranceGroups.OVERWORLD),
         (Regions.HAUNTED_WASTELAND, lambda bundle: can_use_any(
             [Items.HOVER_BOOTS, Items.LONGSHOT], bundle) or can_do_trick(Tricks.HW_CROSSING, bundle))
     ])
@@ -70,7 +70,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.WASTELAND_NEAR_COLOSSUS, world, [
-        (Regions.DESERT_COLOSSUS, lambda bundle: True),
+        (Regions.DESERT_COLOSSUS, lambda bundle: True, SOHOverworldEntranceNames.HAUNTED_WASTELAND_WEST_EXIT, SOHEntranceGroups.OVERWORLD),
         (Regions.HAUNTED_WASTELAND, lambda bundle: can_do_trick(
             Tricks.HW_REVERSE, bundle))
     ])
