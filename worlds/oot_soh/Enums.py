@@ -3855,10 +3855,11 @@ class SOHEntranceGroups(IntEnum):
     BOSS_ENTRANCE = 2
     OVERWORLD = 3
     INTERIOR = 4
-    THEIVES_HIDEOUT_ENTRANCE = 5
-    GROTTO = 6
-    OWL_DROP = 7
-    WARP_SONG = 8
+    THIEVES_HIDEOUT_ENTRANCE = 5
+    GERUDO_FORTRESS_ENTRANCE = 6
+    GROTTO = 7
+    OWL_DROP = 8
+    WARP_SONG = 9
     # Age Accessible
     ANY_AGE = 1 << 4
     CHILD = 2 << 4
@@ -4118,6 +4119,90 @@ class SOHSpecialInteriorExitNames(StrEnum):
     KAK_WINDMILL_EXIT = "Kak Windmill Exit"
     KAK_POTION_SHOP_FRONT_EXIT = "Kak Potion Shop Front Exit"
     KAK_POTION_SHOP_BACK_EXIT = "Kak Potion Shop Back Exit"
+
+
+class SOHOverworldEntranceNames(StrEnum):
+    LOST_WOODS_BRIDGE_EAST_EXIT = "Lost Woods Bridge East Exit"
+    KOKIRI_FOREST_LOWER_EXIT = "Kokiri Forest Lower Exit"
+    LOST_WOODS_SOUTH_EXIT = "Lost Woods South Exit"
+    KOKIRI_FOREST_UPPER_EXIT = "Kokiri Forest Upper Exit"
+    GORON_CITY_TUNNEL_SHORTCUT = "Goron City Tunnel Shortcut"
+    LOST_WOODS_TUNNEL_SHORTCUT = "Lost Woods Tunnel Shortcut"
+    ZORAS_RIVER_UNDERWATER_SHORTCUT = "Zoras River Underwater Shortcut"
+    LOST_WOODS_UNDERWATER_SHORTCUT = "Lost Woods Underwater Shortcut"
+    SACRED_FOREST_MEADOW_SOUTH_EXIT = "Sacred Forst Meadow South Exit"
+    LOST_WOODS_NORTH_EXIT = "Lost Woods North Exit"
+    HYRULE_FIELD_WOODED_EXIT = "Hyrule Field Wooded Exit"
+    LOST_WOODS_BRIDGE_WEST_EXIT = "Lost Woods Bridge West Exit"
+    LAKE_HYLIA_NORTH_EXIT = "Lake Hylia North Exit"
+    HYRULE_FIELD_FENCE_EXIT = "Hyrule Field Fence Exit"
+    GERUDO_VALLEY_EAST_EXIT = "Gerudo Valley East Exit"
+    HYRULE_FIELD_ROCKY_PATH = "Hyrule Field Rocky Path"
+    MARKET_ENTRANCE_NEAR_GUARD_EXIT = "Market Entrance Near Guard Exit"
+    HYRULE_FIELD_ON_BRIDGE_SPAWN = "Hyrule Field On Bridge Spawn"
+    KAKARIKO_VILLAGE_FRONT_GATE = "Kakariko Village Front Gate"
+    HYRULE_FIELD_STAIRS_EXIT = "Hyrule Field Stairs Exit"
+    ZORAS_RIVER_WEST_EXIT = "Zoras River West Exit"
+    HYRULE_FIELD_RIVER_EXIT = "Hyrule Field River Exit"
+    LON_LON_RANCH_ENTRANCE = "Lon Lon Ranch Entrance"
+    HYRULE_FIELD_CENTER_EXIT = "Hyrule Field Center Exit"
+    ZORAS_DOMAIN_UNDERWATER_SHORTCUT = "Zoras Domain Underwater Shortcut"
+    LAKE_HYLIA_UNDERWATER_SHORTCUT = "Lakey Hylia Underwater Shortcut"
+    GERUDOS_FORTRESS_EAST_EXIT = "Gerudos Fortress East Exit"
+    GERUDO_VALLEY_WEST_EXIT = "Gerudo Valley West Exit"
+    HAUNTED_WASTELAND_EAST_EXIT = "Haunted Wasteland East Exit"
+    GERUDOS_FORTRESS_GATE_EXIT = "Gerudos Fortress Gate Exit"
+    DESERT_COLOSSUS_EAST_EXIT = "Desert Colossus East Exit"
+    HAUNTED_WASTELAND_WEST_EXIT = "Haunted Wasteland West Exit"
+    MARKET_SOUTH_EXIT = "Market South Exit"
+    MARKET_ENTRANCE_NORTH_EXIT = "Market Entrance North Exit"
+    CASTLE_GROUNDS_SOUTH_EXIT = "Castle Grounds South Exit"
+    MARKET_DAY_CASTLE_EXIT = "Market Day Castle Exit"
+    TEMPLE_OF_TIME_EXTERIOR_DAY_GOSSIP_STONE_EXIT = "Temple of Time Exterior Day Gossip Stone Exit"
+    MARKET_DAY_TEMPLE_EXIT = "Market Day Temple Exit"
+    GRAVEYARD_ENTRANCE = "Graveyard Entrance"
+    KAKARIKO_VILLAGE_SOUTHEAST_EXIT = "Kakariko Village Southeast Exit"
+    DEATH_MOUNTAIN_TRAIL_BOTTOM_EXIT = "Death Mountain Trail Bottom Exit"
+    KAKARIKO_VILLAGE_GUARD_GATE = "Kakariko Village Guard Gate"
+    GORON_CITY_UPPER_EXIT = "Goron City Upper Exit"
+    DEATH_MOUNTAIN_TRAIL_GC_EXIT = "Death Mountain Trail GC Exit"
+    DEATH_MOUNTAIN_CRATER_GC_EXIT = "Death Mountain Crater GC Exit"
+    GORON_CITY_DARUNIA_ROOM_EXIT = "Goron City Darunia Room Exit"
+    DEATH_MOUNTAIN_CRATER_UPPER_EXIT = "Death Mountain Crater Upper Exit"
+    DEATH_MOUNTAIN_TRAIL_SUMMIT_EXIT = "Death Mountain Trail Summit Exit"
+    ZORAS_DOMAIN_ENTRANCE = "Zoras Domain Entrance"
+    ZORAS_RIVER_WATERFALL_EXIT = "Zoras River Waterfall Exit"
+    ZORAS_FOUNTAIN_TUNNEL_EXIT = "Zoras Fountain Tunnel Exit"
+    ZORAS_DOMAIN_KING_ZORA_EXIT = "Zoras Domain King Zora Exit" 
+
+
+class SOHThievesHideoutEntranceNames(StrEnum):
+    THIEVES_HIDEOUT_0 = "Thieves Hideout 0"
+    GERUDOS_FORTRESS_1 = "Gerudos Fortress 1"
+    THIEVES_HIDEOUT_1 = "Thieves Hideout 1"
+    GERUDOS_FORTRESS_2 = "Gerudos Fortress 2"
+    THIEVES_HIDEOUT_2 = "Thieves Hideout 2"
+    GERUDOS_FORTRESS_3 = "Gerudos Fortress 3"
+    THIEVES_HIDEOUT_3 = "Thieves Hideout 3"
+    GERUDOS_FORTRESS_4 = "Gerudos Fortress 4"
+    THIEVES_HIDEOUT_4 = "Thieves Hideout 4"
+    GERUDOS_FORTRESS_5 = "Gerudos Fortress 5"
+    THIEVES_HIDEOUT_5 = "Thieves Hideout 5"
+    GERUDOS_FORTRESS_6 = "Gerudos Fortress 6"
+    THIEVES_HIDEOUT_6 = "Thieves Hideout 6"
+    GERUDOS_FORTRESS_7 = "Gerudos Fortress 7"
+    THIEVES_HIDEOUT_7 = "Thieves Hideout 7"
+    GERUDOS_FORTRESS_8 = "Gerudos Fortress 8"
+    THIEVES_HIDEOUT_8 = "Thieves Hideout 8"
+    GERUDOS_FORTRESS_9 = "Gerudos Fortress 9"
+    THIEVES_HIDEOUT_9 = "Thieves Hideout 9"
+    GERUDOS_FORTRESS_10 = "Gerudos Fortress 10"
+    THIEVES_HIDEOUT_10 = "Thieves Hideout 10"
+    GERUDOS_FORTRESS_11 = "Gerudos Fortress 11"
+    THIEVES_HIDEOUT_11 = "Thieves Hideout 11"
+    GERUDOS_FORTRESS_12 = "Gerudos Fortress 12"
+    THIEVES_HIDEOUT_12 = "Thieves Hideout 12"
+    GERUDOS_FORTRESS_13 = "Gerudos Fortress 13"
 
 
 class TokenCounts(IntEnum):

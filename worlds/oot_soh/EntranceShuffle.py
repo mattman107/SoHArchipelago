@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Callable
 from BaseClasses import Location, Region, Entrance
-from .Enums import SOHBossEntranceExitNames, SOHBossEntranceNames, SOHDungeonExitNames, SOHDungeonEntranceNames, Locations, SOHEntranceGroups, Regions, SOHBossWarpEntranceNames, SOHGrottoEntranceNames, SOHGrottoExitNames, SOHInteriorEntranceNames, SOHInteriorExitNames, SOHSpecialInteriorEntranceNames, SOHSpecialInteriorExitNames
+from .Enums import SOHBossEntranceExitNames, SOHBossEntranceNames, SOHDungeonExitNames, SOHDungeonEntranceNames, Locations, SOHEntranceGroups, Regions, SOHBossWarpEntranceNames, SOHGrottoEntranceNames, SOHGrottoExitNames, SOHInteriorEntranceNames, SOHInteriorExitNames, SOHSpecialInteriorEntranceNames, SOHSpecialInteriorExitNames, SOHThievesHideoutEntranceNames, SOHOverworldEntranceNames
 from .Locations import SohLocation
 from entrance_rando import disconnect_entrance_for_randomization, randomize_entrances, bake_target_group_lookup, EntranceRandomizationError
 from entrance_rando import ERPlacementState, Entrance
@@ -29,13 +29,15 @@ default_group_lookup = {
     SOHEntranceGroups.BOSS_ENTRANCE: [SOHEntranceGroups.BOSS_ENTRANCE],
     SOHEntranceGroups.GROTTO: [SOHEntranceGroups.GROTTO],
     SOHEntranceGroups.INTERIOR: [SOHEntranceGroups.INTERIOR],
+    SOHEntranceGroups.THIEVES_HIDEOUT_ENTRANCE: [SOHEntranceGroups.GERUDO_FORTRESS_ENTRANCE],
+    SOHEntranceGroups.GERUDO_FORTRESS_ENTRANCE: [SOHEntranceGroups.THIEVES_HIDEOUT_ENTRANCE]
 }
 
 
-mixed_group_lookup = {group: [all for all in (SOHEntranceGroups.OTHER, SOHEntranceGroups.BOSS_ENTRANCE, SOHEntranceGroups.DUNGEON_ENTRANCE, SOHEntranceGroups.OVERWORLD, SOHEntranceGroups.INTERIOR, 
-                                              SOHEntranceGroups.THEIVES_HIDEOUT_ENTRANCE, SOHEntranceGroups.GROTTO)] 
-                                              for group in (SOHEntranceGroups.OTHER, SOHEntranceGroups.BOSS_ENTRANCE, SOHEntranceGroups.DUNGEON_ENTRANCE, SOHEntranceGroups.OVERWORLD, SOHEntranceGroups.INTERIOR, 
-                                                            SOHEntranceGroups.THEIVES_HIDEOUT_ENTRANCE, SOHEntranceGroups.GROTTO)}
+mixed_group_lookup = {group: [all for all in (SOHEntranceGroups.OTHER, SOHEntranceGroups.BOSS_ENTRANCE, SOHEntranceGroups.DUNGEON_ENTRANCE, 
+                                              SOHEntranceGroups.OVERWORLD, SOHEntranceGroups.INTERIOR, SOHEntranceGroups.GROTTO)] 
+                                              for group in (SOHEntranceGroups.OTHER, SOHEntranceGroups.BOSS_ENTRANCE, SOHEntranceGroups.DUNGEON_ENTRANCE, 
+                                                            SOHEntranceGroups.OVERWORLD, SOHEntranceGroups.INTERIOR, SOHEntranceGroups.GROTTO)}
                                                             
 
 # This is allowing us to brute force the problem of GER failing. May be a necessary evil as it doesn't do swap or automatic retries itself.
@@ -192,7 +194,7 @@ def soh_one_way_entrance_connections(world: "SohWorld", entrance_names: list, ex
 
 
 # Might need to return the ER Placement state at the end
-def randomize_entrances_soh(world: "SohWorld", entrances_to_shuffle: set[SOHBossEntranceNames | SOHDungeonEntranceNames | SOHDungeonExitNames | SOHInteriorEntranceNames | SOHInteriorExitNames | SOHSpecialInteriorEntranceNames | SOHSpecialInteriorExitNames], on_connect: Callable[[ERPlacementState, list[Entrance], list[Entrance]], bool | None] | None = None, coupled: bool = True, ageRestricted: bool = False) -> None:
+def randomize_entrances_soh(world: "SohWorld", entrances_to_shuffle: set[SOHBossEntranceNames | SOHDungeonEntranceNames | SOHDungeonExitNames | SOHInteriorEntranceNames | SOHInteriorExitNames | SOHSpecialInteriorEntranceNames | SOHSpecialInteriorExitNames | SOHThievesHideoutEntranceNames], on_connect: Callable[[ERPlacementState, list[Entrance], list[Entrance]], bool | None] | None = None, coupled: bool = True, ageRestricted: bool = False) -> None:
     for entranceEnum in entrances_to_shuffle:
         disconnect_entrance_for_randomization(world.multiworld.get_entrance(
             entranceEnum.value, world.player), one_way_target_name=entrance_matching[entranceEnum].value if entranceEnum in entrance_matching else None)

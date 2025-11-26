@@ -3,7 +3,7 @@ import pkgutil
 
 from typing import Any, List, ClassVar
 
-from BaseClasses import CollectionState, Item, Tutorial, ItemClassification
+from BaseClasses import CollectionState, Item, Tutorial, ItemClassification, Entrance
 from worlds.AutoWorld import WebWorld, World
 from .Items import SohItem, item_data_table, item_table, item_name_groups, progressive_items
 from .Locations import location_table, location_name_groups, token_amounts
@@ -240,6 +240,19 @@ class SohWorld(World):
         # Reverse decoupled option for randomize_entrances because it is asking if you wanted coupled
         # Update this when it is figured out why decoupled doesn't work with the current groupings
         coupled = True #(not self.options.decouple_entrances)
+
+        if self.options.shuffle_theives_hideout_entrances:
+            # Make Temp Entrance to GF_ABOVE_JAIL to appease GER
+            temp_entrance: Entrance = self.get_region(Regions.ROOT.value).connect(self.get_region(Regions.GF_ABOVE_JAIL.value), "Temp GF_ABOVE_JAIL Entrance", None)
+
+            for entranceName in SOHThievesHideoutEntranceNames:
+                entrances_to_shuffle.add(entranceName)
+            randomize_entrances_soh(self, entrances_to_shuffle)
+            entrances_to_shuffle.clear()
+
+            # Clean up Temp Entrance
+            temp_entrance.connected_region.entrances.remove(temp_entrance)
+            temp_entrance.connected_region = None
 
         # Boss Entrances
         if self.options.shuffle_boss_entrances:

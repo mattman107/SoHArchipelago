@@ -34,7 +34,7 @@ def set_region_rules(world: "SohWorld") -> None:
     # Connections
     connect_regions(Regions.GERUDO_FORTRESS_OUTSKIRTS, world, [
         (Regions.GV_FORTRESS_SIDE, lambda bundle: True),
-        (Regions.THIEVES_HIDEOUT_1_TORCH_CELL, lambda bundle: True),
+        (Regions.THIEVES_HIDEOUT_1_TORCH_CELL, lambda bundle: True, SOHThievesHideoutEntranceNames.THIEVES_HIDEOUT_0, int(SOHEntranceGroups.THIEVES_HIDEOUT_ENTRANCE)),
         (Regions.GF_OUTSIDE_GATE, lambda bundle: has_item(
             LocalEvents.GF_GATE_OPEN, bundle)),
         (Regions.GF_NEAR_GROTTO, lambda bundle: is_child(bundle)
@@ -58,9 +58,9 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.GF_NEAR_GROTTO, world, [
-        (Regions.THIEVES_HIDEOUT_1_TORCH_CELL, lambda bundle: True),
-        (Regions.THIEVES_HIDEOUT_STEEP_SLOPE_CELL, lambda bundle: True),
-        (Regions.THIEVES_HIDEOUT_KITCHEN_CORRIDOR, lambda bundle: True),
+        (Regions.THIEVES_HIDEOUT_1_TORCH_CELL, lambda bundle: True, SOHThievesHideoutEntranceNames.THIEVES_HIDEOUT_1, int(SOHEntranceGroups.THIEVES_HIDEOUT_ENTRANCE)),
+        (Regions.THIEVES_HIDEOUT_STEEP_SLOPE_CELL, lambda bundle: True, SOHThievesHideoutEntranceNames.THIEVES_HIDEOUT_4, int(SOHEntranceGroups.THIEVES_HIDEOUT_ENTRANCE)),
+        (Regions.THIEVES_HIDEOUT_KITCHEN_CORRIDOR, lambda bundle: True, SOHThievesHideoutEntranceNames.THIEVES_HIDEOUT_2, int(SOHEntranceGroups.THIEVES_HIDEOUT_ENTRANCE)),
         (Regions.GERUDO_FORTRESS_OUTSKIRTS, lambda bundle: True),
         (Regions.GF_JAIL_WINDOW, lambda bundle: can_use(Items.HOOKSHOT, bundle)),
         (Regions.GF_OUTSIDE_GTG, lambda bundle: is_child(bundle)
@@ -117,8 +117,8 @@ def set_region_rules(world: "SohWorld") -> None:
     # GF Above GTG
     # Connections
     connect_regions(Regions.GF_ABOVE_GTG, world, [
-        (Regions.THIEVES_HIDEOUT_DOUBLE_CELL, lambda bundle: True),
-        (Regions.THIEVES_HIDEOUT_KITCHEN_CORRIDOR, lambda bundle: True),
+        (Regions.THIEVES_HIDEOUT_DOUBLE_CELL, lambda bundle: True, SOHThievesHideoutEntranceNames.THIEVES_HIDEOUT_6, int(SOHEntranceGroups.THIEVES_HIDEOUT_ENTRANCE)),
+        (Regions.THIEVES_HIDEOUT_KITCHEN_CORRIDOR, lambda bundle: True, SOHThievesHideoutEntranceNames.THIEVES_HIDEOUT_3, int(SOHEntranceGroups.THIEVES_HIDEOUT_ENTRANCE)),
         (Regions.GF_JAIL_WINDOW, lambda bundle: can_use(Items.HOOKSHOT, bundle)),
         (Regions.GERUDO_FORTRESS_OUTSKIRTS, lambda bundle: True),
         (Regions.GF_NEAR_GROTTO, lambda bundle: True),
@@ -131,7 +131,7 @@ def set_region_rules(world: "SohWorld") -> None:
     # GF Bottom of Lower Vines
     # Connections
     connect_regions(Regions.GF_BOTTOM_OF_LOWER_VINES, world, [
-        (Regions.THIEVES_HIDEOUT_STEEP_SLOPE_CELL, lambda bundle: True),
+        (Regions.THIEVES_HIDEOUT_STEEP_SLOPE_CELL, lambda bundle: True, SOHThievesHideoutEntranceNames.THIEVES_HIDEOUT_5, int(SOHEntranceGroups.THIEVES_HIDEOUT_ENTRANCE)),
         (Regions.GF_NEAR_GROTTO, lambda bundle: True),
         (Regions.GF_TOP_OF_LOWER_VINES, lambda bundle: True),
         (Regions.GF_ABOVE_GTG, lambda bundle: True),
@@ -142,8 +142,8 @@ def set_region_rules(world: "SohWorld") -> None:
     # GF Top of Lower Vines
     # Connections
     connect_regions(Regions.GF_TOP_OF_LOWER_VINES, world, [
-        (Regions.THIEVES_HIDEOUT_KITCHEN_TOP, lambda bundle: True),
-        (Regions.THIEVES_HIDEOUT_DOUBLE_CELL, lambda bundle: True),
+        (Regions.THIEVES_HIDEOUT_KITCHEN_TOP, lambda bundle: True, SOHThievesHideoutEntranceNames.THIEVES_HIDEOUT_8, int(SOHEntranceGroups.THIEVES_HIDEOUT_ENTRANCE)),
+        (Regions.THIEVES_HIDEOUT_DOUBLE_CELL, lambda bundle: True, SOHThievesHideoutEntranceNames.THIEVES_HIDEOUT_7, int(SOHEntranceGroups.THIEVES_HIDEOUT_ENTRANCE)),
         (Regions.GF_ABOVE_GTG, lambda bundle: True),
         (Regions.GF_BOTTOM_OF_LOWER_VINES, lambda bundle: True),
         (Regions.GF_BOTTOM_OF_UPPER_VINES, lambda bundle: is_adult(
@@ -153,7 +153,7 @@ def set_region_rules(world: "SohWorld") -> None:
     # GF Near GS
     # Connections
     connect_regions(Regions.GF_NEAR_GS, world, [
-        (Regions.THIEVES_HIDEOUT_KITCHEN_TOP, lambda bundle: True),
+        (Regions.THIEVES_HIDEOUT_KITCHEN_TOP, lambda bundle: True, SOHThievesHideoutEntranceNames.THIEVES_HIDEOUT_9, int(SOHEntranceGroups.THIEVES_HIDEOUT_ENTRANCE)),
         (Regions.GF_BOTTOM_OF_LOWER_VINES, lambda bundle: True),
         (Regions.GF_TOP_OF_LOWER_VINES, lambda bundle: True),
         (Regions.GF_SLOPED_ROOF, lambda bundle: is_adult(
@@ -243,7 +243,7 @@ def set_region_rules(world: "SohWorld") -> None:
     # GF Below GS
     # Connections
     connect_regions(Regions.GF_BELOW_GS, world, [
-        (Regions.THIEVES_HIDEOUT_DEAD_END_CELL, lambda bundle: True),
+        (Regions.THIEVES_HIDEOUT_DEAD_END_CELL, lambda bundle: True, SOHThievesHideoutEntranceNames.THIEVES_HIDEOUT_12, int(SOHEntranceGroups.THIEVES_HIDEOUT_ENTRANCE)),
         (Regions.GF_BOTTOM_OF_LOWER_VINES, lambda bundle: True),
         (Regions.GF_GS_KILL_ZONE,
          lambda bundle: is_adult(bundle) and can_get_enemy_drop(bundle, Enemies.GOLD_SKULLTULA,
@@ -254,7 +254,7 @@ def set_region_rules(world: "SohWorld") -> None:
     # GF Below Chest
     # Connections
     connect_regions(Regions.GF_BELOW_CHEST, world, [
-        (Regions.THIEVES_HIDEOUT_BREAK_ROOM, lambda bundle: True),
+        (Regions.THIEVES_HIDEOUT_BREAK_ROOM, lambda bundle: True, SOHThievesHideoutEntranceNames.THIEVES_HIDEOUT_10, int(SOHEntranceGroups.THIEVES_HIDEOUT_ENTRANCE)),
         (Regions.GERUDO_FORTRESS_OUTSKIRTS, lambda bundle: True),
     ])
 
@@ -270,6 +270,7 @@ def set_region_rules(world: "SohWorld") -> None:
         (Regions.GF_NEAR_CHEST, lambda bundle: can_use(Items.LONGSHOT, bundle)),
         (Regions.GF_BELOW_CHEST, lambda bundle: take_damage(bundle)),
         (Regions.GF_JAIL_WINDOW, lambda bundle: can_use(Items.HOOKSHOT, bundle)),
+        (Regions.THIEVES_HIDEOUT_BREAK_ROOM_CORRIDOR, lambda bundle: True, SOHThievesHideoutEntranceNames.THIEVES_HIDEOUT_11, int(SOHEntranceGroups.THIEVES_HIDEOUT_ENTRANCE))
     ])
 
     # GF Jail Window

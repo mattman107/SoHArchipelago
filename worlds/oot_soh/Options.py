@@ -901,6 +901,18 @@ class ShuffleDungeonBossEntrances(Choice):
     default = 0
 
 
+class ShuffleOverworldEntrances(Toggle):
+    """
+    Shuffle the pool of Overworld Entrances, which corresponds to almost all loading zones between overworld areas.
+
+    Some Entrances are unshuffled to avoid issues:
+    - Hyrule Castle Courtyard and Garden Entrance
+    - Both Market and Back Alley Entrances
+    - Gerudo Valley to Lake Hylia (unless entrances are decoupled)
+    """
+    display_name = "Shuffle Overworld Entrances"
+
+
 class ShuffleDungeonEntrances(Choice):
     """
     Shuffle the pool of dungeon entrances, including Bottom of the Well, Ice Cavern and Gerudo Training Ground.
@@ -916,6 +928,13 @@ class ShuffleDungeonEntrances(Choice):
     option_on = 1
     option_on_plus_ganon = 2
     default = 0
+
+
+class ShuffleTheivesHideoutEntrances(Toggle):
+    """
+    Shuffle the pool of entrances between Gerudo Fortress & Theives' Hideout
+    """
+    display_name = "Shuffle Theives' Hideout Entrances"
 
 
 class ShuffleGrottoEntrances(Toggle):
@@ -1070,6 +1089,8 @@ class SohOptions(PerGameCommonOptions):
     enable_all_tricks: EnableAllTricks
     shuffle_dungeon_entrances: ShuffleDungeonEntrances
     shuffle_boss_entrances: ShuffleDungeonBossEntrances
+    shuffle_overworld_entances: ShuffleOverworldEntrances
+    shuffle_theives_hideout_entrances: ShuffleTheivesHideoutEntrances
     shuffle_grotto_entrances: ShuffleGrottoEntrances
     shuffle_warp_song_entrances: ShuffleWarpSongEntrances
     shuffle_owl_drop_entrances: ShuffleOwlDropEntrances
@@ -1109,14 +1130,15 @@ soh_option_groups = [
     OptionGroup("Shuffle Entrances", [
         ShuffleDungeonEntrances,
         ShuffleDungeonBossEntrances,
+        ShuffleOverworldEntrances,
         ShuffleInteriorEntrances,
+        ShuffleTheivesHideoutEntrances,
         ShuffleGrottoEntrances,
         ShuffleWarpSongEntrances,
         ShuffleOwlDropEntrances,
         ShuffleOverworldSpawns,
         DecoupleEntrances,
         MixedEntrancePools
-        # Overworld Entrances
     ]),
     OptionGroup("Shuffle Items", [
         # Shuffle Songs -- idk if this or the other ones here will be an actual option here, delete if not
