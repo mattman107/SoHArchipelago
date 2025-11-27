@@ -27,7 +27,7 @@ def set_region_rules(world: "SohWorld") -> None:
     # LW Forest Exit
     # Connections
     connect_regions(Regions.LW_FOREST_EXIT, world, [
-        (Regions.KOKIRI_FOREST, lambda bundle: True, SOHOverworldEntranceNames.LOST_WOODS_SOUTH_EXIT, SOHEntranceGroups.OVERWORLD),
+        (Regions.KOKIRI_FOREST, lambda bundle: True, SOHOverworldEntranceNames.LOST_WOODS_SOUTH_EXIT, SOHEntranceGroups.OVERWORLD | SOHEntranceGroups.BOTH_AGE),
     ])
 
     # Lost Woods
@@ -101,7 +101,7 @@ def set_region_rules(world: "SohWorld") -> None:
     # Connections
     connect_regions(Regions.LOST_WOODS, world, [
         (Regions.LW_FOREST_EXIT, lambda bundle: True),
-        (Regions.GC_WOODS_WARP, lambda bundle: True, SOHOverworldEntranceNames.LOST_WOODS_TUNNEL_SHORTCUT, SOHEntranceGroups.OVERWORLD),
+        (Regions.GC_WOODS_WARP, lambda bundle: True, SOHOverworldEntranceNames.LOST_WOODS_TUNNEL_SHORTCUT, SOHEntranceGroups.OVERWORLD | SOHEntranceGroups.BOTH_AGE),
         (Regions.LW_BRIDGE, lambda bundle: (is_adult(bundle) and (
             has_item(LocalEvents.LW_BRIDGE_BEAN_PLANTED, bundle) or can_do_trick(Tricks.LW_BRIDGE, bundle))) or can_use(Items.HOVER_BOOTS,
                                                                                                                         bundle) or can_use(
@@ -109,7 +109,7 @@ def set_region_rules(world: "SohWorld") -> None:
         (Regions.ZR_FROM_SHORTCUT,
          lambda bundle: has_item(Items.SILVER_SCALE, bundle) or can_use(Items.IRON_BOOTS, bundle) or (can_do_trick(
              Tricks.LOST_WOOD_NAVI_DIVE, bundle) and is_child(bundle) and has_item(Items.BRONZE_SCALE,
-                                                                                   bundle) and can_jump_slash(bundle)), SOHOverworldEntranceNames.LOST_WOODS_UNDERWATER_SHORTCUT, SOHEntranceGroups.OVERWORLD),
+                                                                                   bundle) and can_jump_slash(bundle)), SOHOverworldEntranceNames.LOST_WOODS_UNDERWATER_SHORTCUT, SOHEntranceGroups.OVERWORLD | SOHEntranceGroups.BOTH_AGE),
         (Regions.LW_BEYOND_MIDO,
          lambda bundle: is_child(bundle) or can_use(Items.SARIAS_SONG, bundle) or can_do_trick(Tricks.LW_MIDO_BACKFLIP,
                                                                                                bundle)),
@@ -160,7 +160,7 @@ def set_region_rules(world: "SohWorld") -> None:
         (Regions.LW_FOREST_EXIT, lambda bundle: True),
         (Regions.LOST_WOODS, lambda bundle: is_child(
             bundle) or can_use(Items.SARIAS_SONG, bundle)),
-        (Regions.SFM_ENTRYWAY, lambda bundle: True, SOHOverworldEntranceNames.LOST_WOODS_NORTH_EXIT, SOHEntranceGroups.OVERWORLD),
+        (Regions.SFM_ENTRYWAY, lambda bundle: True, SOHOverworldEntranceNames.LOST_WOODS_NORTH_EXIT, SOHEntranceGroups.OVERWORLD | SOHEntranceGroups.BOTH_AGE),
         (Regions.DEKU_THEATER, lambda bundle: True, SOHGrottoEntranceNames.DEKU_THEATER_ENTRANCE, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE),
         (Regions.LW_SCRUBS_GROTTO, lambda bundle: blast_or_smash(bundle), SOHGrottoEntranceNames.LW_SCRUBS_GROTTO_ENTRANCE, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE),
     ])
@@ -233,20 +233,24 @@ def set_region_rules(world: "SohWorld") -> None:
         (Regions.LW_BEYOND_MIDO, lambda bundle: True, SOHGrottoExitNames.LW_SCRUBS_GROTTO_EXIT, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE),
     ])
 
-    # LW Bridge From Forest
+    # # LW Bridge From Forest
+    # # Location
+    # add_locations(Regions.LW_BRIDGE_FROM_FOREST, world, [
+    #     (Locations.LW_GIFT_FROM_SARIA, lambda bundle: True)
+    # ])
+    # # Connections
+    # connect_regions(Regions.LW_BRIDGE_FROM_FOREST, world, [
+    #     (Regions.LW_BRIDGE, lambda bundle: True),
+    # ])
+
+    # LW Bridge
     # Location
-    add_locations(Regions.LW_BRIDGE_FROM_FOREST, world, [
+    add_locations(Regions.LW_BRIDGE, world, [
         (Locations.LW_GIFT_FROM_SARIA, lambda bundle: True)
     ])
     # Connections
-    connect_regions(Regions.LW_BRIDGE_FROM_FOREST, world, [
-        (Regions.LW_BRIDGE, lambda bundle: True),
-    ])
-
-    # LW Bridge
-    # Connections
     connect_regions(Regions.LW_BRIDGE, world, [
-        (Regions.KOKIRI_FOREST, lambda bundle: True, SOHOverworldEntranceNames.LOST_WOODS_BRIDGE_EAST_EXIT, SOHEntranceGroups.OVERWORLD),
-        (Regions.HYRULE_FIELD, lambda bundle: True, SOHOverworldEntranceNames.LOST_WOODS_BRIDGE_WEST_EXIT, SOHEntranceGroups.OVERWORLD),
+        (Regions.KOKIRI_FOREST, lambda bundle: True, SOHOverworldEntranceNames.LOST_WOODS_BRIDGE_EAST_EXIT, SOHEntranceGroups.OVERWORLD | SOHEntranceGroups.BOTH_AGE),
+        (Regions.HYRULE_FIELD, lambda bundle: True, SOHOverworldEntranceNames.LOST_WOODS_BRIDGE_WEST_EXIT, SOHEntranceGroups.OVERWORLD | SOHEntranceGroups.BOTH_AGE),
         (Regions.LOST_WOODS, lambda bundle: can_use(Items.LONGSHOT, bundle))
     ])

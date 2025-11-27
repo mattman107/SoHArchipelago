@@ -35,7 +35,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connection
     connect_regions(Regions.GERUDO_VALLEY, world, [
-        (Regions.HYRULE_FIELD, lambda bundle: True, SOHOverworldEntranceNames.GERUDO_VALLEY_EAST_EXIT, SOHEntranceGroups.OVERWORLD),
+        (Regions.HYRULE_FIELD, lambda bundle: True, SOHOverworldEntranceNames.GERUDO_VALLEY_EAST_EXIT, SOHEntranceGroups.OVERWORLD | SOHEntranceGroups.BOTH_AGE),
         (Regions.GV_UPPER_STREAM,
          lambda bundle: is_child(bundle) or has_item(Items.BRONZE_SCALE, bundle) or take_damage(bundle)),
         (Regions.GV_CRATE_LEDGE, lambda bundle: is_child(
@@ -44,7 +44,7 @@ def set_region_rules(world: "SohWorld") -> None:
         (Regions.GV_FORTRESS_SIDE, lambda bundle: (is_adult(bundle) and (
             can_use(Items.EPONA, bundle) or can_use(Items.LONGSHOT,
                                                     bundle) or world.options.fortress_carpenters.value == 2 or has_item(
-                Events.RESCUED_ALL_CARPENTERS, bundle))) or (is_child(bundle) and can_use(Items.HOOKSHOT, bundle)), SOHOverworldEntranceNames.GERUDO_VALLEY_WEST_EXIT, SOHEntranceGroups.OVERWORLD),
+                Events.RESCUED_ALL_CARPENTERS, bundle))) or (is_child(bundle) and can_use(Items.HOOKSHOT, bundle))),
         (Regions.GV_LOWER_STREAM, lambda bundle: is_child(bundle))
     ])
 
@@ -91,7 +91,7 @@ def set_region_rules(world: "SohWorld") -> None:
     # GV Lower Stream
     # Connections
     connect_regions(Regions.GV_LOWER_STREAM, world, [
-        (Regions.LAKE_HYLIA, lambda bundle: True, SOHOverworldEntranceNames.LAKE_HYLIA_RIVER_ENTRANCE, SOHEntranceGroups.OVERWORLD, EntranceType.ONE_WAY)
+        (Regions.LAKE_HYLIA, lambda bundle: True, SOHOverworldEntranceNames.LAKE_HYLIA_RIVER_ENTRANCE, SOHEntranceGroups.OVERWORLD | SOHEntranceGroups.ANY_AGE, EntranceType.ONE_WAY)
     ])
 
     # GV Grotto Ledge
@@ -144,7 +144,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.GV_FORTRESS_SIDE, world, [
-        (Regions.GERUDO_FORTRESS_OUTSKIRTS, lambda bundle: True),
+        (Regions.GERUDO_FORTRESS_OUTSKIRTS, lambda bundle: True, SOHOverworldEntranceNames.GERUDO_VALLEY_WEST_EXIT, SOHEntranceGroups.OVERWORLD | SOHEntranceGroups.BOTH_AGE),
         (Regions.GV_UPPER_STREAM, lambda bundle: True),
         (Regions.GERUDO_VALLEY,
          lambda bundle: is_child(bundle) or can_use(Items.EPONA, bundle) or can_use(Items.LONGSHOT,

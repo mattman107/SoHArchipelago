@@ -23,7 +23,7 @@ def set_region_rules(world: "SohWorld") -> None:
     # Connections
     connect_regions(Regions.DMC_UPPER_NEARBY, world, [
         (Regions.DMC_UPPER_LOCAL, lambda bundle: fire_timer(bundle) >= 48),
-        (Regions.DEATH_MOUNTAIN_SUMMIT, lambda bundle: True, SOHOverworldEntranceNames.DEATH_MOUNTAIN_CRATER_UPPER_EXIT, SOHEntranceGroups.OVERWORLD),
+        (Regions.DEATH_MOUNTAIN_SUMMIT, lambda bundle: True, SOHOverworldEntranceNames.DEATH_MOUNTAIN_CRATER_UPPER_EXIT, SOHEntranceGroups.OVERWORLD | SOHEntranceGroups.BOTH_AGE),
         (Regions.DMC_UPPER_GROTTO, lambda bundle: blast_or_smash(
             bundle) and (fire_timer(bundle) >= 8 or hearts(bundle) >= 3), SOHGrottoEntranceNames.DMC_UPPER_GROTTO_ENTRANCE, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE),
     ])
@@ -83,7 +83,7 @@ def set_region_rules(world: "SohWorld") -> None:
     # Connections
     connect_regions(Regions.DMC_LOWER_NEARBY, world, [
         (Regions.DMC_LOWER_LOCAL, lambda bundle: fire_timer(bundle) >= 48),
-        (Regions.GC_DARUNIAS_CHAMBER, lambda bundle: True, SOHOverworldEntranceNames.DEATH_MOUNTAIN_TRAIL_GC_EXIT, SOHEntranceGroups.OVERWORLD),
+        (Regions.GC_DARUNIAS_CHAMBER, lambda bundle: True, SOHOverworldEntranceNames.DEATH_MOUNTAIN_TRAIL_GC_EXIT, SOHEntranceGroups.OVERWORLD | SOHEntranceGroups.BOTH_AGE),
         (Regions.DMC_GREAT_FAIRY_FOUNTAIN,
          lambda bundle: can_use(Items.MEGATON_HAMMER, bundle), SOHInteriorEntranceNames.DMC_GREAT_FAIRY_FOUNTAIN_ENTRANCE, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ADULT_ONLY),
         (Regions.DMC_HAMMER_GROTTO, lambda bundle: is_adult(

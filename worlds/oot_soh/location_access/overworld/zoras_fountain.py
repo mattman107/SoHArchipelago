@@ -45,7 +45,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.ZORAS_FOUNTAIN, world, [
-        (Regions.ZD_BEHIND_KING_ZORA, lambda bundle: True, SOHOverworldEntranceNames.ZORAS_FOUNTAIN_TUNNEL_EXIT, SOHEntranceGroups.OVERWORLD),
+        (Regions.ZD_BEHIND_KING_ZORA, lambda bundle: True, SOHOverworldEntranceNames.ZORAS_FOUNTAIN_TUNNEL_EXIT, SOHEntranceGroups.OVERWORLD | SOHEntranceGroups.BOTH_AGE),
         (Regions.ZF_ICEBERGS, lambda bundle: is_adult(bundle)),
         (Regions.ZF_LAKEBED, lambda bundle: can_use(Items.IRON_BOOTS, bundle)),
         (Regions.ZF_HIDDEN_CAVE, lambda bundle: can_use(

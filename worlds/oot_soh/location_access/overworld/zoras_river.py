@@ -53,7 +53,7 @@ def set_region_rules(world: "SohWorld") -> None:
     connect_regions(Regions.ZR_FRONT, world, [
         (Regions.ZORA_RIVER, lambda bundle: is_adult(
             bundle) or blast_or_smash(bundle)),
-        (Regions.HYRULE_FIELD, lambda bundle: True, SOHOverworldEntranceNames.ZORAS_RIVER_WEST_EXIT, SOHEntranceGroups.OVERWORLD)
+        (Regions.HYRULE_FIELD, lambda bundle: True, SOHOverworldEntranceNames.ZORAS_RIVER_WEST_EXIT, SOHEntranceGroups.OVERWORLD | SOHEntranceGroups.BOTH_AGE)
     ])
 
     # Zora River
@@ -166,7 +166,7 @@ def set_region_rules(world: "SohWorld") -> None:
           can_do_trick(Tricks.ZR_CUCCO, bundle)) or
          (is_adult(bundle) and
           can_use(Items.HOVER_BOOTS, bundle) and
-          can_do_trick(Tricks.ZR_HOVERS, bundle)), SOHOverworldEntranceNames.ZORAS_RIVER_WATERFALL_EXIT, SOHEntranceGroups.OVERWORLD)
+          can_do_trick(Tricks.ZR_HOVERS, bundle)), SOHOverworldEntranceNames.ZORAS_RIVER_WATERFALL_EXIT, SOHEntranceGroups.OVERWORLD | SOHEntranceGroups.BOTH_AGE)
 
     ])
     # Events
@@ -178,7 +178,7 @@ def set_region_rules(world: "SohWorld") -> None:
          has_item(Items.BOTTLE_WITH_FAIRY, bundle) or
          has_item(Items.BRONZE_SCALE, bundle)),
         (Regions.LOST_WOODS, lambda bundle: has_item(Items.SILVER_SCALE, bundle) or
-         can_use(Items.IRON_BOOTS, bundle), SOHOverworldEntranceNames.ZORAS_RIVER_UNDERWATER_SHORTCUT, SOHEntranceGroups.OVERWORLD)
+         can_use(Items.IRON_BOOTS, bundle), SOHOverworldEntranceNames.ZORAS_RIVER_UNDERWATER_SHORTCUT, SOHEntranceGroups.OVERWORLD | SOHEntranceGroups.BOTH_AGE)
 
     ])
 

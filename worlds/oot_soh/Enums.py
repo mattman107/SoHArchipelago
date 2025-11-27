@@ -4147,7 +4147,7 @@ class SOHOverworldEntranceNames(StrEnum):
     LON_LON_RANCH_ENTRANCE = "Lon Lon Ranch Entrance"
     HYRULE_FIELD_CENTER_EXIT = "Hyrule Field Center Exit"
     ZORAS_DOMAIN_UNDERWATER_SHORTCUT = "Zoras Domain Underwater Shortcut"
-    LAKE_HYLIA_UNDERWATER_SHORTCUT = "Lakey Hylia Underwater Shortcut"
+    LAKE_HYLIA_UNDERWATER_SHORTCUT = "Lake Hylia Underwater Shortcut"
     GERUDOS_FORTRESS_EAST_EXIT = "Gerudos Fortress East Exit"
     GERUDO_VALLEY_WEST_EXIT = "Gerudo Valley West Exit"
     HAUNTED_WASTELAND_EAST_EXIT = "Haunted Wasteland East Exit"

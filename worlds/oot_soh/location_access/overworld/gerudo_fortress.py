@@ -33,7 +33,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.GERUDO_FORTRESS_OUTSKIRTS, world, [
-        (Regions.GV_FORTRESS_SIDE, lambda bundle: True, SOHOverworldEntranceNames.GERUDOS_FORTRESS_EAST_EXIT, SOHEntranceGroups.OVERWORLD),
+        (Regions.GV_FORTRESS_SIDE, lambda bundle: True, SOHOverworldEntranceNames.GERUDOS_FORTRESS_EAST_EXIT, SOHEntranceGroups.OVERWORLD | SOHEntranceGroups.ADULT),
         (Regions.THIEVES_HIDEOUT_1_TORCH_CELL, lambda bundle: True, SOHThievesHideoutEntranceNames.THIEVES_HIDEOUT_0, int(SOHEntranceGroups.THIEVES_HIDEOUT_ENTRANCE)),
         (Regions.GF_OUTSIDE_GATE, lambda bundle: has_item(
             LocalEvents.GF_GATE_OPEN, bundle)),
@@ -335,7 +335,7 @@ def set_region_rules(world: "SohWorld") -> None:
     connect_regions(Regions.GF_OUTSIDE_GATE, world, [
         (Regions.GERUDO_FORTRESS_OUTSKIRTS, lambda bundle: has_item(
             LocalEvents.GF_GATE_OPEN, bundle)),
-        (Regions.WASTELAND_NEAR_FORTRESS, lambda bundle: True, SOHOverworldEntranceNames.GERUDOS_FORTRESS_GATE_EXIT, SOHEntranceGroups.OVERWORLD),
+        (Regions.WASTELAND_NEAR_FORTRESS, lambda bundle: True, SOHOverworldEntranceNames.GERUDOS_FORTRESS_GATE_EXIT, SOHEntranceGroups.OVERWORLD | SOHEntranceGroups.BOTH_AGE),
     ])
 
     # GF Storms Grotto

@@ -179,9 +179,9 @@ def set_region_rules(world: "SohWorld") -> None:
          or (is_child(bundle) and has_item(LocalEvents.MIDO_SWORD_AND_SHIELD, bundle))
          # Todo, maybe create a helper for handling settings
          or world.options.closed_forest.value == 2),
-        (Regions.LOST_WOODS, lambda bundle: True, SOHOverworldEntranceNames.KOKIRI_FOREST_UPPER_EXIT, SOHEntranceGroups.OVERWORLD),
+        (Regions.LOST_WOODS, lambda bundle: True, SOHOverworldEntranceNames.KOKIRI_FOREST_UPPER_EXIT, SOHEntranceGroups.OVERWORLD | SOHEntranceGroups.BOTH_AGE),
         (Regions.LW_BRIDGE_FROM_FOREST, lambda bundle: world.options.closed_forest.value >= 1 or is_adult(bundle) or
-         has_item(Events.DEKU_TREE_COMPLETED, bundle), SOHOverworldEntranceNames.KOKIRI_FOREST_LOWER_EXIT, SOHEntranceGroups.OVERWORLD),
+         has_item(Events.DEKU_TREE_COMPLETED, bundle), SOHOverworldEntranceNames.KOKIRI_FOREST_LOWER_EXIT, SOHEntranceGroups.OVERWORLD | SOHEntranceGroups.BOTH_AGE),
         (Regions.KF_STORMS_GROTTO, lambda bundle: can_open_storms_grotto(bundle), SOHGrottoEntranceNames.KF_STORMS_GROTTO_ENTRANCE, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE)
     ])
 

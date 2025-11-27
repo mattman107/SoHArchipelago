@@ -266,7 +266,7 @@ class SohWorld(World):
         # Overworld Entrances
         if self.options.shuffle_overworld_entrances:
             for entranceName in SOHOverworldEntranceNames:
-                if not self.options.decouple_entrances and entranceName == SOHOverworldEntranceNames.LAKE_HYLIA_RIVER_ENTRANCE:
+                if not self.options.decouple_entrances and sum(map(bool, [self.options.shuffle_grotto_entrances, self.options.shuffle_interior_entrances, self.options.shuffle_dungeon_entrances, True if self.options.shuffle_boss_entrances == "full" else False])) >= 1 and entranceName == SOHOverworldEntranceNames.LAKE_HYLIA_RIVER_ENTRANCE:
                     continue
 
                 # ignore our one way exit here

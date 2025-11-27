@@ -118,7 +118,7 @@ def randomize_soh_one_way_entrances(world: "SohWorld") -> None:
         one_way_entrance_names = list()
         one_way_entrance_exit_names = list()
         # TODO This will need to be updated as we make more named entrances
-        all_named_entrances = list(SOHDungeonEntranceNames) + list(SOHDungeonExitNames) + list(SOHGrottoExitNames) + list(SOHGrottoEntranceNames) + list(SOHInteriorEntranceNames) + list(SOHInteriorExitNames) + list(SOHSpecialInteriorExitNames) + list(SOHSpecialInteriorEntranceNames)
+        all_named_entrances = list(SOHDungeonEntranceNames) + list(SOHDungeonExitNames) + list(SOHGrottoExitNames) + list(SOHGrottoEntranceNames) + list(SOHInteriorEntranceNames) + list(SOHInteriorExitNames) + list(SOHSpecialInteriorExitNames) + list(SOHSpecialInteriorEntranceNames) + list(SOHOverworldEntranceNames)
 
         if world.options.shuffle_owl_drop_entrances:
             one_way_entrance_names += [Regions.LH_OWL_FLIGHT, Regions.DMT_OWL_FLIGHT]

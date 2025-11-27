@@ -155,7 +155,7 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.LAKE_HYLIA, world, [
-        (Regions.HYRULE_FIELD, lambda bundle: True, SOHOverworldEntranceNames.LAKE_HYLIA_NORTH_EXIT, SOHEntranceGroups.OVERWORLD),
+        (Regions.HYRULE_FIELD, lambda bundle: True, SOHOverworldEntranceNames.LAKE_HYLIA_NORTH_EXIT, SOHEntranceGroups.OVERWORLD | SOHEntranceGroups.BOTH_AGE),
         (Regions.LH_FROM_SHORTCUT, lambda bundle: True),
         (Regions.LH_OWL_FLIGHT, lambda bundle: is_child(bundle)),
         (Regions.LH_FISHING_ISLAND, lambda bundle: ((is_child(bundle)
@@ -179,7 +179,7 @@ def set_region_rules(world: "SohWorld") -> None:
          can_use(Items.IRON_BOOTS, bundle)),
         (Regions.ZORAS_DOMAIN, lambda bundle: is_child(bundle) and
          (has_item(Items.SILVER_SCALE, bundle) or
-          can_use(Items.IRON_BOOTS, bundle)), SOHOverworldEntranceNames.LAKE_HYLIA_UNDERWATER_SHORTCUT, SOHEntranceGroups.OVERWORLD),
+          can_use(Items.IRON_BOOTS, bundle)), SOHOverworldEntranceNames.LAKE_HYLIA_UNDERWATER_SHORTCUT, SOHEntranceGroups.OVERWORLD | SOHEntranceGroups.CHILD_ONLY),
     ])
 
     # LH from Water Temple

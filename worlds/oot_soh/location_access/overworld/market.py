@@ -19,8 +19,8 @@ def set_region_rules(world: "SohWorld") -> None:
     # Connections
     connect_regions(Regions.MARKET_ENTRANCE, world, [
         (Regions.HYRULE_FIELD, lambda bundle: (
-            is_adult(bundle) or at_day(bundle)), SOHOverworldEntranceNames.MARKET_ENTRANCE_NEAR_GUARD_EXIT, SOHEntranceGroups.OVERWORLD),
-        (Regions.MARKET, lambda bundle: True, SOHOverworldEntranceNames.MARKET_ENTRANCE_NORTH_EXIT, SOHEntranceGroups.OVERWORLD),
+            is_adult(bundle) or at_day(bundle)), SOHOverworldEntranceNames.MARKET_ENTRANCE_NEAR_GUARD_EXIT, SOHEntranceGroups.OVERWORLD | SOHEntranceGroups.BOTH_AGE),
+        (Regions.MARKET, lambda bundle: True, SOHOverworldEntranceNames.MARKET_ENTRANCE_NORTH_EXIT, SOHEntranceGroups.OVERWORLD | SOHEntranceGroups.BOTH_AGE),
         (Regions.MARKET_GUARD_HOUSE, lambda bundle: can_open_overworld_door(
             Items.GUARD_HOUSE_KEY, bundle), SOHInteriorEntranceNames.MARKET_GUARD_HOUSE_ENTRANCE, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ANY_AGE)
     ])
@@ -55,9 +55,9 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.MARKET, world, [
-        (Regions.MARKET_ENTRANCE, lambda bundle: True, SOHOverworldEntranceNames.MARKET_SOUTH_EXIT, SOHEntranceGroups.OVERWORLD),
-        (Regions.TOT_ENTRANCE, lambda bundle: True, SOHOverworldEntranceNames.MARKET_DAY_TEMPLE_EXIT, SOHEntranceGroups.OVERWORLD),
-        (Regions.CASTLE_GROUNDS, lambda bundle: True, SOHOverworldEntranceNames.MARKET_DAY_CASTLE_EXIT, SOHEntranceGroups.OVERWORLD),
+        (Regions.MARKET_ENTRANCE, lambda bundle: True, SOHOverworldEntranceNames.MARKET_SOUTH_EXIT, SOHEntranceGroups.OVERWORLD | SOHEntranceGroups.BOTH_AGE),
+        (Regions.TOT_ENTRANCE, lambda bundle: True, SOHOverworldEntranceNames.MARKET_DAY_TEMPLE_EXIT, SOHEntranceGroups.OVERWORLD | SOHEntranceGroups.BOTH_AGE),
+        (Regions.CASTLE_GROUNDS, lambda bundle: True, SOHOverworldEntranceNames.MARKET_DAY_CASTLE_EXIT, SOHEntranceGroups.OVERWORLD | SOHEntranceGroups.BOTH_AGE),
         (Regions.MARKET_BAZAAR, lambda bundle: (is_child(bundle) and at_day(
             bundle) and can_open_overworld_door(Items.MARKET_BAZAAR_KEY, bundle)), SOHInteriorEntranceNames.MARKET_BAZAAR_ENTRANCE, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.CHILD_ONLY),
         (Regions.MARKET_MASK_SHOP, lambda bundle: (is_child(bundle) and at_day(

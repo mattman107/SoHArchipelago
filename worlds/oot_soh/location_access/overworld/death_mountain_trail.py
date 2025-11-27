@@ -62,8 +62,8 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.DEATH_MOUNTAIN_TRAIL, world, [
-        (Regions.KAK_BEHIND_GATE, lambda bundle: True, SOHOverworldEntranceNames.DEATH_MOUNTAIN_TRAIL_BOTTOM_EXIT, SOHEntranceGroups.OVERWORLD),
-        (Regions.GORON_CITY, lambda bundle: True, SOHOverworldEntranceNames.DEATH_MOUNTAIN_CRATER_GC_EXIT, SOHEntranceGroups.OVERWORLD),
+        (Regions.KAK_BEHIND_GATE, lambda bundle: True, SOHOverworldEntranceNames.DEATH_MOUNTAIN_TRAIL_BOTTOM_EXIT, SOHEntranceGroups.OVERWORLD | SOHEntranceGroups.BOTH_AGE),
+        (Regions.GORON_CITY, lambda bundle: True, SOHOverworldEntranceNames.DEATH_MOUNTAIN_CRATER_GC_EXIT, SOHEntranceGroups.OVERWORLD | SOHEntranceGroups.BOTH_AGE),
         (Regions.DEATH_MOUNTAIN_SUMMIT, lambda bundle: blast_or_smash(bundle) or (is_adult(bundle) and ((has_item(LocalEvents.DMT_BEAN_PLANTED, bundle)
          and has_item(Items.GORONS_BRACELET, bundle)) or (can_use(Items.HOVER_BOOTS, bundle) and can_do_trick(Tricks.DMT_CLIMB_HOVERS, bundle))))),
         (Regions.DODONGOS_CAVERN_ENTRYWAY, lambda bundle: has_explosives(bundle) or has_item(Items.GORONS_BRACELET, bundle) or is_adult(
@@ -96,7 +96,7 @@ def set_region_rules(world: "SohWorld") -> None:
     # Connections
     connect_regions(Regions.DEATH_MOUNTAIN_SUMMIT, world, [
         (Regions.DEATH_MOUNTAIN_TRAIL, lambda bundle: True),
-        (Regions.DMC_UPPER_LOCAL, lambda bundle: True, SOHOverworldEntranceNames.DEATH_MOUNTAIN_TRAIL_SUMMIT_EXIT, SOHEntranceGroups.OVERWORLD),
+        (Regions.DMC_UPPER_LOCAL, lambda bundle: True, SOHOverworldEntranceNames.DEATH_MOUNTAIN_TRAIL_SUMMIT_EXIT, SOHEntranceGroups.OVERWORLD | SOHEntranceGroups.BOTH_AGE),
         (Regions.DMT_OWL_FLIGHT, lambda bundle: is_child(bundle)),
         (Regions.DMT_COW_GROTTO, lambda bundle: blast_or_smash(bundle), SOHGrottoEntranceNames.DMT_COW_GROTTO_ENTRANCE, SOHEntranceGroups.GROTTO | SOHEntranceGroups.ANY_AGE),
         (Regions.DMT_GREAT_FAIRY_FOUNTAIN, lambda bundle: blast_or_smash(bundle), SOHInteriorEntranceNames.DMT_GREAT_FAIRY_FOUNTAIN_ENTRANCE, SOHEntranceGroups.INTERIOR | SOHEntranceGroups.ANY_AGE)
