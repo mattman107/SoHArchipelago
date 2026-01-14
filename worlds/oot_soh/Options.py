@@ -1120,7 +1120,7 @@ class DamageMultiplier(Choice):
     option_1X = 1
     option_2x = 2
     option_4X = 3
-    option_4X = 4
+    option_8X = 4
     option_16X = 5
     option_OHKO = 6
     default = 1
