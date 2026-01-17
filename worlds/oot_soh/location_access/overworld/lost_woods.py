@@ -35,17 +35,14 @@ def set_region_rules(world: "SohWorld") -> None:
     add_events(Regions.LOST_WOODS, world, [
         (EventLocations.LW_GOSSIP_STONE_SONG_FAIRY, Events.CAN_ACCESS_FAIRIES,
          lambda bundle: call_gossip_fairy_except_suns(bundle)),
-        (EventLocations.LW_BEAN_PLANT_FAIRY, Events.CAN_ACCESS_FAIRIES,
-         lambda bundle: is_child(bundle) and can_use(Items.MAGIC_BEAN, bundle) and can_use(Items.SONG_OF_STORMS,
-                                                                                           bundle)),
+        (EventLocations.LW_BEAN_PLANT_FAIRY, Events.CAN_ACCESS_FAIRIES, lambda bundle: has_item(LocalEvents.LW_BRIDGE_BEAN_PLANTED, bundle) and can_use(Items.SONG_OF_STORMS,bundle)),
         (EventLocations.LW_BUG_GRASS, Events.CAN_ACCESS_BUGS,
          lambda bundle: can_cut_shrubs(bundle)),
         (EventLocations.LW_SKULL_KID_MASK_TRADE, Events.SOLD_SKULL_MASK,
          lambda bundle: is_child(bundle) and can_use(Items.SARIAS_SONG, bundle) and has_item(Events.CAN_BORROW_SKULL_MASK,
                                                                                              bundle) and has_item(
              Items.CHILD_WALLET, bundle)),
-        (EventLocations.LW_BRIDGE_BEAN_PATCH, LocalEvents.LW_BRIDGE_BEAN_PLANTED,
-         lambda bundle: is_child(bundle) and can_use(Items.MAGIC_BEAN, bundle)),
+        (EventLocations.LW_BRIDGE_BEAN_PATCH, LocalEvents.LW_BRIDGE_BEAN_PLANTED, lambda bundle: is_child(bundle) and can_use(Items.MAGIC_BEAN, bundle) and has_item(Items.LOST_WOODS_BRIDGE_BEAN_SOUL, bundle)),
     ])
     # Locations
     add_locations(Regions.LOST_WOODS, world, [
@@ -61,8 +58,7 @@ def set_region_rules(world: "SohWorld") -> None:
             bundle) and can_use(Items.FAIRY_SLINGSHOT, bundle)),
         (Locations.LW_DEKU_SCRUB_NEAR_BRIDGE,
          lambda bundle: is_child(bundle) and can_stun_deku(bundle)),
-        (Locations.LW_GS_BEAN_PATCH_NEAR_BRIDGE,
-         lambda bundle: can_spawn_soil_skull(bundle) and can_attack(bundle)),
+        (Locations.LW_GS_BEAN_PATCH_NEAR_BRIDGE, lambda bundle: can_spawn_soil_skull(Items.LOST_WOODS_BRIDGE_BEAN_SOUL, bundle) and can_attack(bundle)),
         (Locations.LW_UNDERWATER_SHORTCUT_RUPEE1,
          lambda bundle: is_child(bundle) and (has_item(Items.SILVER_SCALE, bundle) or can_use(Items.IRON_BOOTS, bundle))),
         (Locations.LW_UNDERWATER_SHORTCUT_RUPEE2,
@@ -79,15 +75,9 @@ def set_region_rules(world: "SohWorld") -> None:
          lambda bundle: is_child(bundle) and (has_item(Items.SILVER_SCALE, bundle) or can_use(Items.IRON_BOOTS, bundle))),
         (Locations.LW_UNDERWATER_SHORTCUT_RUPEE8,
          lambda bundle: is_child(bundle) and (has_item(Items.SILVER_SCALE, bundle) or can_use(Items.IRON_BOOTS, bundle))),
-        (Locations.LW_BEAN_SPROUT_NEAR_BRIDGE_FAIRY1,
-         lambda bundle: is_child(bundle) and can_use(Items.MAGIC_BEAN, bundle) and can_use(Items.SONG_OF_STORMS,
-                                                                                           bundle)),
-        (Locations.LW_BEAN_SPROUT_NEAR_BRIDGE_FAIRY2,
-         lambda bundle: is_child(bundle) and can_use(Items.MAGIC_BEAN, bundle) and can_use(Items.SONG_OF_STORMS,
-                                                                                           bundle)),
-        (Locations.LW_BEAN_SPROUT_NEAR_BRIDGE_FAIRY3,
-         lambda bundle: is_child(bundle) and can_use(Items.MAGIC_BEAN, bundle) and can_use(Items.SONG_OF_STORMS,
-                                                                                           bundle)),
+        (Locations.LW_BEAN_SPROUT_NEAR_BRIDGE_FAIRY1, lambda bundle: has_item(LocalEvents.LW_BRIDGE_BEAN_PLANTED, bundle) and can_use(Items.SONG_OF_STORMS, bundle)),
+        (Locations.LW_BEAN_SPROUT_NEAR_BRIDGE_FAIRY2, lambda bundle: has_item(LocalEvents.LW_BRIDGE_BEAN_PLANTED, bundle) and can_use(Items.SONG_OF_STORMS, bundle)),
+        (Locations.LW_BEAN_SPROUT_NEAR_BRIDGE_FAIRY3, lambda bundle: has_item(LocalEvents.LW_BRIDGE_BEAN_PLANTED, bundle) and can_use(Items.SONG_OF_STORMS, bundle)),
         (Locations.LW_GOSSIP_STONE_FAIRY,
          lambda bundle: call_gossip_fairy_except_suns(bundle)),
         (Locations.LW_GOSSIP_STONE_BIG_FAIRY,
@@ -121,8 +111,7 @@ def set_region_rules(world: "SohWorld") -> None:
     add_events(Regions.LW_BEYOND_MIDO, world, [
         (EventLocations.LW_BUTTERFLY_FAIRY, Events.CAN_ACCESS_FAIRIES,
          lambda bundle: can_use(Items.STICKS, bundle)),
-        (EventLocations.LW_THEATER_BEAN_PATCH, LocalEvents.LW_THEATER_BEAN_PLANTED,
-         lambda bundle: is_child(bundle) and can_use(Items.MAGIC_BEAN, bundle)),
+        (EventLocations.LW_THEATER_BEAN_PATCH, LocalEvents.LW_THEATER_BEAN_PLANTED, lambda bundle: is_child(bundle) and can_use(Items.MAGIC_BEAN, bundle) and has_item(Items.LOST_WOODS_BEAN_SOUL, bundle)),
     ])
     # Locations
     add_locations(Regions.LW_BEYOND_MIDO, world, [
@@ -136,18 +125,12 @@ def set_region_rules(world: "SohWorld") -> None:
                   and can_use(Items.LONGSHOT, bundle)
                   and can_use_any([Items.FAIRY_BOW, Items.FAIRY_SLINGSHOT, Items.BOMBCHUS_5, Items.DINS_FIRE], bundle)))),
         (Locations.LW_GS_BEAN_PATCH_NEAR_THEATER,
-         lambda bundle: can_spawn_soil_skull(bundle) and (can_attack(bundle) or
+         lambda bundle: can_spawn_soil_skull(Items.LOST_WOODS_BEAN_SOUL, bundle) and (can_attack(bundle) or
                                                           (world.options.shuffle_scrubs.value == 0 and can_reflect_nuts(bundle)))),
         (Locations.LW_BOULDER_RUPEE, lambda bundle: blast_or_smash(bundle)),
-        (Locations.LW_BEAN_SPROUT_NEAR_THEATRE_FAIRY1,
-         lambda bundle: is_child(bundle) and has_item(Items.MAGIC_BEAN, bundle) and can_use(Items.SONG_OF_STORMS,
-                                                                                            bundle)),
-        (Locations.LW_BEAN_SPROUT_NEAR_THEATRE_FAIRY2,
-         lambda bundle: is_child(bundle) and has_item(Items.MAGIC_BEAN, bundle) and can_use(Items.SONG_OF_STORMS,
-                                                                                            bundle)),
-        (Locations.LW_BEAN_SPROUT_NEAR_THEATRE_FAIRY3,
-         lambda bundle: is_child(bundle) and has_item(Items.MAGIC_BEAN, bundle) and can_use(Items.SONG_OF_STORMS,
-                                                                                            bundle)),
+        (Locations.LW_BEAN_SPROUT_NEAR_THEATRE_FAIRY1, lambda bundle: has_item(LocalEvents.LW_THEATER_BEAN_PLANTED, bundle) and can_use(Items.SONG_OF_STORMS, bundle)),
+        (Locations.LW_BEAN_SPROUT_NEAR_THEATRE_FAIRY2, lambda bundle: has_item(LocalEvents.LW_THEATER_BEAN_PLANTED, bundle) and can_use(Items.SONG_OF_STORMS, bundle)),
+        (Locations.LW_BEAN_SPROUT_NEAR_THEATRE_FAIRY3, lambda bundle: has_item(LocalEvents.LW_THEATER_BEAN_PLANTED, bundle) and can_use(Items.SONG_OF_STORMS, bundle)),
         (Locations.LW_AFTER_MIDO_GRASS1, lambda bundle: can_cut_shrubs(bundle)),
         (Locations.LW_AFTER_MIDO_GRASS2, lambda bundle: can_cut_shrubs(bundle)),
         (Locations.LW_AFTER_MIDO_GRASS3, lambda bundle: can_cut_shrubs(bundle)),

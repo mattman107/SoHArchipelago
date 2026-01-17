@@ -989,6 +989,16 @@ class Items(StrEnum):
     NUTS = "Nuts"
     EPONA = "Epona"
     MAX = "Max"
+    DEATH_MOUNTAIN_CRATER_BEAN_SOUL = "Death Mountain Crater Bean Soul"
+    DEATH_MOUNTAIN_TRAIL_BEAN_SOUL = "Death Mountain Trail Bean Soul"
+    DESERT_COLOSSUS_BEAN_SOUL = "Desert Colossus Bean Soul"
+    GERUDO_VALLEY_BEAN_SOUL = "Gerudo Valley Bean Soul"
+    GRAVEYARD_BEAN_SOUL = "Graveyard Bean Soul"
+    KOKIRI_FOREST_BEAN_SOUL = "Kokiri Forest Bean Soul"
+    LAKE_HYLIA_BEAN_SOUL = "Lake Hylia Bean Soul"
+    LOST_WOODS_BRIDGE_BEAN_SOUL = "Lost Woods Bridge Bean Soul"
+    LOST_WOODS_BEAN_SOUL = "Lost Woods Bean Soul"
+    ZORAS_RIVER_BEAN_SOUL = "Zora's River Bean Soul"
     # Universal Tracker Required
     GLITCHED = "Glitched Item"
 

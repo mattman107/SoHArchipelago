@@ -26,9 +26,7 @@ def set_region_rules(world: "SohWorld") -> None:
     add_events(Regions.LAKE_HYLIA, world, [
         (EventLocations.LH_GOSSIP_STONE_SONG_FAIRY,
          Events.CAN_ACCESS_FAIRIES, lambda bundle: call_gossip_fairy(bundle)),
-        (EventLocations.LH_BEAN_FAIRY, Events.CAN_ACCESS_FAIRIES, lambda bundle: is_child(bundle) and
-         can_use(Items.MAGIC_BEAN, bundle) and
-         can_use(Items.SONG_OF_STORMS, bundle)),
+        (EventLocations.LH_BEAN_FAIRY, Events.CAN_ACCESS_FAIRIES, lambda bundle: has_item(LocalEvents.LH_BEAN_PLANTED, bundle) and can_use(Items.SONG_OF_STORMS, bundle)),
         (EventLocations.LH_BUTTERFLY_FAIRY, Events.CAN_ACCESS_FAIRIES,
          lambda bundle: can_use(Items.STICKS, bundle)),
         (EventLocations.LH_BUG_SHRUB, Events.CAN_ACCESS_BUGS,
@@ -39,8 +37,7 @@ def set_region_rules(world: "SohWorld") -> None:
         (EventLocations.ADULT_SCARECROW, Events.ADULT_SCARECROW_UNLOCKED, lambda bundle: is_adult(bundle) and
          has_item(Items.FAIRY_OCARINA, bundle) and
          ocarina_button_count(bundle) >= 2),
-        (EventLocations.LH_BEAN_PATCH, LocalEvents.LH_BEAN_PLANTED, lambda bundle: is_child(bundle) and
-         can_use(Items.MAGIC_BEAN, bundle)),
+        (EventLocations.LH_BEAN_PATCH, LocalEvents.LH_BEAN_PLANTED, lambda bundle: is_child(bundle) and can_use(Items.MAGIC_BEAN, bundle) and has_item(Items.LAKE_HYLIA_BEAN_SOUL, bundle)),
         (EventLocations.LH_DAY_NIGHT_CYCLE_CHILD,
          Events.CHILD_CAN_PASS_TIME, lambda bundle: is_child(bundle)),
         (EventLocations.LH_DAY_NIGHT_CYCLE_ADULT,
@@ -58,7 +55,7 @@ def set_region_rules(world: "SohWorld") -> None:
         (Locations.LH_FREESTANDING_POH, lambda bundle: is_adult(bundle) and
          (can_use(Items.SCARECROW, bundle) or
           has_item(LocalEvents.LH_BEAN_PLANTED, bundle))),
-        (Locations.LH_GS_BEAN_PATCH, lambda bundle: can_spawn_soil_skull(bundle) and
+        (Locations.LH_GS_BEAN_PATCH, lambda bundle: can_spawn_soil_skull(Items.LAKE_HYLIA_BEAN_SOUL, bundle) and
          can_get_enemy_drop(bundle, Enemies.GOLD_SKULLTULA)),
         (Locations.LH_GS_LAB_WALL, lambda bundle: is_child(bundle) and
          (can_get_enemy_drop(bundle, Enemies.GOLD_SKULLTULA, EnemyDistance.BOOMERANG)
@@ -80,15 +77,9 @@ def set_region_rules(world: "SohWorld") -> None:
         (Locations.LH_UNDERWATER_BACK_RUPEE, lambda bundle: is_child(bundle) and
          (has_item(Items.SILVER_SCALE, bundle) or
           can_use(Items.IRON_BOOTS, bundle))),
-        (Locations.LH_BEAN_SPROUT_FAIRY1, lambda bundle: is_child(bundle) and
-         can_use(Items.MAGIC_BEAN, bundle) and
-         can_use(Items.SONG_OF_STORMS, bundle)),
-        (Locations.LH_BEAN_SPROUT_FAIRY2, lambda bundle: is_child(bundle) and
-         can_use(Items.MAGIC_BEAN, bundle) and
-         can_use(Items.SONG_OF_STORMS, bundle)),
-        (Locations.LH_BEAN_SPROUT_FAIRY3, lambda bundle: is_child(bundle) and
-         can_use(Items.MAGIC_BEAN, bundle) and
-         can_use(Items.SONG_OF_STORMS, bundle)),
+        (Locations.LH_BEAN_SPROUT_FAIRY1, lambda bundle: has_item(LocalEvents.LH_BEAN_PLANTED, bundle) and can_use(Items.SONG_OF_STORMS, bundle)),
+        (Locations.LH_BEAN_SPROUT_FAIRY2, lambda bundle: has_item(LocalEvents.LH_BEAN_PLANTED, bundle) and can_use(Items.SONG_OF_STORMS, bundle)),
+        (Locations.LH_BEAN_SPROUT_FAIRY3, lambda bundle: has_item(LocalEvents.LH_BEAN_PLANTED, bundle) and can_use(Items.SONG_OF_STORMS, bundle)),
         (Locations.LH_LAB_GOSSIP_STONE_FAIRY,
          lambda bundle: call_gossip_fairy(bundle)),
         (Locations.LH_LAB_GOSSIP_STONE_BIG_FAIRY,

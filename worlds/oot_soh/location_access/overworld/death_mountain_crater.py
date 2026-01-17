@@ -126,12 +126,12 @@ def set_region_rules(world: "SohWorld") -> None:
         (EventLocations.DMC_BEAN_PLANT_FAIRY, Events.CAN_ACCESS_FAIRIES, lambda bundle: can_use(Items.MAGIC_BEAN,
          bundle) and can_use(Items.SONG_OF_STORMS, bundle) and (fire_timer(bundle) >= 8 or hearts(bundle) >= 3)),
         (EventLocations.DMC_BEAN_PATCH, LocalEvents.DMC_BEAN_PLANTED, lambda bundle: is_child(bundle)
-         and can_use(Items.MAGIC_BEAN, bundle) and (fire_timer(bundle) >= 8 or hearts(bundle) >= 3)),
+         and can_use(Items.MAGIC_BEAN, bundle) and (fire_timer(bundle) >= 8 or hearts(bundle) >= 3) and has_item(Items.DEATH_MOUNTAIN_CRATER_BEAN_SOUL, bundle)),
     ])
     # Locations
     add_locations(Regions.DMC_CENTRAL_LOCAL, world, [
         (Locations.DMC_GS_BEAN_PATCH, lambda bundle: (fire_timer(bundle) >= 8 or hearts(
-            bundle) >= 3) and can_spawn_soil_skull(bundle) and can_attack(bundle)),
+            bundle) >= 3) and can_spawn_soil_skull(Items.DEATH_MOUNTAIN_CRATER_BEAN_SOUL, bundle) and can_attack(bundle)),
         (Locations.DMC_NEAR_WARP_PLATFORM_RED_RUPEE,
          lambda bundle: is_child(bundle)),
         (Locations.DMC_MIDDLE_PLATFORM_RED_RUPEE, lambda bundle: is_child(
@@ -148,12 +148,9 @@ def set_region_rules(world: "SohWorld") -> None:
             bundle) and (fire_timer(bundle) >= 8 or hearts(bundle) >= 3)),
         (Locations.DMC_MIDDLE_PLATFORM_BLUE_RUPEE6, lambda bundle: is_child(
             bundle) and (fire_timer(bundle) >= 8 or hearts(bundle) >= 3)),
-        (Locations.DMC_BEAN_SPROUT_FAIRY1, lambda bundle: is_child(bundle) and can_use(Items.MAGIC_BEAN, bundle)
-         and can_use(Items.SONG_OF_STORMS, bundle) and (fire_timer(bundle) >= 8 or hearts(bundle) >= 3)),
-        (Locations.DMC_BEAN_SPROUT_FAIRY2, lambda bundle: is_child(bundle) and can_use(Items.MAGIC_BEAN, bundle)
-         and can_use(Items.SONG_OF_STORMS, bundle) and (fire_timer(bundle) >= 8 or hearts(bundle) >= 3)),
-        (Locations.DMC_BEAN_SPROUT_FAIRY3, lambda bundle: is_child(bundle) and can_use(Items.MAGIC_BEAN, bundle)
-         and can_use(Items.SONG_OF_STORMS, bundle) and (fire_timer(bundle) >= 8 or hearts(bundle) >= 3))
+        (Locations.DMC_BEAN_SPROUT_FAIRY1, lambda bundle: has_item(LocalEvents.DMC_BEAN_PLANTED, bundle) and can_use(Items.SONG_OF_STORMS, bundle)),
+        (Locations.DMC_BEAN_SPROUT_FAIRY2, lambda bundle: has_item(LocalEvents.DMC_BEAN_PLANTED, bundle) and can_use(Items.SONG_OF_STORMS, bundle)),
+        (Locations.DMC_BEAN_SPROUT_FAIRY3, lambda bundle: has_item(LocalEvents.DMC_BEAN_PLANTED, bundle) and can_use(Items.SONG_OF_STORMS, bundle))
     ])
     # Connections
     connect_regions(Regions.DMC_CENTRAL_LOCAL, world, [

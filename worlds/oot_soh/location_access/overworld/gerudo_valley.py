@@ -54,28 +54,22 @@ def set_region_rules(world: "SohWorld") -> None:
         (EventLocations.GV_GOSSIP_STONE_SONG_FAIRY,
          Events.CAN_ACCESS_FAIRIES, lambda bundle: call_gossip_fairy(bundle)),
         (EventLocations.GV_BEAN_SOIL, Events.CAN_ACCESS_FAIRIES,
-         lambda bundle: is_child(bundle) and can_use(Items.MAGIC_BEAN, bundle) and can_use(Items.SONG_OF_STORMS,
-                                                                                           bundle)),
+         lambda bundle: has_item(LocalEvents.GV_BEAN_PLANTED, bundle) and can_use(Items.SONG_OF_STORMS, bundle)),
         (EventLocations.GV_BEAN_PATCH, LocalEvents.GV_BEAN_PLANTED,
-         lambda bundle: is_child(bundle) and can_use(Items.MAGIC_BEAN, bundle)),
+         lambda bundle: is_child(bundle) and can_use(Items.MAGIC_BEAN, bundle) and has_item(Items.GERUDO_VALLEY_BEAN_SOUL, bundle)),
     ])
     # Locations
     add_locations(Regions.GV_UPPER_STREAM, world, [
-        (Locations.GV_WATERFALL_FREESTANDING_POH, lambda bundle: is_child(
-            bundle) or has_item(Items.BRONZE_SCALE, bundle)),
-        (Locations.GV_GS_BEAN_PATCH, lambda bundle: can_spawn_soil_skull(
-            bundle) and can_attack(bundle)),
+        (Locations.GV_WATERFALL_FREESTANDING_POH, lambda bundle: is_child(bundle) or has_item(Items.BRONZE_SCALE, bundle) or has_item(LocalEvents.GV_BEAN_PLANTED, bundle)),
+        (Locations.GV_GS_BEAN_PATCH, lambda bundle: can_spawn_soil_skull(Items.GERUDO_VALLEY_BEAN_SOUL, bundle) and can_attack(bundle)),
         (Locations.GV_COW, lambda bundle: is_child(
             bundle) and can_use(Items.EPONAS_SONG, bundle)),
         (Locations.GV_BEAN_SPROUT_FAIRY1,
-         lambda bundle: is_child(bundle) and can_use(Items.MAGIC_BEAN, bundle) and can_use(Items.SONG_OF_STORMS,
-                                                                                           bundle)),
+         lambda bundle: has_item(LocalEvents.GV_BEAN_PLANTED, bundle) and can_use(Items.SONG_OF_STORMS, bundle)),
         (Locations.GV_BEAN_SPROUT_FAIRY2,
-         lambda bundle: is_child(bundle) and can_use(Items.MAGIC_BEAN, bundle) and can_use(Items.SONG_OF_STORMS,
-                                                                                           bundle)),
+         lambda bundle: has_item(LocalEvents.GV_BEAN_PLANTED, bundle) and can_use(Items.SONG_OF_STORMS, bundle)),
         (Locations.GV_BEAN_SPROUT_FAIRY3,
-         lambda bundle: is_child(bundle) and can_use(Items.MAGIC_BEAN, bundle) and can_use(Items.SONG_OF_STORMS,
-                                                                                           bundle)),
+         lambda bundle: has_item(LocalEvents.GV_BEAN_PLANTED, bundle) and can_use(Items.SONG_OF_STORMS, bundle)),
         (Locations.GV_GOSSIP_STONE_FAIRY, lambda bundle: call_gossip_fairy(bundle)),
         (Locations.GV_GOSSIP_STONE_BIG_FAIRY,
          lambda bundle: can_use(Items.SONG_OF_STORMS, bundle)),

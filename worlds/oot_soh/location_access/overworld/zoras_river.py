@@ -14,6 +14,7 @@ class EventLocations(StrEnum):
     ZR_BEAN_PATCH = "ZR Bean Patch"
     ZR_DAY_NIGHT_CYCLE_CHILD = "ZR Day Night Cycle Child"
     ZR_DAY_NIGHT_CYCLE_ADULT = "ZR Day Night Cycle Adult"
+    ZR_BEAN_PLANT_FAIRY = "ZR Bean Plant Fairy"
 
 
 class LocalEvents(StrEnum):
@@ -61,8 +62,8 @@ def set_region_rules(world: "SohWorld") -> None:
     add_events(Regions.ZORA_RIVER, world, [
         (EventLocations.ZR_BUG_GRASS, Events.CAN_ACCESS_BUGS,
          lambda bundle: can_cut_shrubs(bundle) and (is_child(bundle) or can_use(Items.HOVER_BOOTS, bundle) or can_do_trick(Tricks.ZR_LOWER, bundle))),
-        (EventLocations.ZR_BEAN_PATCH, LocalEvents.ZR_BEAN_PLANTED,
-         lambda bundle: is_child(bundle) and can_use(Items.MAGIC_BEAN, bundle)),
+        (EventLocations.ZR_BEAN_PATCH, LocalEvents.ZR_BEAN_PLANTED, lambda bundle: is_child(bundle) and can_use(Items.MAGIC_BEAN, bundle) and has_item(Items.ZORAS_RIVER_BEAN_SOUL, bundle)),
+        (EventLocations.ZR_BEAN_PLANT_FAIRY, Events.CAN_ACCESS_FAIRIES, lambda bundle: has_item(LocalEvents.ZR_BEAN_PLANTED, bundle) and can_use(Items.SONG_OF_STORMS, bundle))
     ])
     # Only when selling vanilla item (beans)
     if world.options.shuffle_merchants.value == 0 or world.options.shuffle_merchants.value == 2:
@@ -113,12 +114,15 @@ def set_region_rules(world: "SohWorld") -> None:
          can_get_nighttime_gs(bundle)),
         (Locations.ZR_BEAN_SPROUT_FAIRY1, lambda bundle: is_child(bundle)
          and can_use(Items.MAGIC_BEAN, bundle)
+         and has_item(Items.ZORAS_RIVER_BEAN_SOUL, bundle)
          and can_use(Items.SONG_OF_STORMS, bundle)),
         (Locations.ZR_BEAN_SPROUT_FAIRY2, lambda bundle: is_child(bundle)
          and can_use(Items.MAGIC_BEAN, bundle)
+         and has_item(Items.ZORAS_RIVER_BEAN_SOUL, bundle)
          and can_use(Items.SONG_OF_STORMS, bundle)),
         (Locations.ZR_BEAN_SPROUT_FAIRY3, lambda bundle: is_child(bundle)
          and can_use(Items.MAGIC_BEAN, bundle)
+         and has_item(Items.ZORAS_RIVER_BEAN_SOUL, bundle)
          and can_use(Items.SONG_OF_STORMS, bundle)),
         (Locations.ZR_NEAR_GROTTOS_GOSSIP_STONE_FAIRY,
          lambda bundle: call_gossip_fairy(bundle)),

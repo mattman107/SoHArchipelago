@@ -1111,6 +1111,13 @@ class ItemPool(Choice):
     default = 0
 
 
+class ShuffleBeanSouls(Toggle):
+    """
+    Shuffle 10 bean souls which must be found to spawn corresponding soil/plant
+    """
+    display_name = "Shuffle Bean Souls" 
+
+
 @dataclass
 class SohOptions(PerGameCommonOptions):
     closed_forest: ClosedForest
@@ -1218,6 +1225,7 @@ class SohOptions(PerGameCommonOptions):
     tricks_in_logic: TricksInLogic
     enable_all_tricks: EnableAllTricks
     item_pool: ItemPool
+    shuffle_bean_souls: ShuffleBeanSouls
 
 
 soh_option_groups = [
@@ -1275,7 +1283,8 @@ soh_option_groups = [
         ShuffleFishingPole,
         ShuffleDekuStickBag,
         ShuffleDekuNutBag,
-        RocsFeather
+        RocsFeather,
+        ShuffleBeanSouls
     ]),
     OptionGroup("Shuffle NPCs & Merchants", [
         ShuffleShops,

@@ -16,6 +16,7 @@ class EventLocations(StrEnum):
     KF_STORMS_GROTTO_BUTTERFLY_FAIRY = "KF Storms Grotto Butterfly Fairy"
     KF_STORMS_GROTTO_BUG_GRASS = "KF Storms Grotto Bugs"
     KF_STORMS_GROTTO_PUDDLE_FISH = "KF Storms Grotto Puddle Fish"
+    KF_BEAN_FAIRY = "KF Bean Fairy"
 
 
 class LocalEvents(StrEnum):
@@ -33,8 +34,8 @@ def set_region_rules(world: "SohWorld") -> None:
          or world.options.closed_forest.value == 2),
         (EventLocations.KF_GOSSIP_STONE_SONG_FAIRY, Events.CAN_ACCESS_FAIRIES,
          lambda bundle: call_gossip_fairy_except_suns(bundle)),
-        (EventLocations.KF_SOFT_SOIL, LocalEvents.KF_BEAN_PLANTED, lambda bundle: is_child(bundle) and
-         can_use(Items.MAGIC_BEAN, bundle)),
+        (EventLocations.KF_SOFT_SOIL, LocalEvents.KF_BEAN_PLANTED, lambda bundle: is_child(bundle) and can_use(Items.MAGIC_BEAN, bundle) and has_item(Items.KOKIRI_FOREST_BEAN_SOUL, bundle)),
+        (EventLocations.KF_BEAN_FAIRY, Events.CAN_ACCESS_FAIRIES, lambda bundle: has_item(LocalEvents.KF_BEAN_PLANTED, bundle) and can_use(Items.SONG_OF_STORMS, bundle)),
     ])
     # Locations
     add_locations(Regions.KOKIRI_FOREST, world, [
@@ -42,22 +43,14 @@ def set_region_rules(world: "SohWorld") -> None:
         (Locations.KF_GS_KNOW_IT_ALL_HOUSE, lambda bundle: (is_child(bundle) and
                                                             can_attack(bundle) and
                                                             can_get_nighttime_gs(bundle))),
-        (Locations.KF_GS_BEAN_PATCH, lambda bundle: can_attack(bundle) and
-         is_child(bundle) and
-         can_use(Items.BOTTLE_WITH_BUGS, bundle)),
+        (Locations.KF_GS_BEAN_PATCH, lambda bundle: can_attack(bundle) and can_spawn_soil_skull(Items.KOKIRI_FOREST_BEAN_SOUL, bundle)),
         (Locations.KF_GS_HOUSE_OF_TWINS, lambda bundle: is_adult(bundle) and
          (hookshot_or_boomerang(bundle)
           or (can_do_trick(Tricks.KF_ADULT_GS, bundle)
               and can_use(Items.HOVER_BOOTS, bundle))) and can_get_nighttime_gs(bundle)),
-        (Locations.KF_BEAN_SPROUT_FAIRY1, lambda bundle: is_child(bundle)
-         and has_item(LocalEvents.KF_BEAN_PLANTED, bundle)
-         and can_use(Items.SONG_OF_STORMS, bundle)),
-        (Locations.KF_BEAN_SPROUT_FAIRY2, lambda bundle: is_child(bundle)
-         and has_item(LocalEvents.KF_BEAN_PLANTED, bundle)
-         and can_use(Items.SONG_OF_STORMS, bundle)),
-        (Locations.KF_BEAN_SPROUT_FAIRY3, lambda bundle: is_child(bundle)
-         and has_item(LocalEvents.KF_BEAN_PLANTED, bundle)
-         and can_use(Items.SONG_OF_STORMS, bundle)),
+        (Locations.KF_BEAN_SPROUT_FAIRY1, lambda bundle: has_item(LocalEvents.KF_BEAN_PLANTED, bundle) and can_use(Items.SONG_OF_STORMS, bundle)),
+        (Locations.KF_BEAN_SPROUT_FAIRY2, lambda bundle: has_item(LocalEvents.KF_BEAN_PLANTED, bundle) and can_use(Items.SONG_OF_STORMS, bundle)),
+        (Locations.KF_BEAN_SPROUT_FAIRY3, lambda bundle: has_item(LocalEvents.KF_BEAN_PLANTED, bundle) and can_use(Items.SONG_OF_STORMS, bundle)),
         (Locations.KF_GOSSIP_STONE_FAIRY,
          lambda bundle: call_gossip_fairy_except_suns(bundle)),
         (Locations.KF_GOSSIP_STONE_BIG_FAIRY,

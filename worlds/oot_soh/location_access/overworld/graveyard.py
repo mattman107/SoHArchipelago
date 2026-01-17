@@ -26,14 +26,13 @@ def set_region_rules(world: "SohWorld") -> None:
     add_events(Regions.THE_GRAVEYARD, world, [
         (EventLocations.GRAVEYARD_BUTTERFLY_FAIRY, Events.CAN_ACCESS_FAIRIES,
          lambda bundle: can_use(Items.STICKS, bundle) and at_day(bundle)),
-        (EventLocations.GRAVEYARD_BEAN_PLANT_FAIRY, Events.CAN_ACCESS_FAIRIES, lambda bundle: is_child(
-            bundle) and can_use(Items.MAGIC_BEAN, bundle) and can_use(Items.SONG_OF_STORMS, bundle)),
+        (EventLocations.GRAVEYARD_BEAN_PLANT_FAIRY, Events.CAN_ACCESS_FAIRIES, lambda bundle: has_item(LocalEvents.GRAVEYARD_BEAN_PLANTED, bundle) and can_use(Items.SONG_OF_STORMS, bundle)),
         (EventLocations.GRAVEYARD_BUG_ROCK,
          Events.CAN_ACCESS_BUGS, lambda bundle: True),
         (EventLocations.GRAVEYARD_SOLD_SPOOKY_MASK, Events.SOLD_SPOOKY_MASK, lambda bundle: is_child(bundle) and at_day(
             bundle) and has_item(Events.CAN_BORROW_SPOOKY_MASK, bundle) and has_item(Items.CHILD_WALLET, bundle)),
         (EventLocations.GRAVEYARD_BEAN_PATCH, LocalEvents.GRAVEYARD_BEAN_PLANTED,
-         lambda bundle: is_child(bundle) and can_use(Items.MAGIC_BEAN, bundle)),
+         lambda bundle: is_child(bundle) and can_use(Items.MAGIC_BEAN, bundle) and has_item(Items.GRAVEYARD_BEAN_SOUL, bundle)),
     ])
     # Locations
     add_locations(Regions.THE_GRAVEYARD, world, [
@@ -44,13 +43,10 @@ def set_region_rules(world: "SohWorld") -> None:
         (Locations.GRAVEYARD_GS_WALL, lambda bundle: is_child(bundle) and hookshot_or_boomerang(
             bundle) and at_night(bundle) and can_get_nighttime_gs(bundle)),
         (Locations.GRAVEYARD_GS_BEAN_PATCH,
-         lambda bundle: can_spawn_soil_skull(bundle) and can_attack(bundle)),
-        (Locations.GRAVEYARD_BEAN_SPROUT_FAIRY1, lambda bundle: is_child(bundle) and can_use(
-            Items.MAGIC_BEAN, bundle) and can_use(Items.SONG_OF_STORMS, bundle)),
-        (Locations.GRAVEYARD_BEAN_SPROUT_FAIRY2, lambda bundle: is_child(bundle) and can_use(
-            Items.MAGIC_BEAN, bundle) and can_use(Items.SONG_OF_STORMS, bundle)),
-        (Locations.GRAVEYARD_BEAN_SPROUT_FAIRY3, lambda bundle: is_child(bundle) and can_use(
-            Items.MAGIC_BEAN, bundle) and can_use(Items.SONG_OF_STORMS, bundle)),
+         lambda bundle: can_spawn_soil_skull(Items.GRAVEYARD_BEAN_SOUL, bundle) and can_attack(bundle)),
+        (Locations.GRAVEYARD_BEAN_SPROUT_FAIRY1, lambda bundle: has_item(LocalEvents.GRAVEYARD_BEAN_PLANTED, bundle) and can_use(Items.SONG_OF_STORMS, bundle)),
+        (Locations.GRAVEYARD_BEAN_SPROUT_FAIRY2, lambda bundle: has_item(LocalEvents.GRAVEYARD_BEAN_PLANTED, bundle) and can_use(Items.SONG_OF_STORMS, bundle)),
+        (Locations.GRAVEYARD_BEAN_SPROUT_FAIRY3, lambda bundle: has_item(LocalEvents.GRAVEYARD_BEAN_PLANTED, bundle) and can_use(Items.SONG_OF_STORMS, bundle)),
         (Locations.GRAVEYARD_GRASS_1, lambda bundle: can_cut_shrubs(bundle)),
         (Locations.GRAVEYARD_GRASS_2, lambda bundle: can_cut_shrubs(bundle)),
         (Locations.GRAVEYARD_GRASS_3, lambda bundle: can_cut_shrubs(bundle)),

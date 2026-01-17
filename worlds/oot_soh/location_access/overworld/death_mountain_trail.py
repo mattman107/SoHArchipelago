@@ -27,10 +27,9 @@ def set_region_rules(world: "SohWorld") -> None:
     # Death Mountain Trail
     # Events
     add_events(Regions.DEATH_MOUNTAIN_TRAIL, world, [
-        (EventLocations.DMT_BEAN_PLANT_FAIRY, Events.CAN_ACCESS_FAIRIES, lambda bundle: is_child(bundle) and can_use(Items.MAGIC_BEAN,
-         bundle) and can_use(Items.SONG_OF_STORMS, bundle) and (has_explosives(bundle) or has_item(Items.GORONS_BRACELET, bundle))),
+        (EventLocations.DMT_BEAN_PLANT_FAIRY, Events.CAN_ACCESS_FAIRIES, lambda bundle: has_item(LocalEvents.DMT_BEAN_PLANTED, bundle) and can_use(Items.SONG_OF_STORMS, bundle)),
         (EventLocations.DMT_BEAN_PATCH, LocalEvents.DMT_BEAN_PLANTED, lambda bundle: is_child(bundle) and can_use(
-            Items.MAGIC_BEAN, bundle) and (has_explosives(bundle) or has_item(Items.GORONS_BRACELET, bundle))),
+            Items.MAGIC_BEAN, bundle) and (has_explosives(bundle) or has_item(Items.GORONS_BRACELET, bundle)) and has_item(Items.DEATH_MOUNTAIN_TRAIL_BEAN_SOUL, bundle)),
         (EventLocations.DMT_DAY_NIGHT_CYCLE_CHILD,
          Events.CHILD_CAN_PASS_TIME, lambda bundle: is_child(bundle)),
         (EventLocations.DMT_DAY_NIGHT_CYCLE_ADULT,
@@ -42,7 +41,7 @@ def set_region_rules(world: "SohWorld") -> None:
             Tricks.DMT_BOMBABLE, bundle) and is_child(bundle) and has_item(Items.GORONS_BRACELET, bundle))),
         (Locations.DMT_FREESTANDING_POH, lambda bundle: take_damage(bundle) or can_use(Items.HOVER_BOOTS, bundle) or (is_adult(bundle)
          and has_item(LocalEvents.DMT_BEAN_PLANTED, bundle) and (has_explosives(bundle) or has_item(Items.GORONS_BRACELET, bundle)))),
-        (Locations.DMT_GS_BEAN_PATCH, lambda bundle: can_spawn_soil_skull(bundle) and (has_explosives(bundle) or has_item(Items.GORONS_BRACELET, bundle) or (
+        (Locations.DMT_GS_BEAN_PATCH, lambda bundle: can_spawn_soil_skull(Items.DEATH_MOUNTAIN_TRAIL_BEAN_SOUL, bundle) and (has_explosives(bundle) or has_item(Items.GORONS_BRACELET, bundle) or (
             can_do_trick(Tricks.DMT_SOIL_GS, bundle) and (take_damage(bundle) or can_use(Items.HOVER_BOOTS, bundle)) and can_use(Items.BOOMERANG, bundle)))),
         (Locations.DMT_GS_NEAR_KAK, lambda bundle: blast_or_smash(bundle)),
         (Locations.DMT_GS_ABOVE_DODONGOS_CAVERN, lambda bundle: is_adult(bundle) and at_night(bundle) and (can_use(Items.MEGATON_HAMMER, bundle) or (can_do_trick(Tricks.DMT_HOOKSHOT_LOWER_GS, bundle) and can_use(Items.HOOKSHOT, bundle)) or (can_do_trick(
@@ -51,12 +50,9 @@ def set_region_rules(world: "SohWorld") -> None:
          lambda bundle: is_child(bundle) and blast_or_smash(bundle)),
         (Locations.DMT_RED_RUPEE_UNDER_BOULDER,
          lambda bundle: is_child(bundle) and blast_or_smash(bundle)),
-        (Locations.DMT_BEAN_SPROUT_FAIRY1, lambda bundle: is_child(bundle) and can_use(Items.MAGIC_BEAN, bundle) and can_use(
-            Items.SONG_OF_STORMS, bundle) and (has_explosives(bundle) or has_item(Items.GORONS_BRACELET, bundle))),
-        (Locations.DMT_BEAN_SPROUT_FAIRY2, lambda bundle: is_child(bundle) and can_use(Items.MAGIC_BEAN, bundle) and can_use(
-            Items.SONG_OF_STORMS, bundle) and (has_explosives(bundle) or has_item(Items.GORONS_BRACELET, bundle))),
-        (Locations.DMT_BEAN_SPROUT_FAIRY3, lambda bundle: is_child(bundle) and can_use(Items.MAGIC_BEAN, bundle) and can_use(
-            Items.SONG_OF_STORMS, bundle) and (has_explosives(bundle) or has_item(Items.GORONS_BRACELET, bundle))),
+        (Locations.DMT_BEAN_SPROUT_FAIRY1, lambda bundle: has_item(LocalEvents.DMT_BEAN_PLANTED, bundle) and can_use(Items.SONG_OF_STORMS, bundle)),
+        (Locations.DMT_BEAN_SPROUT_FAIRY2, lambda bundle: has_item(LocalEvents.DMT_BEAN_PLANTED, bundle) and can_use(Items.SONG_OF_STORMS, bundle)),
+        (Locations.DMT_BEAN_SPROUT_FAIRY3, lambda bundle: has_item(LocalEvents.DMT_BEAN_PLANTED, bundle) and can_use(Items.SONG_OF_STORMS, bundle)),
         (Locations.DMT_FLAG_SUNS_SONG_FAIRY,
          lambda bundle: can_use(Items.SUNS_SONG, bundle))
     ])

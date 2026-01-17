@@ -288,6 +288,19 @@ def create_item_pool(world: "SohWorld") -> None:
     if world.options.rocs_feather:
         items_to_create[Items.ROCS_FEATHER] = 1
 
+    # Bean Souls
+    if world.options.shuffle_bean_souls:
+        items_to_create[Items.DEATH_MOUNTAIN_CRATER_BEAN_SOUL] = 1
+        items_to_create[Items.DEATH_MOUNTAIN_TRAIL_BEAN_SOUL] = 1
+        items_to_create[Items.DESERT_COLOSSUS_BEAN_SOUL] = 1
+        items_to_create[Items.GERUDO_VALLEY_BEAN_SOUL] = 1
+        items_to_create[Items.GRAVEYARD_BEAN_SOUL] = 1
+        items_to_create[Items.KOKIRI_FOREST_BEAN_SOUL] = 1
+        items_to_create[Items.LAKE_HYLIA_BEAN_SOUL] = 1
+        items_to_create[Items.LOST_WOODS_BRIDGE_BEAN_SOUL] = 1
+        items_to_create[Items.LOST_WOODS_BEAN_SOUL] = 1
+        items_to_create[Items.ZORAS_RIVER_BEAN_SOUL] = 1
+
     # Max Hearts logic for Item Pool
     max_hearts: int = 20
     if world.options.item_pool == "scarce":
@@ -393,7 +406,17 @@ def create_item_pool(world: "SohWorld") -> None:
 
             items_to_create[Items.CLAIM_CHECK] += 1
 
-            # TODO Bean Souls
+            if world.options.shuffle_bean_souls:
+                items_to_create[Items.DEATH_MOUNTAIN_CRATER_BEAN_SOUL] += 1
+                items_to_create[Items.DEATH_MOUNTAIN_TRAIL_BEAN_SOUL] += 1
+                items_to_create[Items.DESERT_COLOSSUS_BEAN_SOUL] += 1
+                items_to_create[Items.GERUDO_VALLEY_BEAN_SOUL] += 1
+                items_to_create[Items.GRAVEYARD_BEAN_SOUL] += 1
+                items_to_create[Items.KOKIRI_FOREST_BEAN_SOUL] += 1
+                items_to_create[Items.LAKE_HYLIA_BEAN_SOUL] += 1
+                items_to_create[Items.LOST_WOODS_BRIDGE_BEAN_SOUL] += 1
+                items_to_create[Items.LOST_WOODS_BEAN_SOUL] += 1
+                items_to_create[Items.ZORAS_RIVER_BEAN_SOUL] += 1
 
             if world.options.shuffle_boss_souls:
                 items_to_create[Items.GOHMAS_SOUL] += 1

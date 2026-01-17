@@ -178,6 +178,9 @@ def has_item(item: Items | Events | StrEnum, bundle: tuple[CollectionState, Regi
 
     if item in (Items.BOTTLE_WITH_MILK, Items.BOTTLE_WITH_POE, Items.BOTTLE_WITH_RED_POTION, Items.EMPTY_BOTTLE):
         return has_bottle(bundle)
+    
+    if not world.options.shuffle_bean_souls and item in (Items.DEATH_MOUNTAIN_CRATER_BEAN_SOUL, Items.DEATH_MOUNTAIN_TRAIL_BEAN_SOUL, Items.DESERT_COLOSSUS_BEAN_SOUL, Items.GERUDO_VALLEY_BEAN_SOUL, Items.GRAVEYARD_BEAN_SOUL, Items.KOKIRI_FOREST_BEAN_SOUL, Items.LAKE_HYLIA_BEAN_SOUL, Items.LOST_WOODS_BRIDGE_BEAN_SOUL, Items.LOST_WOODS_BEAN_SOUL, Items.ZORAS_RIVER_BEAN_SOUL):
+        return True
 
     return state.has(item, player, count)
 
@@ -909,8 +912,8 @@ def dungeon_count(bundle: tuple[CollectionState, Regions, "SohWorld"]) -> int:
     return count
 
 
-def can_spawn_soil_skull(bundle: tuple[CollectionState, Regions, "SohWorld"]) -> bool:
-    return is_child(bundle) and can_use(Items.BOTTLE_WITH_BUGS, bundle)
+def can_spawn_soil_skull(bean: Items, bundle: tuple[CollectionState, Regions, "SohWorld"]) -> bool:
+    return is_child(bundle) and can_use(Items.BOTTLE_WITH_BUGS, bundle) and has_item(bean, bundle)
 
 
 def fire_timer(bundle: tuple[CollectionState, Regions, "SohWorld"]) -> int:
