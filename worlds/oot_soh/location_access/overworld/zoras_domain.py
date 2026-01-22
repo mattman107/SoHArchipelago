@@ -22,7 +22,7 @@ class LocalEvents(StrEnum):
 def set_region_rules(world: "SohWorld") -> None:
     # Zoras Domain
     # Events
-    if world.options.zoras_fountain.value != 2:
+    if world.options.zoras_fountain != "open":
         add_events(Regions.ZORAS_DOMAIN, world, [
             (EventLocations.ZD_DELIVER_RUTOS_LETTER, Events.DELIVER_LETTER,
              lambda bundle: can_use(Items.BOTTLE_WITH_RUTOS_LETTER, bundle) and is_child(bundle))
@@ -30,9 +30,9 @@ def set_region_rules(world: "SohWorld") -> None:
     add_events(Regions.ZORAS_DOMAIN, world, [
         (EventLocations.ZD_GOSSIP_STONE_SONG_FAIRY, Events.CAN_ACCESS_FAIRIES,
          lambda bundle: call_gossip_fairy_except_suns(bundle)),
-        (EventLocations.ZD_NUT_POT, Events.CAN_FARM_NUTS, lambda bundle: True),
+        (EventLocations.ZD_NUT_POT, Events.CAN_FARM_NUTS, lambda bundle: can_break_pots(bundle)),
         (EventLocations.ZD_STICK_POT, Events.CAN_FARM_STICKS,
-         lambda bundle: is_child(bundle)),
+         lambda bundle: is_child(bundle) and can_break_pots(bundle)),
         (EventLocations.ZD_FISH_GROUP, Events.CAN_ACCESS_FISH,
          lambda bundle: is_child(bundle)),
         (EventLocations.ZD_KING_ZORA_THAWING, LocalEvents.KING_ZORA_THAWED,
@@ -43,24 +43,13 @@ def set_region_rules(world: "SohWorld") -> None:
         (Locations.ZD_DIVING_MINIGAME,
          lambda bundle: has_item(Items.BRONZE_SCALE, bundle) and has_item(Items.CHILD_WALLET, bundle) and is_child(
              bundle)),
-        (Locations.ZD_CHEST, lambda bundle: is_child(
-            bundle) and can_use(Items.STICKS, bundle)),
+        (Locations.ZD_CHEST, lambda bundle: is_child(bundle) and can_use(Items.STICKS, bundle) and has_item(Items.OPEN_CHEST, bundle)),
         (Locations.ZD_KING_ZORA_THAWED,
          lambda bundle: is_adult(bundle) and has_item(LocalEvents.KING_ZORA_THAWED, bundle)),
         (Locations.ZD_TRADE_PRESCRIPTION,
          lambda bundle: is_adult(bundle) and has_item(LocalEvents.KING_ZORA_THAWED, bundle) and can_use(
              Items.PRESCRIPTION, bundle)),
-        (Locations.ZD_GS_FROZEN_WATERFALL, lambda bundle: is_adult(bundle)
-         and (hookshot_or_boomerang(bundle)
-              or can_use(Items.FAIRY_SLINGSHOT, bundle)
-              or can_use(Items.FAIRY_BOW, bundle)
-              or (can_use(Items.MAGIC_SINGLE, bundle)
-                  and (can_use(Items.MASTER_SWORD, bundle)
-                       or can_use(Items.KOKIRI_SWORD, bundle)
-                       or can_use(Items.BIGGORONS_SWORD, bundle))))
-         or (can_do_trick(Tricks.ZD_GS, bundle)
-             and can_jump_slash_except_hammer(bundle))
-         and can_get_nighttime_gs(bundle)),
+        (Locations.ZD_GS_FROZEN_WATERFALL, lambda bundle: is_adult(bundle) and (hookshot_or_boomerang(bundle) or can_use_any([Items.FAIRY_SLINGSHOT, Items.FAIRY_BOW], bundle) or (can_use(Items.MAGIC_SINGLE, bundle) and (can_use_any([Items.MASTER_SWORD, Items.KOKIRI_SWORD, Items.BIGGORONS_SWORD], bundle))) or (can_do_trick(Tricks.ZD_GS, bundle) and can_jump_slash_except_hammer(bundle))) and can_get_nighttime_gs(bundle)),
         (Locations.ZD_FISH1, lambda bundle: is_child(bundle) and has_bottle(bundle)),
         (Locations.ZD_FISH2, lambda bundle: is_child(bundle) and has_bottle(bundle)),
         (Locations.ZD_FISH3, lambda bundle: is_child(bundle) and has_bottle(bundle)),
@@ -86,8 +75,8 @@ def set_region_rules(world: "SohWorld") -> None:
         (Regions.LH_FROM_SHORTCUT, lambda bundle: is_child(bundle) and (
             has_item(Items.SILVER_SCALE, bundle) or can_use(Items.IRON_BOOTS, bundle))),
         (Regions.ZD_BEHIND_KING_ZORA,
-         lambda bundle: has_item(Events.DELIVER_LETTER, bundle) or world.options.zoras_fountain.value == 2 or (
-             world.options.zoras_fountain.value == 1 and is_adult(bundle)) or (
+         lambda bundle: has_item(Events.DELIVER_LETTER, bundle) or world.options.zoras_fountain == "open" or (
+             world.options.zoras_fountain == "closed_as_child" and is_adult(bundle)) or (
              can_do_trick(Tricks.ZD_KING_ZORA_SKIP, bundle) and is_adult(bundle))),
         (Regions.ZD_SHOP, lambda bundle: is_child(bundle) or blue_fire(bundle)),
         (Regions.ZORAS_DOMAIN_ISLAND, lambda bundle: True),
@@ -115,8 +104,8 @@ def set_region_rules(world: "SohWorld") -> None:
     # Connections
     connect_regions(Regions.ZD_BEHIND_KING_ZORA, world, [
         (Regions.ZORAS_DOMAIN,
-         lambda bundle: has_item(Events.DELIVER_LETTER, bundle) or world.options.zoras_fountain.value == 2 or (
-             world.options.zoras_fountain.value == 1 and is_adult(bundle))),
+         lambda bundle: has_item(Events.DELIVER_LETTER, bundle) or world.options.zoras_fountain == "open" or (
+             world.options.zoras_fountain.value == "closed_as_child" and is_adult(bundle))),
         (Regions.ZORAS_FOUNTAIN, lambda bundle: True),
     ])
 
