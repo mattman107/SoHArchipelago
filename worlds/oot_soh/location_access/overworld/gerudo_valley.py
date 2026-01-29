@@ -57,7 +57,7 @@ def set_region_rules(world: "SohWorld") -> None:
          lambda bundle: is_child(bundle) and can_use(Items.MAGIC_BEAN, bundle) and can_use(Items.SONG_OF_STORMS,
                                                                                            bundle)),
         (EventLocations.GV_BEAN_PATCH, LocalEvents.GV_BEAN_PLANTED,
-         lambda bundle: (is_child(bundle) and can_use(Items.MAGIC_BEAN, bundle)) or world.options.skip_plant_bean),
+         lambda bundle: (is_child(bundle) or world.options.skip_plant_bean) and has_item(Items.MAGIC_BEAN, bundle)),
     ])
     # Locations
     add_locations(Regions.GV_UPPER_STREAM, world, [

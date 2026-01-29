@@ -33,7 +33,7 @@ def set_region_rules(world: "SohWorld") -> None:
          or world.options.closed_forest.value == 2),
         (EventLocations.KF_GOSSIP_STONE_SONG_FAIRY, Events.CAN_ACCESS_FAIRIES,
          lambda bundle: call_gossip_fairy_except_suns(bundle)),
-        (EventLocations.KF_BEAN_PATCH, LocalEvents.KF_BEAN_PLANTED, lambda bundle: (is_child(bundle) and can_use(Items.MAGIC_BEAN, bundle)) or world.options.skip_plant_bean),
+        (EventLocations.KF_BEAN_PATCH, LocalEvents.KF_BEAN_PLANTED, lambda bundle: (is_child(bundle) or world.options.skip_plant_bean) and has_item(Items.MAGIC_BEAN, bundle)),
     ])
     # Locations
     add_locations(Regions.KOKIRI_FOREST, world, [

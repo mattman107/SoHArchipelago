@@ -45,7 +45,7 @@ def set_region_rules(world: "SohWorld") -> None:
                                                                                              bundle) and has_item(
              Items.CHILD_WALLET, bundle)),
         (EventLocations.LW_BRIDGE_BEAN_PATCH, LocalEvents.LW_BRIDGE_BEAN_PLANTED,
-         lambda bundle: (is_child(bundle) and can_use(Items.MAGIC_BEAN, bundle)) or world.options.skip_plant_bean),
+         lambda bundle: (is_child(bundle) or world.options.skip_plant_bean) and has_item(Items.MAGIC_BEAN, bundle)),
     ])
     # Locations
     add_locations(Regions.LOST_WOODS, world, [
@@ -122,7 +122,7 @@ def set_region_rules(world: "SohWorld") -> None:
         (EventLocations.LW_BUTTERFLY_FAIRY, Events.CAN_ACCESS_FAIRIES,
          lambda bundle: can_use(Items.STICKS, bundle)),
         (EventLocations.LW_THEATER_BEAN_PATCH, LocalEvents.LW_THEATER_BEAN_PLANTED,
-         lambda bundle: (is_child(bundle) and can_use(Items.MAGIC_BEAN, bundle)) or world.options.skip_plant_bean),
+         lambda bundle: (is_child(bundle) or world.options.skip_plant_bean) and has_item(Items.MAGIC_BEAN, bundle)),
     ])
     # Locations
     add_locations(Regions.LW_BEYOND_MIDO, world, [

@@ -125,8 +125,7 @@ def set_region_rules(world: "SohWorld") -> None:
     add_events(Regions.DMC_CENTRAL_LOCAL, world, [
         (EventLocations.DMC_BEAN_PLANT_FAIRY, Events.CAN_ACCESS_FAIRIES, lambda bundle: can_use(Items.MAGIC_BEAN,
          bundle) and can_use(Items.SONG_OF_STORMS, bundle) and (fire_timer(bundle) >= 8 or hearts(bundle) >= 3)),
-        (EventLocations.DMC_BEAN_PATCH, LocalEvents.DMC_BEAN_PLANTED, lambda bundle: (is_child(bundle)
-         and can_use(Items.MAGIC_BEAN, bundle) and (fire_timer(bundle) >= 8 or hearts(bundle) >= 3)) or world.options.skip_plant_bean),
+        (EventLocations.DMC_BEAN_PATCH, LocalEvents.DMC_BEAN_PLANTED, lambda bundle: ((is_child(bundle) and (fire_timer(bundle) >= 8 or hearts(bundle) >= 3)) or world.options.skip_plant_bean) and has_item(Items.MAGIC_BEAN, bundle)),
     ])
     # Locations
     add_locations(Regions.DMC_CENTRAL_LOCAL, world, [
