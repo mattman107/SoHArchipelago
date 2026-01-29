@@ -33,7 +33,7 @@ def set_region_rules(world: "SohWorld") -> None:
         (EventLocations.GRAVEYARD_SOLD_SPOOKY_MASK, Events.SOLD_SPOOKY_MASK, lambda bundle: is_child(bundle) and at_day(
             bundle) and has_item(Events.CAN_BORROW_SPOOKY_MASK, bundle) and has_item(Items.CHILD_WALLET, bundle)),
         (EventLocations.GRAVEYARD_BEAN_PATCH, LocalEvents.GRAVEYARD_BEAN_PLANTED,
-         lambda bundle: is_child(bundle) and can_use(Items.MAGIC_BEAN, bundle)),
+         lambda bundle: (is_child(bundle) and can_use(Items.MAGIC_BEAN, bundle)) or world.options.skip_plant_bean),
     ])
     # Locations
     add_locations(Regions.THE_GRAVEYARD, world, [

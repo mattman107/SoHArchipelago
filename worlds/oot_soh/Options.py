@@ -1111,6 +1111,13 @@ class ItemPool(Choice):
     default = 0
 
 
+class SkipPlantBean(Toggle):
+    """
+    Beans will be planted once you find beans. If bean souls are shuffled, you must find soul still.
+    """
+    display_name = "Skip Planting Beans"
+
+
 @dataclass
 class SohOptions(PerGameCommonOptions):
     closed_forest: ClosedForest
@@ -1218,6 +1225,7 @@ class SohOptions(PerGameCommonOptions):
     tricks_in_logic: TricksInLogic
     enable_all_tricks: EnableAllTricks
     item_pool: ItemPool
+    skip_plant_bean: SkipPlantBean
 
 
 soh_option_groups = [
@@ -1235,6 +1243,7 @@ soh_option_groups = [
     OptionGroup("World Settings", [
         StartingAge,
         FortressCarpenters,
+        SkipPlantBean,
         RainbowBridge,
         RainbowBridgeStonesRequired,
         RainbowBridgeMedallionsRequired,

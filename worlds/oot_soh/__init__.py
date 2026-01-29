@@ -465,5 +465,6 @@ class SohWorld(World):
             "no_logic": self.options.true_no_logic.value,
             "apworld_version": self.apworld_version,
             "enable_all_tricks": self.options.enable_all_tricks.value,
-            "tricks_in_logic": self.options.tricks_in_logic.value
+            "tricks_in_logic": self.options.tricks_in_logic.value,
+            "skip_plant_bean": self.options.skip_plant_bean.value
         }

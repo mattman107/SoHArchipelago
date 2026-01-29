@@ -62,7 +62,7 @@ def set_region_rules(world: "SohWorld") -> None:
         (EventLocations.ZR_BUG_GRASS, Events.CAN_ACCESS_BUGS,
          lambda bundle: can_cut_shrubs(bundle) and (is_child(bundle) or can_use(Items.HOVER_BOOTS, bundle) or can_do_trick(Tricks.ZR_LOWER, bundle))),
         (EventLocations.ZR_BEAN_PATCH, LocalEvents.ZR_BEAN_PLANTED,
-         lambda bundle: is_child(bundle) and can_use(Items.MAGIC_BEAN, bundle)),
+         lambda bundle: (is_child(bundle) and can_use(Items.MAGIC_BEAN, bundle)) or world.options.skip_plant_bean),
     ])
     # Only when selling vanilla item (beans)
     if world.options.shuffle_merchants.value == 0 or world.options.shuffle_merchants.value == 2:

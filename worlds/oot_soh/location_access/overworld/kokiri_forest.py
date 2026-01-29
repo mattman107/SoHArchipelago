@@ -8,7 +8,7 @@ class EventLocations(StrEnum):
     MIDO = "Mido"
     MIDO_FROM_OUTSIDE_DEKU_TREE = "Mido From Outside Deku Tree"
     KF_GOSSIP_STONE_SONG_FAIRY = "KF Gossip Stone Song Fairy"
-    KF_SOFT_SOIL = "KF Soft Soil"
+    KF_BEAN_PATCH = "KF Bean Patch"
     KF_DEKU_TREE_DEKU_BABA_NUTS = "KF Deku Tree Deku Baba Nuts"
     KF_DEKU_TREE_DEKU_BABA_STICKS = "KF Deku Tree Deku Baba Sticks"
     KF_DEKU_TREE_GOSSIP_STONE_SONG_FAIRY = "KF Deku Tree Gossip Stone Song Fairy"
@@ -33,8 +33,7 @@ def set_region_rules(world: "SohWorld") -> None:
          or world.options.closed_forest.value == 2),
         (EventLocations.KF_GOSSIP_STONE_SONG_FAIRY, Events.CAN_ACCESS_FAIRIES,
          lambda bundle: call_gossip_fairy_except_suns(bundle)),
-        (EventLocations.KF_SOFT_SOIL, LocalEvents.KF_BEAN_PLANTED, lambda bundle: is_child(bundle) and
-         can_use(Items.MAGIC_BEAN, bundle)),
+        (EventLocations.KF_BEAN_PATCH, LocalEvents.KF_BEAN_PLANTED, lambda bundle: (is_child(bundle) and can_use(Items.MAGIC_BEAN, bundle)) or world.options.skip_plant_bean),
     ])
     # Locations
     add_locations(Regions.KOKIRI_FOREST, world, [
