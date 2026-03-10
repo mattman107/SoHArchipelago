@@ -152,6 +152,9 @@ class HintsSpiderHouses(Toggle):
     display_name = "Hints: Spider Houses"
     default = 0
 
+class HintsBankSign(Toggle):
+    display_name = "Hints: Bank Sign"
+    default = 0
 
 class Logic(Choice):
     """ Logic is not currently implemented """
@@ -508,6 +511,7 @@ class MM2ShipOptions(PerGameCommonOptions):
     hints_hookshot: HintsHookshot
     hints_song_of_soaring: HintsSongOfSoaring
     hints_spider_houses: HintsSpiderHouses
+    hints_bank_sign: HintsBankSign
 
     extra_items: ExtraItems
 
@@ -622,5 +626,6 @@ mm2ship_option_groups = [
         HintsHookshot,
         HintsSongOfSoaring,
         HintsSpiderHouses,
+        HintsBankSign,
     ]),
 ]

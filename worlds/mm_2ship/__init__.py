@@ -69,7 +69,7 @@ class MM2ShipWorld(World):
         apworld_manifest = orjson.loads(
             pkgutil.get_data(__name__, "archipelago.json").decode("utf-8")
         )
-        self.apworld_version: str = apworld_manifest.get("world_version", "0.0.0")
+        self.apworld_version: str = apworld_manifest.get("world_version", "0.1.0")
 
         # local tracking (used by ItemPool.py)
         self.item_pool: list[MM2ShipItem] = []
@@ -176,6 +176,7 @@ class MM2ShipWorld(World):
             "hints_purchaseable": self.options.hints_purchaseable.value,
             "hints_song_of_soaring": self.options.hints_song_of_soaring.value,
             "hints_spider_houses": self.options.hints_spider_houses.value,
+            "hints_bank_sign": self.options.hints_bank_sign.value,
             # Logic
             "logic": self.options.logic.value,
             "plentiful_items": self.options.plentiful_items.value,
