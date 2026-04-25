@@ -55,7 +55,7 @@ class KillBase(SohTestBase):
 
 # Can Kill Regular Enemies
 class TestCanKillEnemy(KillBase):
-    options = {"shuffle_deku_nut_bag": True, "shuffle_deku_stick_bag": True, "closed_forest": 2, "door_of_time": 0, "shuffle_kokiri_sword": 1}
+    options = {"shuffle_deku_nut_bag": True, "shuffle_deku_stick_bag": True, "closed_forest": 2, "door_of_time": 2, "shuffle_kokiri_sword": 1, "shuffle_master_sword": 1}
 
     """
     Testing to see if we can kill regular enemies. 
@@ -135,8 +135,18 @@ class TestCanKillEnemy(KillBase):
         for i in range(1,6):
             self.require_any_to_beat(items, enemy, quantity=i)
 
-    # def test_keese(self):
-    #     for enemy in (Enemies.KEESE, Enemies.FIRE_KEESE):
+    def test_keese(self):
+        for enemy in (Enemies.KEESE, Enemies.FIRE_KEESE):
+            # Close
+            self.require_all_to_beat([Items.KOKIRI_SWORD], enemy)
+
+            # <= Boomerang
+            for distance in (EnemyDistance.CLOSE, EnemyDistance.SHORT_JUMPSLASH, EnemyDistance.MASTER_SWORD_JUMPSLASH, 
+                             EnemyDistance.LONG_JUMPSLASH, EnemyDistance.BOMB_THROW, EnemyDistance.BOOMERANG):
+                self.require_all_to_beat([Items.BOOMERANG], enemy, distance)
+
+            # Short Jumpslash
+            self.require_all_to_beat([Items.MEGATON_HAMMER], enemy, EnemyDistance.SHORT_JUMPSLASH)
 
 
 
