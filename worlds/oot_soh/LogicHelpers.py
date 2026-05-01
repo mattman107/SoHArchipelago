@@ -1072,7 +1072,7 @@ class HeartsAtLeast(Rule, game="Ship of Harkinian"):
                 color = "green" if self(state) else "salmon"
                 messages.append({"type": "color", "color": "cyan", "text": str(self.amount)})
 
-                if self.count > 1:
+                if self.amount > 1:
                     messages.append({"type": "color", "color": color, "text": " hearts "})
                 else:
                     messages.append({"type": "color", "color": color, "text": " heart "})
