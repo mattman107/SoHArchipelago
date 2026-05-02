@@ -21,7 +21,7 @@ class SohTestBase(WorldTestBase):
 
         This will ignore age requirements on items because both ages can reach root.
         """
-        return self.multiworld.state, Regions.ROOT, self.world
+        return Regions.ROOT, self.world
     
     def get_reg_bundle(self, region) -> tuple:
         """
@@ -29,7 +29,7 @@ class SohTestBase(WorldTestBase):
 
         This can be used to enfore age requirements by setting CHILD_SPAWN or ADULT_SPAWN as the required region
         """
-        return self.multiworld.state, region, self.world
+        return region, self.world
     
     def create_item(self, item) -> SohItem:
         """
