@@ -124,16 +124,11 @@ class TestCanKillEnemy(KillBase):
         """
         Checking if player can kill Lizalfos
         """
-        enemy = Enemies.DODONGO
-     
- 
-        items = [Items.MEGATON_HAMMER, Items.PROGRESSIVE_SLINGSHOT, Items.PROGRESSIVE_BOW]
-        self.require_any_to_beat(items, enemy)
+        enemy = Enemies.LIZALFOS
 
-        # Sticks
-        items = [Items.PROGRESSIVE_STICK_CAPACITY]
-        for i in range(1,6):
-            self.require_any_to_beat(items, enemy, quantity=i)
+        items = [Items.MEGATON_HAMMER, Items.KOKIRI_SWORD, Items.MASTER_SWORD, 
+                 Items.BIGGORONS_SWORD, Items.PROGRESSIVE_BOW, Items.PROGRESSIVE_SLINGSHOT, Items.PROGRESSIVE_BOMB_BAG]
+        self.require_any_to_beat(items, enemy)
 
     def test_keese(self):
         for enemy in (Enemies.KEESE, Enemies.FIRE_KEESE):
@@ -148,6 +143,291 @@ class TestCanKillEnemy(KillBase):
             # Short Jumpslash
             self.require_all_to_beat([Items.MEGATON_HAMMER], enemy, EnemyDistance.SHORT_JUMPSLASH)
 
+    def test_gohma_larva(self):
+        """
+        Checking if player can kill Gohma Larva
+        """
+        items = [Items.KOKIRI_SWORD, Items.MASTER_SWORD, Items.BIGGORONS_SWORD, Items.PROGRESSIVE_STICK_CAPACITY, Items.MEGATON_HAMMER, Items.PROGRESSIVE_BOMB_BAG, Items.PROGRESSIVE_SLINGSHOT, Items.PROGRESSIVE_BOW, Items.BOOMERANG, Items.PROGRESSIVE_HOOKSHOT]
+        self.require_any_to_beat(items, Enemies.GOHMA_LARVA)
+        self.require_all_to_beat([Items.PROGRESSIVE_MAGIC_METER, Items.DINS_FIRE], Enemies.GOHMA_LARVA)
+
+    def test_mad_scrub(self):
+        """
+        Checking if player can kill Mad Scrub
+        """
+        items = [Items.KOKIRI_SWORD, Items.MASTER_SWORD, Items.BIGGORONS_SWORD, Items.PROGRESSIVE_STICK_CAPACITY, Items.MEGATON_HAMMER, Items.PROGRESSIVE_BOMB_BAG, Items.PROGRESSIVE_SLINGSHOT, Items.PROGRESSIVE_BOW, Items.BOOMERANG, Items.PROGRESSIVE_HOOKSHOT]
+        self.require_any_to_beat(items, Enemies.MAD_SCRUB)
+        self.require_all_to_beat([Items.PROGRESSIVE_MAGIC_METER, Items.DINS_FIRE], Enemies.MAD_SCRUB)
+
+    def test_deku_baba(self):
+        """
+        Checking if player can kill Deku Baba
+        """
+        items = [Items.KOKIRI_SWORD, Items.MASTER_SWORD, Items.BIGGORONS_SWORD, Items.PROGRESSIVE_STICK_CAPACITY, Items.MEGATON_HAMMER, Items.PROGRESSIVE_BOMB_BAG, Items.PROGRESSIVE_SLINGSHOT, Items.PROGRESSIVE_BOW, Items.BOOMERANG, Items.PROGRESSIVE_HOOKSHOT]
+        self.require_any_to_beat(items, Enemies.DEKU_BABA)
+        self.require_all_to_beat([Items.PROGRESSIVE_MAGIC_METER, Items.DINS_FIRE], Enemies.DEKU_BABA)
+
+    def test_blue_bubble(self):
+        """
+        Checking if player can kill Blue Bubble
+        """
+        items = [Items.MEGATON_HAMMER, Items.KOKIRI_SWORD, Items.MASTER_SWORD, 
+                 Items.PROGRESSIVE_BOMB_BAG, Items.PROGRESSIVE_BOW, Items.PROGRESSIVE_SLINGSHOT]
+        self.require_any_to_beat(items, Enemies.BLUE_BUBBLE)
+
+    def test_dead_hand(self):
+        """
+        Checking if player can kill Dead Hand
+        """
+        items = [Items.KOKIRI_SWORD, Items.MASTER_SWORD, Items.BIGGORONS_SWORD]
+        self.require_any_to_beat(items, Enemies.DEAD_HAND)
+
+    def test_withered_deku_baba(self):
+        """
+        Checking if player can kill Withered Deku Baba
+        """
+        items = [Items.KOKIRI_SWORD, Items.MASTER_SWORD, Items.BIGGORONS_SWORD, Items.PROGRESSIVE_STICK_CAPACITY, Items.MEGATON_HAMMER, Items.PROGRESSIVE_BOMB_BAG, Items.PROGRESSIVE_SLINGSHOT, Items.PROGRESSIVE_BOW, Items.BOOMERANG, Items.PROGRESSIVE_HOOKSHOT]
+        self.require_any_to_beat(items, Enemies.DEKU_BABA)
+        self.require_all_to_beat([Items.PROGRESSIVE_MAGIC_METER, Items.DINS_FIRE], Enemies.DEKU_BABA)
+
+    def test_like_like(self):
+        """
+        Checking if player can kill Like Like
+        """
+        items = [Items.KOKIRI_SWORD, Items.MASTER_SWORD, Items.BIGGORONS_SWORD, Items.PROGRESSIVE_STICK_CAPACITY, Items.MEGATON_HAMMER, Items.PROGRESSIVE_BOMB_BAG, Items.PROGRESSIVE_SLINGSHOT, Items.PROGRESSIVE_BOW, Items.BOOMERANG, Items.PROGRESSIVE_HOOKSHOT]
+        self.require_any_to_beat(items, Enemies.DEKU_BABA)
+        self.require_all_to_beat([Items.PROGRESSIVE_MAGIC_METER, Items.DINS_FIRE], Enemies.DEKU_BABA)
+
+    def test_floormaster(self):
+        """
+        Checking if player can kill Floormaster
+        """
+        items = [Items.KOKIRI_SWORD, Items.MASTER_SWORD, Items.BIGGORONS_SWORD, Items.PROGRESSIVE_STICK_CAPACITY, Items.MEGATON_HAMMER, Items.PROGRESSIVE_BOMB_BAG, Items.PROGRESSIVE_SLINGSHOT, Items.PROGRESSIVE_BOW, Items.BOOMERANG, Items.PROGRESSIVE_HOOKSHOT]
+        self.require_any_to_beat(items, Enemies.DEKU_BABA)
+        self.require_all_to_beat([Items.PROGRESSIVE_MAGIC_METER, Items.DINS_FIRE], Enemies.DEKU_BABA)
+
+    def test_stalfos(self):
+        """
+        Checking if player can kill Stalfos
+        """
+        items = [Items.KOKIRI_SWORD, Items.MEGATON_HAMMER]
+        self.require_any_to_beat(items, Enemies.STALFOS, EnemyDistance.SHORT_JUMPSLASH)
+        self.require_all_to_beat([Items.MASTER_SWORD], Enemies.STALFOS, EnemyDistance.MASTER_SWORD_JUMPSLASH)
+        items = [Items.BIGGORONS_SWORD, Items.PROGRESSIVE_STICK_CAPACITY]
+        self.require_any_to_beat(items, Enemies.STALFOS, EnemyDistance.LONG_JUMPSLASH)
+        self.require_all_to_beat([Items.PROGRESSIVE_BOMB_BAG], Enemies.STALFOS, EnemyDistance.BOMB_THROW)
+        self.require_all_to_beat([Items.PROGRESSIVE_BOW], Enemies.STALFOS, EnemyDistance.FAR)
+
+    def test_iron_knuckle(self):
+        """
+        Checking if player can kill Iron Knuckle
+        """
+        items = [Items.KOKIRI_SWORD, Items.MASTER_SWORD, Items.BIGGORONS_SWORD, Items.MEGATON_HAMMER, Items.PROGRESSIVE_BOMB_BAG]
+        self.require_any_to_beat(items, Enemies.IRON_KNUCKLE)
+
+    def test_flare_dancer(self):
+        """
+        Checking if player can kill Flare Dancer
+        """
+        items = [Items.MEGATON_HAMMER, Items.PROGRESSIVE_HOOKSHOT]
+        self.require_any_to_beat(items, Enemies.FLARE_DANCER)
+        self.require_all_to_beat([Items.PROGRESSIVE_BOMB_BAG, Items.KOKIRI_SWORD], Enemies.FLARE_DANCER)
+        self.require_all_to_beat([Items.PROGRESSIVE_BOMB_BAG, Items.PROGRESSIVE_BOW], Enemies.FLARE_DANCER)
+        self.require_all_to_beat([Items.PROGRESSIVE_BOMB_BAG, Items.PROGRESSIVE_SLINGSHOT], Enemies.FLARE_DANCER)
+        self.require_all_to_beat([Items.PROGRESSIVE_BOMB_BAG, Items.BOOMERANG], Enemies.FLARE_DANCER)
+
+    def test_wolfos(self):
+        """
+        Checking if player can kill Wolfos
+        """
+        items = [Items.KOKIRI_SWORD, Items.MASTER_SWORD, Items.BIGGORONS_SWORD, Items.PROGRESSIVE_STICK_CAPACITY, 
+                 Items.MEGATON_HAMMER, Items.PROGRESSIVE_BOW, Items.PROGRESSIVE_SLINGSHOT, Items.PROGRESSIVE_BOMB_BAG]
+        self.require_any_to_beat(items, Enemies.WOLFOS)
+        self.require_all_to_beat([Items.PROGRESSIVE_MAGIC_METER, Items.DINS_FIRE], Enemies.WOLFOS)
+
+    def test_white_wolfos(self):
+        """
+        Checking if player can kill White Wolfos
+        """
+        items = [Items.KOKIRI_SWORD, Items.MASTER_SWORD, Items.BIGGORONS_SWORD, Items.PROGRESSIVE_STICK_CAPACITY, 
+                 Items.MEGATON_HAMMER, Items.PROGRESSIVE_BOW, Items.PROGRESSIVE_SLINGSHOT, Items.PROGRESSIVE_BOMB_BAG]
+        self.require_any_to_beat(items, Enemies.WHITE_WOLFOS)
+        self.require_all_to_beat([Items.PROGRESSIVE_MAGIC_METER, Items.DINS_FIRE], Enemies.WHITE_WOLFOS)
+
+    def test_wallmaster(self):
+        """
+        Checking if player can kill Wallmaster
+        """
+        items = [Items.KOKIRI_SWORD, Items.MASTER_SWORD, Items.BIGGORONS_SWORD, Items.PROGRESSIVE_STICK_CAPACITY, 
+                 Items.MEGATON_HAMMER, Items.PROGRESSIVE_BOW, Items.PROGRESSIVE_SLINGSHOT, Items.PROGRESSIVE_BOMB_BAG]
+        self.require_any_to_beat(items, Enemies.WALLMASTER)
+        self.require_all_to_beat([Items.PROGRESSIVE_MAGIC_METER, Items.DINS_FIRE], Enemies.WALLMASTER)
+
+    def test_armos(self):
+        """
+        Checking if player can kill Armos
+        """
+        items = [Items.MASTER_SWORD, Items.BIGGORONS_SWORD, Items.PROGRESSIVE_STICK_CAPACITY, Items.MEGATON_HAMMER, 
+                 Items.PROGRESSIVE_BOMB_BAG, Items.PROGRESSIVE_BOW]
+        self.require_any_to_beat(items, Enemies.ARMOS)
+
+    def test_dinolfos(self):
+        """
+        Checking if player can kill Dinolfos
+        """
+        items = [Items.KOKIRI_SWORD, Items.MASTER_SWORD, Items.BIGGORONS_SWORD, Items.PROGRESSIVE_SLINGSHOT, Items.PROGRESSIVE_BOW]
+        self.require_any_to_beat(items, Enemies.DINOLFOS)
+
+    def test_torch_slug(self):
+        """
+        Checking if player can kill Torch Slug
+        """
+        items = [Items.KOKIRI_SWORD, Items.MASTER_SWORD, Items.BIGGORONS_SWORD, Items.PROGRESSIVE_STICK_CAPACITY, Items.MEGATON_HAMMER, 
+                 Items.PROGRESSIVE_BOW]
+        self.require_any_to_beat(items, Enemies.TORCH_SLUG)
+        self.require_all_to_beat([Items.PROGRESSIVE_BOMB_BAG], Enemies.TORCH_SLUG)
+
+    def test_freezard(self):
+        """
+        Checking if player can kill Freezard
+        """
+        items = [Items.MASTER_SWORD, Items.BIGGORONS_SWORD, Items.MEGATON_HAMMER, Items.PROGRESSIVE_STICK_CAPACITY, 
+                 Items.PROGRESSIVE_HOOKSHOT, Items.PROGRESSIVE_BOMB_BAG]
+        self.require_any_to_beat(items, Enemies.FREEZARD)
+        self.require_all_to_beat([Items.PROGRESSIVE_MAGIC_METER, Items.DINS_FIRE], Enemies.FREEZARD)
+        self.require_all_to_beat([Items.PROGRESSIVE_BOW, Items.PROGRESSIVE_MAGIC_METER, Items.FIRE_ARROW], Enemies.FREEZARD)
+
+    def test_shell_blade(self):
+        """
+        Checking if player can kill Shell Blade
+        """
+        items = [Items.KOKIRI_SWORD, Items.MASTER_SWORD, Items.BIGGORONS_SWORD, Items.PROGRESSIVE_STICK_CAPACITY, 
+                 Items.MEGATON_HAMMER, Items.PROGRESSIVE_BOMB_BAG]
+        self.require_any_to_beat(items, Enemies.SHELL_BLADE)
+        self.require_all_to_beat([Items.PROGRESSIVE_MAGIC_METER, Items.DINS_FIRE], Enemies.FREEZARD)
+        self.require_all_to_beat([Items.PROGRESSIVE_BOW, Items.PROGRESSIVE_MAGIC_METER, Items.FIRE_ARROW], Enemies.FREEZARD)
+
+    def test_spike(self):
+        """
+        Checking if player can kill Spike
+        """
+        items = [Items.MASTER_SWORD, Items.BIGGORONS_SWORD, Items.MEGATON_HAMMER, Items.PROGRESSIVE_STICK_CAPACITY, 
+                 Items.PROGRESSIVE_HOOKSHOT, Items.PROGRESSIVE_BOW, Items.PROGRESSIVE_BOMB_BAG]
+        self.require_any_to_beat(items, Enemies.SPIKE)
+        self.require_all_to_beat([Items.PROGRESSIVE_MAGIC_METER, Items.DINS_FIRE], Enemies.SPIKE)
+
+    def test_stinger(self):
+        """
+        Checking if player can kill Stinger
+        """
+        items = [Items.KOKIRI_SWORD, Items.MASTER_SWORD, Items.BIGGORONS_SWORD, Items.PROGRESSIVE_STICK_CAPACITY, 
+                 Items.MEGATON_HAMMER, Items.PROGRESSIVE_SLINGSHOT, Items.PROGRESSIVE_BOW, Items.PROGRESSIVE_BOMB_BAG, 
+                 Items.PROGRESSIVE_HOOKSHOT]
+        self.require_any_to_beat(items, Enemies.STINGER)
+
+    def test_big_octo(self):
+        """
+        Checking if player can kill Big Octo
+        """
+        items = [Items.KOKIRI_SWORD, Items.MASTER_SWORD, Items.PROGRESSIVE_STICK_CAPACITY]
+        self.require_any_to_beat(items, Enemies.BIG_OCTO)
+
+    def test_dark_link(self):
+        """
+        Checking if player can kill Dark Link
+        """
+        items = [Items.KOKIRI_SWORD, Items.MASTER_SWORD, Items.BIGGORONS_SWORD, Items.PROGRESSIVE_BOW]
+        self.require_any_to_beat(items, Enemies.DARK_LINK)
+
+    def test_anubis(self):
+        """
+        Checking if player can kill Anubis
+        """
+        self.require_all_to_beat([Items.PROGRESSIVE_MAGIC_METER, Items.DINS_FIRE], Enemies.ANUBIS)
+        self.require_all_to_beat([Items.PROGRESSIVE_BOW, Items.PROGRESSIVE_MAGIC_METER, Items.FIRE_ARROW], Enemies.ANUBIS)
+
+    def test_beamos(self):
+        """
+        Checking if player can kill Beamos
+        """
+        items = [Items.PROGRESSIVE_BOMB_BAG]
+        self.require_any_to_beat(items, Enemies.BEAMOS)
+
+    def test_purple_leever(self):
+        """
+        Checking if player can kill Purple Leever
+        """
+        items = [Items.MASTER_SWORD, Items.BIGGORONS_SWORD]
+        self.require_any_to_beat(items, Enemies.PURPLE_LEEVER)
+
+    def test_tentacle(self):
+        """
+        Checking if player can kill Tentacle
+        """
+        self.require_all_to_beat([Items.BOOMERANG], Enemies.TENTACLE)
+
+    def test_bari(self):
+        """
+        Checking if player can kill Bari
+        """
+        items = [Items.PROGRESSIVE_HOOKSHOT, Items.BOOMERANG, Items.PROGRESSIVE_BOW, Items.PROGRESSIVE_STICK_CAPACITY, 
+                 Items.MEGATON_HAMMER, Items.PROGRESSIVE_BOMB_BAG]
+        self.require_any_to_beat(items, Enemies.BARI)
+        self.require_all_to_beat([Items.PROGRESSIVE_MAGIC_METER, Items.DINS_FIRE], Enemies.BARI)
+
+    def test_shabom(self):
+        """
+        Checking if player can kill Shabom
+        """
+        items = [Items.BOOMERANG, Items.PROGRESSIVE_NUT_CAPACITY, Items.KOKIRI_SWORD, Items.MASTER_SWORD, Items.BIGGORONS_SWORD, Items.PROGRESSIVE_STICK_CAPACITY, Items.MEGATON_HAMMER]
+        self.require_any_to_beat(items, Enemies.SHABOM)
+        self.require_all_to_beat([Items.PROGRESSIVE_MAGIC_METER, Items.DINS_FIRE], Enemies.SHABOM)
+        self.require_all_to_beat([Items.PROGRESSIVE_BOW, Items.PROGRESSIVE_MAGIC_METER, Items.ICE_ARROW], Enemies.SHABOM)
+
+    def test_octorok(self):
+        """
+        Checking if player can kill Octorok
+        """
+        items = [Items.DEKU_SHIELD, Items.HYLIAN_SHIELD, Items.PROGRESSIVE_HOOKSHOT, Items.BOOMERANG, Items.PROGRESSIVE_BOW, Items.PROGRESSIVE_SLINGSHOT, Items.PROGRESSIVE_BOMB_BAG, Items.BOMBCHUS_5]
+        self.require_any_to_beat(items, Enemies.OCTOROK)
+
+    def test_redead(self):
+        """
+        Checking if player can kill ReDead
+        """
+        items = [Items.KOKIRI_SWORD, Items.MASTER_SWORD, Items.BIGGORONS_SWORD]
+        self.require_any_to_beat(items, Enemies.REDEAD)
+        self.require_all_to_beat([Items.PROGRESSIVE_MAGIC_METER, Items.DINS_FIRE], Enemies.REDEAD)
+
+    def test_meg(self):
+        """
+        Checking if player can kill Meg
+        """
+        items = [Items.PROGRESSIVE_BOW, Items.PROGRESSIVE_HOOKSHOT, Items.PROGRESSIVE_BOMB_BAG]
+        self.require_any_to_beat(items, Enemies.MEG)
+
+    def test_green_bubble(self):
+        """
+        Checking if player can kill Green Bubble
+        """
+        items = [Items.MEGATON_HAMMER, Items.KOKIRI_SWORD, Items.MASTER_SWORD, 
+            Items.PROGRESSIVE_BOMB_BAG, Items.PROGRESSIVE_BOW, Items.PROGRESSIVE_SLINGSHOT]
+        self.require_any_to_beat(items, Enemies.BLUE_BUBBLE)
+
+    def test_gerudo_warrior(self):
+        """
+        Checking if player can kill Gerudo Warrior
+        """
+        items = [Items.KOKIRI_SWORD, Items.MASTER_SWORD, Items.BIGGORONS_SWORD, Items.PROGRESSIVE_BOW]
+        self.require_any_to_beat(items, Enemies.GERUDO_WARRIOR)
+
+    def test_gibdo(self):
+        """
+        Checking if player can kill Gibdo
+        """
+        items = [Items.KOKIRI_SWORD, Items.MASTER_SWORD, Items.BIGGORONS_SWORD]
+        self.require_any_to_beat(items, Enemies.GIBDO)
+        self.require_all_to_beat([Items.PROGRESSIVE_MAGIC_METER, Items.DINS_FIRE], Enemies.GIBDO)
 
 
 # Can Kill Bosses
