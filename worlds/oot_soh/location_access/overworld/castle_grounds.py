@@ -81,14 +81,17 @@ def set_region_rules(world: "SohWorld") -> None:
     # Hyrule Castle Garden
     # Locations
     if not world.options.skip_child_zelda:
-        add_locations(Regions.HC_GARDEN, world, [
-            (Locations.HC_ZELDAS_LETTER, lambda bundle: True_())
-        ])
         # Connections
         connect_regions(Regions.HC_GARDEN, world, [
             (Regions.HYRULE_CASTLE_GROUNDS, lambda bundle: True_()),
+            (Regions.HC_GARDEN_ZELDAS_LETTER, lambda bundle: True_()),
             (Regions.HC_GARDEN_SONG_FROM_IMPA, lambda bundle: True_())
         ])
+
+    # Hyrule Castle Garden Zeldas Letter
+    add_locations(Regions.HC_GARDEN_ZELDAS_LETTER, world, [
+        (Locations.HC_ZELDAS_LETTER, lambda bundle: True_())
+    ])
 
     # Hyrule Castle Garden Song From Impa
     add_locations(Regions.HC_GARDEN_SONG_FROM_IMPA, world, [

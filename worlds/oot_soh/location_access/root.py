@@ -29,15 +29,11 @@ def set_region_rules(world: "SohWorld") -> None:
             bundle) | has_item(Events.TIME_TRAVEL, bundle))
     ])
 
-    # Event and connection for Zeldas Letter/Impas Song
+    # Connection for Zeldas Letter/Impas Song
     if (bool(world.options.skip_child_zelda)):
-        # Events
-        add_events(Regions.ROOT, world, [
-            (EventLocations.ZELDAS_LETTER_FROM_SKIP_OPTION,
-             Items.ZELDAS_LETTER, lambda bundle: True_())
-        ])
         # Connections
         connect_regions(Regions.ROOT, world, [
+            (Regions.HC_GARDEN_ZELDAS_LETTER, lambda bundle: True_()),
             (Regions.HC_GARDEN_SONG_FROM_IMPA, lambda bundle: True_())
         ])
 

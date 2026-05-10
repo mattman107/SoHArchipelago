@@ -234,8 +234,8 @@ def create_regions_and_locations(world: "SohWorld") -> None:
         world.included_locations.update(links_pocket_location_table)
 
     # Child Zelda
-    if not world.options.skip_child_zelda:
-        world.included_locations.update(child_zelda_location_table)
+    # if not world.options.skip_child_zelda:
+    world.included_locations.update(child_zelda_location_table)
 
     # Carpenters
     if world.options.fortress_carpenters == "normal":
@@ -411,8 +411,7 @@ def place_locked_items(world: "SohWorld") -> None:
     if not world.options.skip_child_zelda and not world.options.shuffle_weird_egg:
         place_locked_item(Locations.HC_MALON_EGG, Items.WEIRD_EGG, world)
 
-    if not world.options.skip_child_zelda:
-        place_locked_item(Locations.HC_ZELDAS_LETTER, Items.ZELDAS_LETTER, world)
+    place_locked_item(Locations.HC_ZELDAS_LETTER, Items.ZELDAS_LETTER, world)
         
     if world.options.shuffle_songs == "off":
         for location, song in song_vanilla_locations.items():

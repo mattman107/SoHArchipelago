@@ -127,6 +127,7 @@ class Regions(StrEnum):
     CASTLE_GROUNDS_FROM_GANONS_CASTLE = "Castle Grounds From Ganon's Castle"
     HYRULE_CASTLE_GROUNDS = "Hyrule Castle Grounds"
     HC_GARDEN_SONG_FROM_IMPA = "HC Garden Song From Impa"
+    HC_GARDEN_ZELDAS_LETTER = "HC Garden Zelda's Letter"
     HC_GARDEN = "HC Garden"
     HC_GREAT_FAIRY_FOUNTAIN = "HC Great Fairy Fountain"
     HC_STORMS_GROTTO = "HC Storms Grotto"
