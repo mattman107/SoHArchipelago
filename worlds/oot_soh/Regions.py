@@ -407,13 +407,15 @@ def place_locked_items(world: "SohWorld") -> None:
     if world.options.start_with_links_pocket == "advancement":
         world.get_location(Locations.LINKS_POCKET).progress_type = LocationProgressType.PRIORITY
 
-    # Add Weird Egg and Zelda's Letter to their vanilla locations when not shuffled
-    place_locked_item(Locations.HC_ZELDAS_LETTER, Items.ZELDAS_LETTER, world)
+    # If not skip_child_zelda, connect Malon Egg loc to root
     if not world.options.skip_child_zelda:
-        convert_to_event(Locations.HC_ZELDAS_LETTER)
+        connect_to_root(Locations.HC_MALON_EGG, world)
+        # If not skip_child_zelda and not shuffle_weird_egg, place the weird egg
         if not world.options.shuffle_weird_egg:
             place_locked_item(Locations.HC_MALON_EGG, Items.WEIRD_EGG, world)
-            convert_to_event(Locations.HC_MALON_EGG, world)
+
+    # Zeldas Letter always gets placed to it's location
+    place_locked_item(Locations.HC_ZELDAS_LETTER, Items.ZELDAS_LETTER, world)
         
     if world.options.shuffle_songs == "off":
         for location, song in song_vanilla_locations.items():
@@ -516,16 +518,13 @@ def place_locked_items(world: "SohWorld") -> None:
         for location, item in map_and_compass_vanilla_mapping.items():
             place_locked_item(location, item, world)
 
-def convert_to_event(location: Locations, world: "SohWorld"):
-    # Make Event
+def connect_to_root(location: Locations, world: "SohWorld"):
     loc = world.get_location(location)
-    loc.address = None
-    loc.item.code = None
 
     # Connect to Root if not already
     region = loc.parent_region
     root = world.get_region(Regions.ROOT)
     if region != root:
         region.locations.remove(loc)
-        loc.parent_region= root
+        loc.parent_region = root
         root.locations.append(loc)
