@@ -412,7 +412,7 @@ def place_locked_items(world: "SohWorld") -> None:
         connect_to_root(Locations.HC_MALON_EGG, world)
         connect_to_root(Locations.HC_ZELDAS_LETTER, world)
         connect_to_root(Locations.SONG_FROM_IMPA, world)
-    
+        world.multiworld.regions.region_cache[world.player].pop(Regions.HC_GARDEN)
 
     # Zeldas Letter always gets placed to it's location
     place_locked_item(Locations.HC_ZELDAS_LETTER, Items.ZELDAS_LETTER, world)
