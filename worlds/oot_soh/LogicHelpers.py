@@ -462,10 +462,10 @@ class IsChild(Rule, game="Ship of Harkinian"):
 
 #Build the rules
 def is_child(bundle: tuple[Regions, "SohWorld"]):
-    return IsChild(bundle[0])
+    return Has(Events.TIME_TRAVEL, options=[OptionFilter(StartingAge, StartingAge.option_child)], filtered_resolution=True)
 
 def is_adult(bundle: tuple[Regions, "SohWorld"]):
-    return IsAdult(bundle[0])
+    return Has(Events.TIME_TRAVEL, options=[OptionFilter(StartingAge, StartingAge.option_adult)], filtered_resolution=True)
 
 def at_day(bundle: tuple[Regions, "SohWorld"]) -> Rule:
     return ((is_child(bundle) & has_item(Events.CHILD_CAN_PASS_TIME, bundle))
@@ -1143,14 +1143,7 @@ def can_build_rainbow_bridge(bundle: tuple[Regions, "SohWorld"]) -> Rule:
 
 
 def can_trigger_lacs(bundle: tuple[Regions, "SohWorld"]) -> Rule:
-    greg = FromOption(GanonsCastleBossKeyGregModifier)
-    return (OptionFilter(GanonsCastleBossKey, [GanonsCastleBossKey.option_vanilla, GanonsCastleBossKey.option_anywhere, GanonsCastleBossKey.option_lacs_vanilla], operator="in") & has_item(Items.SHADOW_MEDALLION, bundle) & has_item(Items.SPIRIT_MEDALLION, bundle)) \
-         | (OptionFilter(GanonsCastleBossKey, GanonsCastleBossKey.option_lacs_stones) & ItemsPlusGregEnough(target=FromOption(GanonsCastleBossKeyStonesRequired), item_tag=GroupTag.Spiritual_Stone, greg=greg))\
-         | (OptionFilter(GanonsCastleBossKey, GanonsCastleBossKey.option_lacs_medallions) & ItemsPlusGregEnough(target=FromOption(GanonsCastleBossKeyMedallionsRequired), item_tag=GroupTag.Medallion, greg=greg)) \
-         | (OptionFilter(GanonsCastleBossKey, GanonsCastleBossKey.option_lacs_dungeon_rewards) & ItemsPlusGregEnough(target=FromOption(GanonsCastleBossKeyDungeonRewardsRequired), item_tag=GroupTag.Spiritual_Stone | GroupTag.Medallion, greg=greg)) \
-         | (OptionFilter(GanonsCastleBossKey, GanonsCastleBossKey.option_lacs_dungeons) & ItemsPlusGregEnough(target=FromOption(GanonsCastleBossKeyDungeonsRequired), item_tag=dungeon_events, greg=greg)) \
-         | (OptionFilter(GanonsCastleBossKey, GanonsCastleBossKey.option_lacs_skull_tokens) & Has(Items.GOLD_SKULLTULA_TOKEN, count=FromOption(GanonsCastleBossKeySkullTokensRequired)))
-
+    return has_item(Items.SHADOW_MEDALLION, bundle) & has_item(Items.SPIRIT_MEDALLION, bundle)
 
 
 # TODO implement EffectiveHealth(); Returns 2 for now. Requires implementing a damage multiplier option

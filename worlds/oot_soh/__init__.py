@@ -8,11 +8,10 @@ from rule_builder.cached_world import CachedRuleBuilderWorld
 from rule_builder.rules import Has
 from worlds.AutoWorld import WebWorld, World
 from Fill import fill_restrictive
-from .location_access.overworld.castle_grounds import LocalEvents
 from .Items import SohItem, item_data_table, item_table, SohItemData, progressive_items
 from .Locations import location_table, token_amounts, SohLocData, location_data_table
 from .Options import SohOptions, soh_option_groups, wallet_capacities
-from .Regions import create_regions_and_locations, place_locked_items
+from .Regions import create_regions_and_locations#, place_locked_items
 from .Enums import *
 from .ItemPool import create_item_pool, create_filler_item_pool, create_triforce_pieces, get_filler_item, give_starting_items
 from . import RegionAgeAccess
@@ -187,13 +186,13 @@ class SohWorld(CachedRuleBuilderWorld):
             self.options.gerudo_fortress_key_ring.value = False
 
         # generate the prefill pool
-        self.pre_fill_pool += get_pre_fill_rewards(self)
-        self.pre_fill_pool += get_prefill_songs(self)
-        for key_shuffle in get_own_dungeon_prefill_items(self).values():
-            self.pre_fill_pool += key_shuffle
-        self.pre_fill_pool += get_dungeon_item_prefill_items(self, False)
-        self.pre_fill_pool += get_dungeon_item_prefill_items(self, True)
-        self.pre_fill_pool += ShopItems.get_vanilla_shop_pool(self)
+        # self.pre_fill_pool += get_pre_fill_rewards(self)
+        # self.pre_fill_pool += get_prefill_songs(self)
+        # for key_shuffle in get_own_dungeon_prefill_items(self).values():
+        #     self.pre_fill_pool += key_shuffle
+        # self.pre_fill_pool += get_dungeon_item_prefill_items(self, False)
+        # self.pre_fill_pool += get_dungeon_item_prefill_items(self, True)
+        # self.pre_fill_pool += ShopItems.get_vanilla_shop_pool(self)
 
         if self.options.ganons_trials == "set_number" and self.options.ganons_trials_count.value > 0:
             self.ganons_trials = [str(trial) for trial in GanonsTrials]
@@ -217,8 +216,7 @@ class SohWorld(CachedRuleBuilderWorld):
 
     def create_regions(self) -> None:
         create_regions_and_locations(self)
-        place_locked_items(self)
-        self.reserve_prefill_locations()
+        # self.reserve_prefill_locations()
         for location in self.get_locations():
             location.name = str(location.name)
         for region in self.get_regions():
@@ -315,12 +313,12 @@ class SohWorld(CachedRuleBuilderWorld):
         self.set_completion_rule()
 
     def pre_fill(self) -> None:
-        pre_fill_own_dungeon_items(self)
-        pre_fill_dungeon_rewards(self)
-        pre_fill_songs(self)
-        pre_fill_any_dungeon_keys(self)
-        pre_fill_overworld_items(self)
-        fill_shop_items(self)
+        # pre_fill_own_dungeon_items(self)
+        # pre_fill_dungeon_rewards(self)
+        # pre_fill_songs(self)
+        # pre_fill_any_dungeon_keys(self)
+        # pre_fill_overworld_items(self)
+        # fill_shop_items(self)
 
         self.set_completion_rule()
 

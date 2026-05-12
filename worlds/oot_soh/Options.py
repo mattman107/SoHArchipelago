@@ -1682,6 +1682,7 @@ class SohOptions(PerGameCommonOptions):
 
 
     def adjust_for_forced_child_starts(self):
+        return
         # We don't care about any of this if no logic is enabled
         if self.true_no_logic:
             return

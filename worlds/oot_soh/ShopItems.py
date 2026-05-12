@@ -134,13 +134,13 @@ shop_locations_zd_shop: dict[Locations, Items] = {
 
 all_shop_locations: list[tuple[Regions, dict[Locations, Items]]] = [
     (Regions.KF_KOKIRI_SHOP, shop_locations_kf_shop),
-    (Regions.MARKET_BAZAAR, shop_locations_market_bazaar),
-    (Regions.MARKET_POTION_SHOP, shop_locations_market_potion_shop),
-    (Regions.MARKET_BOMBCHU_SHOP, shop_locations_market_bombchu_shop),
-    (Regions.KAK_BAZAAR, shop_locations_kak_bazaar),
-    (Regions.KAK_POTION_SHOP_FRONT, shop_locations_kak_potion_shop),
-    (Regions.GC_SHOP, shop_locations_gc_shop),
-    (Regions.ZD_SHOP, shop_locations_zd_shop)
+    # (Regions.MARKET_BAZAAR, shop_locations_market_bazaar),
+    # (Regions.MARKET_POTION_SHOP, shop_locations_market_potion_shop),
+    # (Regions.MARKET_BOMBCHU_SHOP, shop_locations_market_bombchu_shop),
+    # (Regions.KAK_BAZAAR, shop_locations_kak_bazaar),
+    # (Regions.KAK_POTION_SHOP_FRONT, shop_locations_kak_potion_shop),
+    # (Regions.GC_SHOP, shop_locations_gc_shop),
+    # (Regions.ZD_SHOP, shop_locations_zd_shop)
 ]
 
 vanilla_items_to_add: list[list[Items]] = [
