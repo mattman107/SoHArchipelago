@@ -462,10 +462,10 @@ class IsChild(Rule, game="Ship of Harkinian"):
 
 #Build the rules
 def is_child(bundle: tuple[Regions, "SohWorld"]):
-    return Has(Events.TIME_TRAVEL, options=[OptionFilter(StartingAge, StartingAge.option_child)], filtered_resolution=True)
+    return OptionFilter(StartingAge, StartingAge.option_child) | Has(Events.TIME_TRAVEL)
 
 def is_adult(bundle: tuple[Regions, "SohWorld"]):
-    return Has(Events.TIME_TRAVEL, options=[OptionFilter(StartingAge, StartingAge.option_adult)], filtered_resolution=True)
+    return OptionFilter(StartingAge, StartingAge.option_adult) | Has(Events.TIME_TRAVEL)
 
 def at_day(bundle: tuple[Regions, "SohWorld"]) -> Rule:
     return ((is_child(bundle) & has_item(Events.CHILD_CAN_PASS_TIME, bundle))

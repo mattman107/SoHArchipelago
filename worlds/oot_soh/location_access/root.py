@@ -38,8 +38,8 @@ def set_region_rules(world: "SohWorld") -> None:
     # Minuet of Forest Warp
     # Connections
     connect_regions(Regions.MINUET_OF_FOREST_WARP, world, [
-        (Regions.KOKIRI_FOREST_CHILD, lambda bundle: is_child(bundle)),
-
+        (Regions.KF_SARIAS_HOUSE_CHILD, lambda bundle: is_child(bundle)),
+        (Regions.KF_SARIAS_HOUSE_ADULT, lambda bundle: is_adult(bundle))
     ])
 
     # Temple of Time Child
@@ -164,6 +164,34 @@ def set_region_rules(world: "SohWorld") -> None:
     connect_regions(Regions.KF_MIDOS_HOUSE_ADULT, world, [
         (Regions.KOKIRI_FOREST_ADULT, lambda bundle: True_()),
         (Regions.KF_MIDOS_HOUSE_SHARED, lambda bundle: True_())
+    ])
+
+    # KF Mido's House Child
+    # Locations
+    add_locations(Regions.KF_SARIAS_HOUSE_CHILD, world, [
+        (Locations.KF_CHILD_GRASS1, lambda bundle: True_())
+    ])
+    # Connections
+    connect_regions(Regions.KF_SARIAS_HOUSE_CHILD, world, [
+        (Regions.KOKIRI_FOREST_CHILD, lambda bundle: True_()),
+        (Regions.KF_SARIAS_HOUSE_SHARED, lambda bundle: True_())
+    ])
+
+    # KF Mido's House Shared
+    # Locations
+    add_locations(Regions.KF_SARIAS_HOUSE_SHARED, world, [
+        (Locations.KF_BEHIND_MIDOS_HOUSE_RUPEE, lambda bundle: True_())
+    ])
+
+    # KF Mido's House Adult
+    # Locations
+    add_locations(Regions.KF_SARIAS_HOUSE_ADULT, world, [
+        (Locations.KF_ADULT_GRASS1, lambda bundle: True_())
+    ])
+    # Connections
+    connect_regions(Regions.KF_SARIAS_HOUSE_ADULT, world, [
+        (Regions.KOKIRI_FOREST_ADULT, lambda bundle: True_()),
+        (Regions.KF_SARIAS_HOUSE_SHARED, lambda bundle: True_())
     ])
 
     #Ganondorfs Lair
