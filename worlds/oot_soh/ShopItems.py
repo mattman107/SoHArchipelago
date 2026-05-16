@@ -325,21 +325,25 @@ affordable_prices: list[int] = [0,1,100,201,501]
 
 def create_random_price(min_price: int, max_price: int, affordable: bool, world: "SohWorld") -> int:
     if affordable:
-        # Try to adhere to their min
+        # Try to adhere to their min/max
         start: int = 0
-        if min_price != 0:
-            for index, value in enumerate(affordable_prices):
-                if min_price >= value:
-                    start = index
+        end: int = 0
+        for index, value in enumerate(affordable_prices):
+            if min_price >= value and min_price != 0:
+                start = index
+            if max_price >= value:
+                if not world.options.shuffle_tycoon_wallet and index == len(affordable_prices):
+                    end = 4
+                    break
+                # Need to add one because randrange stop in exclusive
+                end = index + 1
 
         # Get a random affordable price within their min and the top wallet amount
-        price_tier = world.random.randrange(start, 5 if world.options.shuffle_tycoon_wallet else 4)
-        
-        # Try to adhere to their max
-        while affordable_prices[price_tier] > max_price:
-            if price_tier == 0:
-                break
-            price_tier -= 1
+        if start == end:
+            price_tier = start
+        else:
+            price_tier = world.random.randrange(start, end)
+
         price = affordable_prices[price_tier]
     else:
         # randrange needs an actual range to work, so just pick the price directly if min/max are the same.
