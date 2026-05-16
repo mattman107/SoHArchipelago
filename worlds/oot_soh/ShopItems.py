@@ -338,7 +338,6 @@ def create_random_price(min_price: int, max_price: int, affordable: bool, world:
                 # Need to add one because randrange stop in exclusive
                 end = index + 1
 
-        # Get a random affordable price within their min and the top wallet amount
         if start == end:
             price_tier = start
         else:
