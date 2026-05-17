@@ -149,6 +149,18 @@ def setup_options_from_slot_data(world: "SohWorld") -> None:
                 "item_pool", 0)
             world.options.medallion_locked_trials.value = world.passthrough.get("medallion_locked_trials", MedallionLockedTrials.default)
             world.options.starting_hearts.value = world.passthrough.get("starting_hearts", StartingHearts.default)
+            world.options.shuffle_songs.value = world.passthrough.get("shuffle_songs", ShuffleSongs.default)
+            world.ganons_trials = world.passthrough.get("required_trials", 6)
+            world.options.gerudo_fortress_key_ring.value = world.passthrough.get("gerudo_fortress_key_ring", False)
+            world.options.forest_temple_key_ring.value = world.passthrough.get("forest_temple_key_ring", False)
+            world.options.fire_temple_key_ring.value = world.passthrough.get("fire_temple_key_ring", False)
+            world.options.water_temple_key_ring.value = world.passthrough.get("water_temple_key_ring", False)
+            world.options.spirit_temple_key_ring.value = world.passthrough.get("spirit_temple_key_ring", False)
+            world.options.shadow_temple_key_ring.value = world.passthrough.get("shadow_temple_key_ring", False)
+            world.options.bottom_of_the_well_key_ring.value = world.passthrough.get("bottom_of_the_well_key_ring", False)
+            world.options.gerudo_training_ground_key_ring.value = world.passthrough.get("gerudo_training_ground_key_ring", False)
+            world.options.ganons_castle_key_ring.value = world.passthrough.get("ganons_castle_key_ring", False)
+
             # when adding new options to this, use .get, and set the default to whatever was before the option was made
             # this will make it back-compatible with seeds generated on earlier versions
             # the below do not need to be handled in UT at all, since they do not affect logic

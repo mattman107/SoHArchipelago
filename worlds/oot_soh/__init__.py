@@ -125,9 +125,6 @@ class SohWorld(World):
         # slot_data["apworld_version"] = self.world_version
 
     def generate_early(self) -> None:
-        # for use with Universal Tracker, doesn't do anything otherwise
-        setup_options_from_slot_data(self)
-
         if self.options.true_no_logic and not self.settings.allow_true_no_logic:
             raise OptionError(f"Player {self.player_name} enabled True No Logic, but the corresponding host.yaml "
                               "setting has not been enabled. Either have them disable that option, or enable it in "
@@ -198,20 +195,9 @@ class SohWorld(World):
             if self.options.ganons_trials_count.value < 6:
                 self.random.shuffle(self.ganons_trials)
                 self.ganons_trials = self.ganons_trials[:self.options.ganons_trials_count.value]
-
-        # These things get modified after we call setup_options_from_slot_data, so we need to set them here.
-        if self.using_ut:
-            self.ganons_trials = self.passthrough.get("required_trials", 6)
-            self.options.gerudo_fortress_key_ring.value = self.passthrough.get("gerudo_fortress_key_ring", False)
-            self.options.forest_temple_key_ring.value = self.passthrough.get("forest_temple_key_ring", False)
-            self.options.fire_temple_key_ring.value = self.passthrough.get("fire_temple_key_ring", False)
-            self.options.water_temple_key_ring.value = self.passthrough.get("water_temple_key_ring", False)
-            self.options.spirit_temple_key_ring.value = self.passthrough.get("spirit_temple_key_ring", False)
-            self.options.shadow_temple_key_ring.value = self.passthrough.get("shadow_temple_key_ring", False)
-            self.options.bottom_of_the_well_key_ring.value = self.passthrough.get("bottom_of_the_well_key_ring", False)
-            self.options.gerudo_training_ground_key_ring.value = self.passthrough.get("gerudo_training_ground_key_ring", False)
-            self.options.ganons_castle_key_ring.value = self.passthrough.get("ganons_castle_key_ring", False)
-
+    
+        # for use with Universal Tracker, doesn't do anything otherwise
+        setup_options_from_slot_data(self)
 
     def create_regions(self) -> None:
         create_regions_and_locations(self)
