@@ -21,13 +21,13 @@ class KillBase(SohTestBase):
         for size in range(1, len(items)):
             for invalid_combo in combinations(items, size):
                 self.collect_by_name(invalid_combo)
-                self.assertFalse(can_kill_enemy(self.get_bundle(), enemy, distance, wall_or_floor, quantity, timer, in_water), f"Was able to kill {quantity} {str(enemy)}, but shouldn't have been able to with only {invalid_combo} at distance {str(distance.name)} {"on wall or floor" if wall_or_floor else "not on wall or floor"}")
+                self.assertFalse(can_kill_enemy(self.get_bundle(), enemy, distance, wall_or_floor, quantity, timer, in_water)._instantiate(self.world)._evaluate(self.multiworld.state), f"Was able to kill {quantity} {str(enemy)}, but shouldn't have been able to with only {invalid_combo} at distance {str(distance.name)} {"on wall or floor" if wall_or_floor else "not on wall or floor"}")
                 self.remove_by_name(invalid_combo)
                 
 
         self.collect_by_name(items)
 
-        self.assertTrue(can_kill_enemy(self.get_bundle(), enemy, distance, wall_or_floor, quantity, timer, in_water), f"Wasn't able to kill {quantity} {str(enemy)}, but should have been able to at distance {str(distance.name)} {"on wall or floor" if wall_or_floor else "not on wall or floor"}")
+        self.assertTrue(can_kill_enemy(self.get_bundle(), enemy, distance, wall_or_floor, quantity, timer, in_water)._instantiate(self.world)._evaluate(self.multiworld.state), f"Wasn't able to kill {quantity} {str(enemy)}, but should have been able to at distance {str(distance.name)} {"on wall or floor" if wall_or_floor else "not on wall or floor"}")
 
         self.remove_by_name(items)
 
@@ -43,13 +43,13 @@ class KillBase(SohTestBase):
         for size in range(1, len(items)):
             for valid_combo in combinations(items, size):
                 self.collect_by_name(valid_combo)
-                self.assertTrue(can_kill_enemy(self.get_bundle(), enemy, distance, wall_or_floor, quantity, timer, in_water), f"Wasn't able to kill {quantity} {str(enemy)}, but should have been able to with only {valid_combo} at distance {str(distance.name)} {"on wall or floor" if wall_or_floor else "not on wall or floor"}")
+                self.assertTrue(can_kill_enemy(self.get_bundle(), enemy, distance, wall_or_floor, quantity, timer, in_water)._instantiate(self.world)._evaluate(self.multiworld.state), f"Wasn't able to kill {quantity} {str(enemy)}, but should have been able to with only {valid_combo} at distance {str(distance.name)} {"on wall or floor" if wall_or_floor else "not on wall or floor"}")
                 self.remove_by_name(valid_combo)
                 
 
         self.collect_by_name(items)
 
-        self.assertTrue(can_kill_enemy(self.get_bundle(), enemy, distance, wall_or_floor, quantity, timer, in_water), f"Wasn't able to kill {quantity} {str(enemy)}, but should have been able to at distance {str(distance.name)} {"on wall or floor" if wall_or_floor else "not on wall or floor"}")
+        self.assertTrue(can_kill_enemy(self.get_bundle(), enemy, distance, wall_or_floor, quantity, timer, in_water)._instantiate(self.world)._evaluate(self.multiworld.state), f"Wasn't able to kill {quantity} {str(enemy)}, but should have been able to at distance {str(distance.name)} {"on wall or floor" if wall_or_floor else "not on wall or floor"}")
         
         self.remove_by_name(items)
 
@@ -66,7 +66,7 @@ class TestCanKillEnemy(KillBase):
         Checking if player can kill Gerudo Guard
         """
         for enemy in (Enemies.GERUDO_GUARD, Enemies.BREAK_ROOM_GUARD):
-            self.assertFalse(can_kill_enemy(self.get_bundle(), enemy), f'Could kill {str(enemy)}. This should be impossible.')
+            self.assertFalse(can_kill_enemy(self.get_bundle(), enemy)._instantiate(self.world)._evaluate(self.multiworld.state), f'Could kill {str(enemy)}. This should be impossible.')
 
     def test_gold_skulltula(self):
         """
