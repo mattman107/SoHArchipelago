@@ -358,7 +358,7 @@ class RainbowBase(SohTestBase):
         self.assertTrue(can_build_rainbow_bridge(self.get_bundle()), f"Wasn't able to trigger Rainbow Bridge, but should have been able to.")
 
 # Greg Specific
-class TestCanTriggerLacsTestGreg(RainbowBase):
+class TestCanTriggerRainbowTestGreg(RainbowBase):
     """
     Test can_build_rainbow_bridge greg
     """
@@ -367,7 +367,7 @@ class TestCanTriggerLacsTestGreg(RainbowBase):
     def test_greg_solo_reward(self):
         self.require_all_rainbow([Items.GREG_THE_GREEN_RUPEE])
 
-class TestCanTriggerLacsTestGregSoloReward(RainbowBase):
+class TestCanTriggerRainbowTestGregSoloReward(RainbowBase):
     """
     Test can_build_rainbow_bridge greg solo reward
     """
@@ -378,7 +378,7 @@ class TestCanTriggerLacsTestGregSoloReward(RainbowBase):
     def test_greg_solo_reward(self):
         self.require_all_rainbow([Items.GREG_THE_GREEN_RUPEE])
 
-class TestCanTriggerLacsGregSoloNonReward(RainbowBase):
+class TestCanTriggerRwinbowGregSoloNonReward(RainbowBase):
     """
     Test can_build_rainbow_bridge stones greg solo non reward
     """
