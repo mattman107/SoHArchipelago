@@ -22,14 +22,14 @@ class TestCanHitAtRange(SohTestBase):
         for size in range(1, len(items)):
             for valid_combo in combinations(items, size):
                 self.collect_by_name(valid_combo)
-                self.assertTrue(can_hit_at_range(self.get_bundle(), distance, wall_or_floor, in_water), 
+                self.assertTrue(can_hit_at_range(self.get_bundle(), distance, wall_or_floor, in_water)._instantiate(self.world)._evaluate(self.multiworld.state), 
                                 f"Wasn't able to hit, but should have been able to with only {valid_combo} at distance {str(distance.name)} {"on wall or floor" if wall_or_floor else "not on wall or floor"}")
                 self.remove_by_name(valid_combo)
                 
 
         self.collect_by_name(items)
 
-        self.assertTrue(can_hit_at_range(self.get_bundle(), distance, wall_or_floor, in_water), 
+        self.assertTrue(can_hit_at_range(self.get_bundle(), distance, wall_or_floor, in_water)._instantiate(self.world)._evaluate(self.multiworld.state), 
                         f"Wasn't able to hit, but should have been able to at distance {str(distance.name)} {"on wall or floor" if wall_or_floor else "not on wall or floor"}")
         
         self.remove_by_name(items)
@@ -45,21 +45,21 @@ class TestCanHitAtRange(SohTestBase):
         for size in range(1, len(items)):
             for valid_combo in combinations(items, size):
                 self.collect_by_name(valid_combo)
-                self.assertFalse(can_hit_at_range(self.get_bundle(), distance, wall_or_floor, in_water), 
+                self.assertFalse(can_hit_at_range(self.get_bundle(), distance, wall_or_floor, in_water)._instantiate(self.world)._evaluate(self.multiworld.state), 
                                 f"Was able to hit, but should not have been able to with only {valid_combo} at distance {str(distance.name)} {"on wall or floor" if wall_or_floor else "not on wall or floor"}")
                 self.remove_by_name(valid_combo)
                 
 
         self.collect_by_name(items)
 
-        self.assertFalse(can_hit_at_range(self.get_bundle(), distance, wall_or_floor, in_water), 
+        self.assertFalse(can_hit_at_range(self.get_bundle(), distance, wall_or_floor, in_water)._instantiate(self.world)._evaluate(self.multiworld.state), 
                         f"Was able to hit, but should not have been able to at distance {str(distance.name)} {"on wall or floor" if wall_or_floor else "not on wall or floor"}")
         
         self.remove_by_name(items)
 
     def test_can_kill_at_range(self):
 
-        self.assertFalse(can_hit_at_range(self.get_bundle(), EnemyDistance.CLOSE, True), f'Could hit with nothing.')
+        self.assertFalse(can_hit_at_range(self.get_bundle(), EnemyDistance.CLOSE, True)._instantiate(self.world)._evaluate(self.multiworld.state), f'Could hit with nothing.')
         
         # Close
         items = [Items.MEGATON_HAMMER, Items.KOKIRI_SWORD, Items.MASTER_SWORD, Items.BIGGORONS_SWORD, Items.PROGRESSIVE_STICK_CAPACITY, 
@@ -98,8 +98,8 @@ class TestCanHitAtRange(SohTestBase):
         
         for distance in (EnemyDistance.CLOSE, EnemyDistance.SHORT_JUMPSLASH, EnemyDistance.MASTER_SWORD_JUMPSLASH, 
                     EnemyDistance.LONG_JUMPSLASH, EnemyDistance.BOMB_THROW):
-            self.assertTrue(can_hit_at_range(self.get_bundle(), distance), f"Wasn't able to hit enemy from {str(distance.name)} distance and not in water.")
-            self.assertFalse(can_hit_at_range(self.get_bundle(), distance, in_water=True), f"Was able to hit enemy from {str(distance.name)} distance and in water.")
+            self.assertTrue(can_hit_at_range(self.get_bundle(), distance)._instantiate(self.world)._evaluate(self.multiworld.state), f"Wasn't able to hit enemy from {str(distance.name)} distance and not in water.")
+            self.assertFalse(can_hit_at_range(self.get_bundle(), distance, in_water=True)._instantiate(self.world)._evaluate(self.multiworld.state), f"Was able to hit enemy from {str(distance.name)} distance and in water.")
 
         self.remove_by_name(items)
 
@@ -107,8 +107,8 @@ class TestCanHitAtRange(SohTestBase):
         self.collect_by_name(items)
         for distance in (EnemyDistance.CLOSE, EnemyDistance.SHORT_JUMPSLASH, EnemyDistance.MASTER_SWORD_JUMPSLASH, 
                 EnemyDistance.LONG_JUMPSLASH, EnemyDistance.BOMB_THROW, EnemyDistance.HOOKSHOT):
-            self.assertTrue(can_hit_at_range(self.get_bundle(), distance), f"Wasn't able to hit enemy from {str(distance.name)} distance using bombchus and on wall or floor.")
-            self.assertFalse(can_hit_at_range(self.get_bundle(), distance, False), f"Was able to hit enemy from {str(distance.name)} distance using bombchus and not on wall or floor.")
+            self.assertTrue(can_hit_at_range(self.get_bundle(), distance)._instantiate(self.world)._evaluate(self.multiworld.state), f"Wasn't able to hit enemy from {str(distance.name)} distance using bombchus and on wall or floor.")
+            self.assertFalse(can_hit_at_range(self.get_bundle(), distance, False)._instantiate(self.world)._evaluate(self.multiworld.state), f"Was able to hit enemy from {str(distance.name)} distance using bombchus and not on wall or floor.")
 
         self.remove_by_name(items)
         
@@ -146,20 +146,20 @@ class TestCanAttack(SohTestBase):
         for size in range(1, len(items)):
             for valid_combo in combinations(items, size):
                 self.collect_by_name(valid_combo)
-                self.assertTrue(can_attack(self.get_bundle()), f"Couldn't attack but should have been able to.")
+                self.assertTrue(can_attack(self.get_bundle())._instantiate(self.world)._evaluate(self.multiworld.state), f"Couldn't attack but should have been able to.")
                 self.remove_by_name(valid_combo)
                 
 
         self.collect_by_name(items)
 
-        self.assertTrue(can_attack(self.get_bundle()), f"Couldn't attack but should have been able to.")
+        self.assertTrue(can_attack(self.get_bundle())._instantiate(self.world)._evaluate(self.multiworld.state), f"Couldn't attack but should have been able to.")
         
         self.remove_by_name(items)
 
     def test_can_attack(self):
 
         # Has Nothing
-        self.assertFalse(can_attack(self.get_bundle()), f"Could attack but shouldn't have been able to.")
+        self.assertFalse(can_attack(self.get_bundle())._instantiate(self.world)._evaluate(self.multiworld.state), f"Could attack but shouldn't have been able to.")
 
         # Attacking items
         items = [Items.MEGATON_HAMMER, Items.KOKIRI_SWORD, Items.MASTER_SWORD, Items.BIGGORONS_SWORD, Items.PROGRESSIVE_STICK_CAPACITY, 
@@ -170,6 +170,6 @@ class TestCanAttack(SohTestBase):
         items = [Items.PROGRESSIVE_MAGIC_METER, Items.DINS_FIRE]
         self.collect_by_name(items)
 
-        self.assertTrue(can_attack(self.get_bundle()), f"Couldn't attack but should have been able to.")
+        self.assertTrue(can_attack(self.get_bundle())._instantiate(self.world)._evaluate(self.multiworld.state), f"Couldn't attack but should have been able to.")
 
         self.remove_by_name(items)
