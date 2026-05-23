@@ -568,9 +568,9 @@ def create_triforce_pieces(world: "SohWorld") -> None:
     triforce_pieces_to_win: int = max(1, round(
         total_triforce_pieces * (world.options.triforce_hunt_pieces_required_percentage.value * .01)))
 
-    triforce_pieces_made = [world.create_item(
-        Items.TRIFORCE_PIECE, classification=ItemClassification.progression_skip_balancing) for _ in range(triforce_pieces_to_win)]
-    triforce_pieces_made += [world.create_item(Items.TRIFORCE_PIECE)
+    triforce_pieces_made = [world.create_item(Items.TRIFORCE_PIECE) 
+                            for _ in range(triforce_pieces_to_win)]
+    triforce_pieces_made += [world.create_item(Items.TRIFORCE_PIECE, classification=ItemClassification.useful | ItemClassification.skip_balancing) 
                              for _ in range(total_triforce_pieces - triforce_pieces_to_win)]
 
     world.add_items_to_item_pool_list(triforce_pieces_made)

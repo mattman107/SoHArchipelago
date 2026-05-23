@@ -93,7 +93,7 @@ def set_region_rules(world: "SohWorld") -> None:
         (Locations.SHADOW_TEMPLE_GS_FALLING_SPIKES_ROOM, lambda bundle: can_use(Items.HOOKSHOT, bundle) | (can_do_trick(Tricks.SHADOW_UMBRELLA_GS, bundle) & can_use(
             Items.HOVER_BOOTS, bundle) & can_standing_shield(bundle) & can_use(Items.MASTER_SWORD, bundle)) | (is_adult(bundle) & can_ground_jump(bundle))),
         (Locations.SHADOW_TEMPLE_GS_SINGLE_GIANT_POT, lambda bundle: small_keys(Items.SHADOW_TEMPLE_SMALL_KEY, 2, bundle) & ((can_do_trick(
-            Tricks.LENS_SHADOW_PLATFORM, bundle) & can_do_trick(Tricks.LENS_SHADOW, bundle)) | can_use(Items.LENS_OF_TRUTH, bundle) & can_use(Items.HOOKSHOT, bundle))),
+            Tricks.LENS_SHADOW_PLATFORM, bundle) & can_do_trick(Tricks.LENS_SHADOW, bundle)) | can_use(Items.LENS_OF_TRUTH, bundle)) & can_use(Items.HOOKSHOT, bundle)),
         (Locations.SHADOW_TEMPLE_FALLING_SPIKES_POT1,
          lambda bundle: can_break_pots(bundle)),
         (Locations.SHADOW_TEMPLE_FALLING_SPIKES_POT2,

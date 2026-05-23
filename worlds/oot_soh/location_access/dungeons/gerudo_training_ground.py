@@ -81,7 +81,7 @@ def set_region_rules(world: "SohWorld") -> None:
     add_locations(Regions.GERUDO_TRAINING_GROUND_LAVA_ROOM, world, [
         (Locations.GERUDO_TRAINING_GROUND_UNDERWATER_SILVER_RUPEE_CHEST,
          lambda bundle: can_use(Items.HOOKSHOT, bundle) & can_use(Items.SONG_OF_TIME, bundle) & can_use(
-             Items.IRON_BOOTS, bundle) & water_timer_at_least(bundle, 24)),
+             Items.IRON_BOOTS, bundle) & water_timer_at_least(bundle, 24) & has_item(Items.BRONZE_SCALE, bundle)),
     ])
     # Connections
     connect_regions(Regions.GERUDO_TRAINING_GROUND_LAVA_ROOM, world, [
