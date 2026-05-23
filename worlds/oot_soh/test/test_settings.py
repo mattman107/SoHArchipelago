@@ -15,15 +15,15 @@ class LACSBase(SohTestBase):
         # and report as Success if any subtest succeeds
         # (https://github.com/microsoft/vscode-python/issues/25824)
         self.sweep()
-        self.assertFalse(can_trigger_lacs(self.get_bundle()), f"Could trigger LACS but shouldn't have been able to.")
+        self.assertFalse(can_trigger_lacs(self.get_bundle())._instantiate(self.world)._evaluate(self.multiworld.state), f"Could trigger LACS but shouldn't have been able to.")
         required_items = list(map(lambda i: self.create_item(i), items))
         for size in range(1, len(required_items)):
             for invalid_combo in combinations(required_items, size):
                 self.collect(invalid_combo)
-                self.assertFalse(can_trigger_lacs(self.get_bundle()), f"Should not be able to trigger LACS with only {invalid_combo}")
+                self.assertFalse(can_trigger_lacs(self.get_bundle())._instantiate(self.world)._evaluate(self.multiworld.state), f"Should not be able to trigger LACS with only {invalid_combo}")
                 self.remove(invalid_combo)
         self.collect(required_items)
-        self.assertTrue(can_trigger_lacs(self.get_bundle()), f"Wasn't able to trigger LACS, but should have been able to.")
+        self.assertTrue(can_trigger_lacs(self.get_bundle())._instantiate(self.world)._evaluate(self.multiworld.state), f"Wasn't able to trigger LACS, but should have been able to.")
         
         
     def require_some_lacs(self, items: list[Items | Events], required_amount: int) -> None:
@@ -31,19 +31,19 @@ class LACSBase(SohTestBase):
         # and report as Success if any subtest succeeds
         # (https://github.com/microsoft/vscode-python/issues/25824)
         self.sweep()
-        self.assertFalse(can_trigger_lacs(self.get_bundle()), f"Could trigger LACS but shouldn't have been able to.")
+        self.assertFalse(can_trigger_lacs(self.get_bundle())._instantiate(self.world)._evaluate(self.multiworld.state), f"Could trigger LACS but shouldn't have been able to.")
         required_items = list(map(lambda i: self.create_item(i), items))
         for size in range(1, len(required_items)):
             for invalid_combo in combinations(required_items, size):
                 self.collect(invalid_combo)
                 if required_amount <= len(invalid_combo) and not (Items.GREG_THE_GREEN_RUPEE in invalid_combo and self.options["ganons_castle_boss_key_greg_modifier"] != GanonsCastleBossKeyGregModifier.option_reward):
-                    self.assertTrue(can_trigger_lacs(self.get_bundle()), f"Wasn't able to trigger LACS, but should have been able to with count {required_amount}, {invalid_combo}")
+                    self.assertTrue(can_trigger_lacs(self.get_bundle())._instantiate(self.world)._evaluate(self.multiworld.state), f"Wasn't able to trigger LACS, but should have been able to with count {required_amount}, {invalid_combo}")
                 else:
-                    self.assertFalse(can_trigger_lacs(self.get_bundle()), f"Should not be able to trigger LACS with only {invalid_combo}. Required amount:{required_amount}")
+                    self.assertFalse(can_trigger_lacs(self.get_bundle())._instantiate(self.world)._evaluate(self.multiworld.state), f"Should not be able to trigger LACS with only {invalid_combo}. Required amount:{required_amount}")
 
                 self.remove(invalid_combo)
         self.collect(required_items)
-        self.assertTrue(can_trigger_lacs(self.get_bundle()), f"Wasn't able to trigger LACS, but should have been able to.")
+        self.assertTrue(can_trigger_lacs(self.get_bundle())._instantiate(self.world)._evaluate(self.multiworld.state), f"Wasn't able to trigger LACS, but should have been able to.")
 
 # Greg Specific
 class TestCanTriggerLacsTestGregSoloReward(LACSBase):
@@ -66,9 +66,9 @@ class TestCanTriggerLacsGregSoloNonReward(LACSBase):
                "ganons_castle_boss_key_greg_modifier": GanonsCastleBossKeyGregModifier.option_off}
 
     def test_stones_greg_solo_nonreward(self):
-        self.assertFalse(can_trigger_lacs(self.get_bundle()), f"Could trigger LACS but shouldn't have been able to.")
+        self.assertFalse(can_trigger_lacs(self.get_bundle())._instantiate(self.world)._evaluate(self.multiworld.state), f"Could trigger LACS but shouldn't have been able to.")
         self.collect(self.create_item(Items.GREG_THE_GREEN_RUPEE))
-        self.assertFalse(can_trigger_lacs(self.get_bundle()), f"Could trigger LACS but shouldn't have been able to.")
+        self.assertFalse(can_trigger_lacs(self.get_bundle())._instantiate(self.world)._evaluate(self.multiworld.state), f"Could trigger LACS but shouldn't have been able to.")
 
 
 # Vanilla
@@ -312,11 +312,11 @@ class TestCanTriggerLacsTokensAll(LACSBase):
                "ganons_castle_boss_key_skull_tokens_required": 100}
 
     def test_tokens_all(self):
-        self.assertFalse(can_trigger_lacs(self.get_bundle()), f"Could trigger LACS but shouldn't have been able to.")
+        self.assertFalse(can_trigger_lacs(self.get_bundle())._instantiate(self.world)._evaluate(self.multiworld.state), f"Could trigger LACS but shouldn't have been able to.")
         self.collect(self.create_item(Items.GOLD_SKULLTULA_TOKEN) for _ in range(99))
-        self.assertFalse(can_trigger_lacs(self.get_bundle()), f"Could trigger LACS but shouldn't have been able to.")
+        self.assertFalse(can_trigger_lacs(self.get_bundle())._instantiate(self.world)._evaluate(self.multiworld.state), f"Could trigger LACS but shouldn't have been able to.")
         self.collect(self.create_item(Items.GOLD_SKULLTULA_TOKEN))
-        self.assertTrue(can_trigger_lacs(self.get_bundle()), f"Couldn't trigger LACS but should have been able to.")
+        self.assertTrue(can_trigger_lacs(self.get_bundle())._instantiate(self.world)._evaluate(self.multiworld.state), f"Couldn't trigger LACS but should have been able to.")
 
 # Rainbow Bridge
 class RainbowBase(SohTestBase):
@@ -327,15 +327,15 @@ class RainbowBase(SohTestBase):
         # and report as Success if any subtest succeeds
         # (https://github.com/microsoft/vscode-python/issues/25824)
         self.sweep()
-        self.assertFalse(can_build_rainbow_bridge(self.get_bundle()), f"Could trigger Rainbow Bridge but shouldn't have been able to.")
+        self.assertFalse(can_build_rainbow_bridge(self.get_bundle())._instantiate(self.world)._evaluate(self.multiworld.state), f"Could trigger Rainbow Bridge but shouldn't have been able to.")
         required_items = list(map(lambda i: self.create_item(i), items))
         for size in range(1, len(required_items)):
             for invalid_combo in combinations(required_items, size):
                 self.collect(invalid_combo)
-                self.assertFalse(can_build_rainbow_bridge(self.get_bundle()), f"Should not be able to trigger Rainbow Bridge with only {invalid_combo}")
+                self.assertFalse(can_build_rainbow_bridge(self.get_bundle())._instantiate(self.world)._evaluate(self.multiworld.state), f"Should not be able to trigger Rainbow Bridge with only {invalid_combo}")
                 self.remove(invalid_combo)
         self.collect(required_items)
-        self.assertTrue(can_build_rainbow_bridge(self.get_bundle()), f"Wasn't able to trigger Rainbow Bridge, but should have been able to.")
+        self.assertTrue(can_build_rainbow_bridge(self.get_bundle())._instantiate(self.world)._evaluate(self.multiworld.state), f"Wasn't able to trigger Rainbow Bridge, but should have been able to.")
         
         
     def require_some_rainbow(self, items: list[Items | Events], required_amount: int) -> None:
@@ -343,19 +343,19 @@ class RainbowBase(SohTestBase):
         # and report as Success if any subtest succeeds
         # (https://github.com/microsoft/vscode-python/issues/25824)
         self.sweep()
-        self.assertFalse(can_build_rainbow_bridge(self.get_bundle()), f"Could trigger Rainbow Bridge but shouldn't have been able to.")
+        self.assertFalse(can_build_rainbow_bridge(self.get_bundle())._instantiate(self.world)._evaluate(self.multiworld.state), f"Could trigger Rainbow Bridge but shouldn't have been able to.")
         required_items = list(map(lambda i: self.create_item(i), items))
         for size in range(1, len(required_items)):
             for invalid_combo in combinations(required_items, size):
                 self.collect(invalid_combo)
                 if required_amount <= len(invalid_combo) and not (Items.GREG_THE_GREEN_RUPEE in invalid_combo and self.options["rainbow_bridge_greg_modifier"] != RainbowBridgeGregModifier.option_reward):
-                    self.assertTrue(can_build_rainbow_bridge(self.get_bundle()), f"Wasn't able to trigger Rainbow Bridge, but should have been able to with count {required_amount}, {invalid_combo}")
+                    self.assertTrue(can_build_rainbow_bridge(self.get_bundle())._instantiate(self.world)._evaluate(self.multiworld.state), f"Wasn't able to trigger Rainbow Bridge, but should have been able to with count {required_amount}, {invalid_combo}")
                 else:
-                    self.assertFalse(can_build_rainbow_bridge(self.get_bundle()), f"Should not be able to trigger Rainbow Bridge with only {invalid_combo}. Required amount:{required_amount}")
+                    self.assertFalse(can_build_rainbow_bridge(self.get_bundle())._instantiate(self.world)._evaluate(self.multiworld.state), f"Should not be able to trigger Rainbow Bridge with only {invalid_combo}. Required amount:{required_amount}")
 
                 self.remove(invalid_combo)
         self.collect(required_items)
-        self.assertTrue(can_build_rainbow_bridge(self.get_bundle()), f"Wasn't able to trigger Rainbow Bridge, but should have been able to.")
+        self.assertTrue(can_build_rainbow_bridge(self.get_bundle())._instantiate(self.world)._evaluate(self.multiworld.state), f"Wasn't able to trigger Rainbow Bridge, but should have been able to.")
 
 # Greg Specific
 class TestCanTriggerRainbowTestGreg(RainbowBase):
@@ -387,9 +387,9 @@ class TestCanTriggerRwinbowGregSoloNonReward(RainbowBase):
                "rainbow_bridge_greg_modifier": RainbowBridgeGregModifier.option_off}
 
     def test_stones_greg_solo_nonreward(self):
-        self.assertFalse(can_build_rainbow_bridge(self.get_bundle()), f"Could trigger Rainbow Bridge but shouldn't have been able to.")
+        self.assertFalse(can_build_rainbow_bridge(self.get_bundle())._instantiate(self.world)._evaluate(self.multiworld.state), f"Could trigger Rainbow Bridge but shouldn't have been able to.")
         self.collect(self.create_item(Items.GREG_THE_GREEN_RUPEE))
-        self.assertFalse(can_build_rainbow_bridge(self.get_bundle()), f"Could trigger Rainbow Bridge but shouldn't have been able to.")
+        self.assertFalse(can_build_rainbow_bridge(self.get_bundle())._instantiate(self.world)._evaluate(self.multiworld.state), f"Could trigger Rainbow Bridge but shouldn't have been able to.")
 
 
 # Vanilla
@@ -416,7 +416,7 @@ class TestCanTriggerRainbowAlwaysOpen(RainbowBase):
                "shuffle_dungeon_rewards": ShuffleDungeonRewards.option_anywhere,}
 
     def test_always_setting(self):
-        self.assertTrue(can_build_rainbow_bridge(self.get_bundle()), f"Wasn't able to trigger Rainbow Bridge, but should have been able to.")
+        self.assertTrue(can_build_rainbow_bridge(self.get_bundle())._instantiate(self.world)._evaluate(self.multiworld.state), f"Wasn't able to trigger Rainbow Bridge, but should have been able to.")
 
 # Stones
 class TestCanTriggerRainbowStonesAll(RainbowBase):
@@ -622,8 +622,8 @@ class TestCanTriggerRainbowTokensAll(RainbowBase):
                "rainbow_bridge_skull_tokens_required": 100}
 
     def test_tokens_all(self):
-        self.assertFalse(can_build_rainbow_bridge(self.get_bundle()), f"Could trigger Rainbow Bridge but shouldn't have been able to.")
+        self.assertFalse(can_build_rainbow_bridge(self.get_bundle())._instantiate(self.world)._evaluate(self.multiworld.state), f"Could trigger Rainbow Bridge but shouldn't have been able to.")
         self.collect(self.create_item(Items.GOLD_SKULLTULA_TOKEN) for _ in range(99))
-        self.assertFalse(can_build_rainbow_bridge(self.get_bundle()), f"Could trigger Rainbow Bridge but shouldn't have been able to.")
+        self.assertFalse(can_build_rainbow_bridge(self.get_bundle())._instantiate(self.world)._evaluate(self.multiworld.state), f"Could trigger Rainbow Bridge but shouldn't have been able to.")
         self.collect(self.create_item(Items.GOLD_SKULLTULA_TOKEN))
-        self.assertTrue(can_build_rainbow_bridge(self.get_bundle()), f"Couldn't trigger Rainbow Bridge but should have been able to.")
+        self.assertTrue(can_build_rainbow_bridge(self.get_bundle())._instantiate(self.world)._evaluate(self.multiworld.state), f"Couldn't trigger Rainbow Bridge but should have been able to.")
