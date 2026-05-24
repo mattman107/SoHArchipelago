@@ -3,7 +3,7 @@ from ..Options import *
 from ..Items import Items, SohItem
 from ..Enums import Events
 from .bases import SohTestBase
-from ..LogicHelpers import can_trigger_lacs, can_build_rainbow_bridge, scarecrows_song, bombchu_refill
+from ..LogicHelpers import can_trigger_lacs, can_build_rainbow_bridge, scarecrows_song, bombchu_refill, trade_quest_step
 from itertools import combinations
 
 # LACS
@@ -722,3 +722,123 @@ class TestBombchuDropsOn(BombchuBase):
     options = {"bombchu_drops": True, "shuffle_childs_wallet": True}
     def test_bombchu_drops_on(self):
         self.assertTrue(bombchu_refill(self.get_bundle()), f"Had bombchu drops setting enabled, but didn't have drops.")
+
+# Trade Quest Step
+class TestTradeQuestStepShuffleDisabled(SohTestBase):
+    """
+    Test Trade Quest Step Helper when adult trade quest items shuffle setting is disabled
+    """
+    options = {"shuffle_adult_trade_items": False}
+    
+    def test_trade_quest_step_pocket_egg(self):
+        self.assertFalse(trade_quest_step(Items.POCKET_EGG, self.get_bundle()), f"Was at pocket egg step, but shouldn't have been.")
+        self.collect(self.create_item(Items.POCKET_EGG))
+        self.assertFalse(trade_quest_step(Items.POCKET_EGG, self.get_bundle()), f"Was at pocket egg step, but shouldn't have been.")
+
+    def test_trade_quest_step_one_ahead(self):
+        self.assertFalse(trade_quest_step(Items.COJIRO, self.get_bundle()), f"Was at cojiro step, but shouldn't have been.")
+        self.collect(self.create_item(Items.ODD_MUSHROOM))
+        self.assertFalse(trade_quest_step(Items.COJIRO, self.get_bundle()), f"Was at cojiro step, but shouldn't have been.")
+
+    def test_trade_quest_step_cojiro(self):
+        self.assertFalse(trade_quest_step(Items.COJIRO, self.get_bundle()), f"Was at cojiro step, but shouldn't have been.")
+        self.collect(self.create_item(Items.COJIRO))
+        self.assertFalse(trade_quest_step(Items.COJIRO, self.get_bundle()), f"Was at cojiro step, but shouldn't have been.")
+
+    def test_trade_quest_step_odd_mushroom(self):
+        self.assertFalse(trade_quest_step(Items.ODD_MUSHROOM, self.get_bundle()), f"Was at odd mushroom step, but shouldn't have been.")
+        self.collect(self.create_item(Items.ODD_MUSHROOM))
+        self.assertFalse(trade_quest_step(Items.ODD_MUSHROOM, self.get_bundle()), f"Was at odd mushroom step, but shouldn't have been.")
+
+    def test_trade_quest_step_odd_potion(self):
+        self.assertFalse(trade_quest_step(Items.ODD_POTION, self.get_bundle()), f"Was at odd potion step, but shouldn't have been.")
+        self.collect(self.create_item(Items.ODD_POTION))
+        self.assertFalse(trade_quest_step(Items.ODD_POTION, self.get_bundle()), f"Was at odd potion step, but shouldn't have been.")
+
+    def test_trade_quest_step_poachers_saw(self):
+        self.assertFalse(trade_quest_step(Items.POACHERS_SAW, self.get_bundle()), f"Was at poachers saw step, but shouldn't have been.")
+        self.collect(self.create_item(Items.POACHERS_SAW))
+        self.assertFalse(trade_quest_step(Items.POACHERS_SAW, self.get_bundle()), f"Was at poachers saw step, but shouldn't have been.")
+
+    def test_trade_quest_step_broken_goron_sword(self):
+        self.assertFalse(trade_quest_step(Items.BROKEN_GORONS_SWORD, self.get_bundle()), f"Was at broken goron sword step, but shouldn't have been.")
+        self.collect(self.create_item(Items.BROKEN_GORONS_SWORD))
+        self.assertFalse(trade_quest_step(Items.BROKEN_GORONS_SWORD, self.get_bundle()), f"Was at broken goron sword step, but shouldn't have been.")
+
+    def test_trade_quest_step_prescription(self):
+        self.assertFalse(trade_quest_step(Items.PRESCRIPTION, self.get_bundle()), f"Was at prescription step, but shouldn't have been.")
+        self.collect(self.create_item(Items.PRESCRIPTION))
+        self.assertFalse(trade_quest_step(Items.PRESCRIPTION, self.get_bundle()), f"Was at prescription step, but shouldn't have been.")
+    
+    def test_trade_quest_step_eyedrops(self):
+        self.assertFalse(trade_quest_step(Items.WORLDS_FINEST_EYEDROPS, self.get_bundle()), f"Was at worlds finest eyedrops step, but shouldn't have been.")
+        self.collect(self.create_item(Items.WORLDS_FINEST_EYEDROPS))
+        self.assertFalse(trade_quest_step(Items.WORLDS_FINEST_EYEDROPS, self.get_bundle()), f"Was at worlds finest eyedrops step, but shouldn't have been.")
+
+    def test_trade_quest_step_claim_check(self):
+        self.assertFalse(trade_quest_step(Items.CLAIM_CHECK, self.get_bundle()), f"Was at claim check step, but shouldn't have been.")
+        self.collect(self.create_item(Items.CLAIM_CHECK))
+        self.assertTrue(trade_quest_step(Items.CLAIM_CHECK, self.get_bundle()), f"Should have been at claim check step, but wasn't.")
+
+    def test_trade_quest_step_other(self):
+        self.assertFalse(trade_quest_step(Items.TRIFORCE_PIECE, self.get_bundle()), f"An item that wasn't supposed to be checked was and returned true.")
+    
+class TestTradeQuestStepShuffleEnabled(SohTestBase):
+    """
+    Test Trade Quest Step Helper when adult trade quest items shuffle setting is enabled
+    """
+    options = {"shuffle_adult_trade_items": True}
+
+    def require_some_trade_step(self, step: Items, items: list[Items | Events], required_amount: int) -> None:
+        # ideally we run these as subtests, but those are currently broken 
+        # and report as Success if any subtest succeeds
+        # (https://github.com/microsoft/vscode-python/issues/25824)
+        self.sweep()
+        self.assertFalse(trade_quest_step(step, self.get_bundle()), f"Was at a trade quests step when it shouldn't have been with nothing.")
+        required_items = list(map(lambda i: self.create_item(i), items))
+        for size in range(1, len(required_items)):
+            for invalid_combo in combinations(required_items, size):
+                self.collect(invalid_combo)
+                self.assertTrue(trade_quest_step(step, self.get_bundle()), f"Wasn't at the step with {required_amount}, {invalid_combo}")
+                self.remove(invalid_combo)
+        self.collect(required_items)
+        self.assertTrue(trade_quest_step(step, self.get_bundle()), f"Wasn't at the step but it should have been.")
+
+    def test_trade_quest_step_pocket_egg(self):
+        self.require_some_trade_step(Items.POCKET_EGG, [Items.POCKET_EGG, Items.COJIRO, Items.ODD_MUSHROOM, Items.ODD_POTION, Items.POACHERS_SAW, 
+                                                        Items.BROKEN_GORONS_SWORD, Items.PRESCRIPTION, Items.WORLDS_FINEST_EYEDROPS, Items.CLAIM_CHECK], 1)
+
+    def test_trade_quest_step_one_behind(self):
+        self.assertFalse(trade_quest_step(Items.COJIRO, self.get_bundle()), f"Was at cojiro step, but shouldn't have been.")
+        self.collect(self.create_item(Items.POCKET_EGG))
+        self.assertFalse(trade_quest_step(Items.COJIRO, self.get_bundle()), f"Was at cojiro step, but shouldn't have been.")
+
+    def test_trade_quest_step_cojiro(self):
+        self.require_some_trade_step(Items.COJIRO, [Items.COJIRO, Items.ODD_MUSHROOM, Items.ODD_POTION, Items.POACHERS_SAW, 
+                                                        Items.BROKEN_GORONS_SWORD, Items.PRESCRIPTION, Items.WORLDS_FINEST_EYEDROPS, Items.CLAIM_CHECK], 1)
+
+    def test_trade_quest_step_odd_mushroom(self):
+        self.require_some_trade_step(Items.ODD_MUSHROOM, [Items.ODD_MUSHROOM, Items.ODD_POTION, Items.POACHERS_SAW, 
+                                                        Items.BROKEN_GORONS_SWORD, Items.PRESCRIPTION, Items.WORLDS_FINEST_EYEDROPS, Items.CLAIM_CHECK], 1)
+
+    def test_trade_quest_step_odd_potion(self):
+        self.require_some_trade_step(Items.ODD_POTION, [Items.ODD_POTION, Items.POACHERS_SAW, Items.BROKEN_GORONS_SWORD, Items.PRESCRIPTION, 
+                                                        Items.WORLDS_FINEST_EYEDROPS, Items.CLAIM_CHECK], 1)
+
+    def test_trade_quest_step_poachers_saw(self):
+        self.require_some_trade_step(Items.POACHERS_SAW, [Items.POACHERS_SAW, Items.BROKEN_GORONS_SWORD, Items.PRESCRIPTION, Items.WORLDS_FINEST_EYEDROPS, Items.CLAIM_CHECK], 1)
+
+    def test_trade_quest_step_broken_goron_sword(self):
+        self.require_some_trade_step(Items.BROKEN_GORONS_SWORD, [Items.BROKEN_GORONS_SWORD, Items.PRESCRIPTION, Items.WORLDS_FINEST_EYEDROPS, Items.CLAIM_CHECK], 1)
+
+    def test_trade_quest_step_prescription(self):
+        self.require_some_trade_step(Items.PRESCRIPTION, [Items.PRESCRIPTION, Items.WORLDS_FINEST_EYEDROPS, Items.CLAIM_CHECK], 1)
+    
+    def test_trade_quest_step_eyedrops(self):
+        self.require_some_trade_step(Items.WORLDS_FINEST_EYEDROPS, [Items.WORLDS_FINEST_EYEDROPS, Items.CLAIM_CHECK], 1)
+
+    def test_trade_quest_step_claim_check(self):
+        self.require_some_trade_step(Items.CLAIM_CHECK, [Items.CLAIM_CHECK], 1)
+
+    def test_trade_quest_step_other(self):
+        self.assertFalse(trade_quest_step(Items.TRIFORCE_PIECE, self.get_bundle()), f"An item that wasn't supposed to be checked was and returned true.")
