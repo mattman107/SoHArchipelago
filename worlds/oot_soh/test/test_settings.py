@@ -3,7 +3,7 @@ from ..Options import *
 from ..Items import Items, SohItem
 from ..Enums import Events
 from .bases import SohTestBase
-from ..LogicHelpers import can_trigger_lacs, can_build_rainbow_bridge, scarecrows_song
+from ..LogicHelpers import can_trigger_lacs, can_build_rainbow_bridge, scarecrows_song, bombchu_refill
 from itertools import combinations
 
 # LACS
@@ -629,7 +629,7 @@ class TestCanTriggerRainbowTokensAll(RainbowBase):
         self.assertTrue(can_build_rainbow_bridge(self.get_bundle()), f"Couldn't trigger Rainbow Bridge but should have been able to.")
 
 
-# Scarecrow Song Base
+# Scarecrow Song
 class ScarecrowBase(SohTestBase):
     __Test__ = False
 
@@ -687,3 +687,38 @@ class TestScarecrowsSongSkip(ScarecrowBase):
         self.assertFalse(scarecrows_song(self.get_bundle()), f"Could use Scarecrows Song but shouldn't have been able to with just ocarina.")
 
         self.scarecrow_button_check([Items.OCARINA_A_BUTTON, Items.OCARINA_CDOWN_BUTTON, Items.OCARINA_CLEFT_BUTTON, Items.OCARINA_CRIGHT_BUTTON, Items.OCARINA_CUP_BUTTON])
+
+# Bombchu Drops
+class BombchuBase(SohTestBase):
+    __Test__ = False
+
+    def require_some_bomchu(self, items: list[Items | Events], required_amount: int) -> None:
+        # ideally we run these as subtests, but those are currently broken 
+        # and report as Success if any subtest succeeds
+        # (https://github.com/microsoft/vscode-python/issues/25824)
+        self.sweep()
+        self.assertFalse(bombchu_refill(self.get_bundle()), f"Had bombchu drops but shouldn't have.")
+        required_items = list(map(lambda i: self.create_item(i), items))
+        for size in range(1, len(required_items)):
+            for invalid_combo in combinations(required_items, size):
+                self.collect(invalid_combo)
+                self.assertTrue(bombchu_refill(self.get_bundle()), f"Didn't have bombchu drops, but should have with {required_amount}, {invalid_combo}")
+                self.remove(invalid_combo)
+        self.collect(required_items)
+        self.assertTrue(bombchu_refill(self.get_bundle()), f"Didn't have bombchu drops, but should have.")
+
+class TestBombchuNoDrops(BombchuBase):
+    """
+    Test if player can get bombchus if the drops setting is disabled.
+    """
+    options = {"bombchu_drops": False, "shuffle_childs_wallet": True}
+    def test_bombchu_no_drops(self):
+        self.require_some_bomchu([Items.BUY_BOMBCHUS10, Items.BUY_BOMBCHUS20, Events.COULD_PLAY_BOWLING, Events.CARPET_MERCHANT], 1)
+
+class TestBombchuDropsOn(BombchuBase):
+    """
+    Test if player can get bombchus if the drops setting is enabled.
+    """
+    options = {"bombchu_drops": True, "shuffle_childs_wallet": True}
+    def test_bombchu_drops_on(self):
+        self.assertTrue(bombchu_refill(self.get_bundle()), f"Had bombchu drops setting enabled, but didn't have drops.")
