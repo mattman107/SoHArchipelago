@@ -3,7 +3,7 @@ from ..Options import *
 from ..Items import Items, SohItem
 from ..Enums import Events
 from .bases import SohTestBase
-from ..LogicHelpers import can_trigger_lacs, can_build_rainbow_bridge
+from ..LogicHelpers import can_trigger_lacs, can_build_rainbow_bridge, scarecrows_song
 from itertools import combinations
 
 # LACS
@@ -627,3 +627,63 @@ class TestCanTriggerRainbowTokensAll(RainbowBase):
         self.assertFalse(can_build_rainbow_bridge(self.get_bundle()), f"Could trigger Rainbow Bridge but shouldn't have been able to.")
         self.collect(self.create_item(Items.GOLD_SKULLTULA_TOKEN))
         self.assertTrue(can_build_rainbow_bridge(self.get_bundle()), f"Couldn't trigger Rainbow Bridge but should have been able to.")
+
+
+# Scarecrow Song Base
+class ScarecrowBase(SohTestBase):
+    __Test__ = False
+
+    def require_all_scarecrow(self, items: list[Items | Events]) -> None:
+        # ideally we run these as subtests, but those are currently broken 
+        # and report as Success if any subtest succeeds
+        # (https://github.com/microsoft/vscode-python/issues/25824)
+        self.sweep()
+        self.assertFalse(scarecrows_song(self.get_bundle()), f"Could use Scarecrows Song but shouldn't have been able to.")
+        required_items = list(map(lambda i: self.create_item(i), items))
+        for size in range(1, len(required_items)):
+            for invalid_combo in combinations(required_items, size):
+                self.collect(invalid_combo)
+                self.assertFalse(scarecrows_song(self.get_bundle()), f"Should not be able to use Scarecrows Song with only {invalid_combo}")
+                self.remove(invalid_combo)
+        self.collect(required_items)
+        self.assertTrue(scarecrows_song(self.get_bundle()), f"Wasn't able to use Scarecrows Song, but should have been able to.")
+
+    def scarecrow_button_check(self, items: list[Items | Events]) -> None:
+        # ideally we run these as subtests, but those are currently broken 
+        # and report as Success if any subtest succeeds
+        # (https://github.com/microsoft/vscode-python/issues/25824)
+        self.sweep()
+        self.assertFalse(scarecrows_song(self.get_bundle()), f"Could use Scarecrows Song but shouldn't have been able to.")
+        required_items = list(map(lambda i: self.create_item(i), items))
+        for size in range(1, len(required_items)):
+            for invalid_combo in combinations(required_items, size):
+                self.collect(invalid_combo)
+                if len(invalid_combo) < 2:
+                    self.assertFalse(scarecrows_song(self.get_bundle()), f"Should not be able to use Scarecrows Song with only {invalid_combo}")
+                else:
+                    self.assertTrue(scarecrows_song(self.get_bundle()), f"Wasn't able to use Scarecrows Song, but should have been able to.")
+                self.remove(invalid_combo)
+        self.collect(required_items)
+        self.assertTrue(scarecrows_song(self.get_bundle()), f"Wasn't able to use Scarecrows Song, but should have been able to.")
+
+class TestScarecrowsSongNoSkip(ScarecrowBase):
+    """
+    Test if Scarecrows Song function works with no skip
+    """
+    options = {"skip_scarecrows_song": False, "shuffle_ocarinas": True, "shuffle_ocarina_buttons": True}
+    def test_scarecrows_song(self):
+        self.require_all_scarecrow([Events.CHILD_SCARECROW_UNLOCKED, Events.ADULT_SCARECROW_UNLOCKED])
+
+class TestScarecrowsSongSkip(ScarecrowBase):
+    """
+    Test if Scarecrows Song function works with skip enabled
+    """
+    options = {"skip_scarecrows_song": True, "shuffle_ocarinas": True, "shuffle_ocarina_buttons": True}
+    def test_scarecrows_song_skip(self):
+        self.assertFalse(scarecrows_song(self.get_bundle()), f"Could use Scarecrows Song but shouldn't have been able to with nothing.")
+
+        self.collect(self.create_item(Items.PROGRESSIVE_OCARINA))
+
+        self.assertFalse(scarecrows_song(self.get_bundle()), f"Could use Scarecrows Song but shouldn't have been able to with just ocarina.")
+
+        self.scarecrow_button_check([Items.OCARINA_A_BUTTON, Items.OCARINA_CDOWN_BUTTON, Items.OCARINA_CLEFT_BUTTON, Items.OCARINA_CRIGHT_BUTTON, Items.OCARINA_CUP_BUTTON])
