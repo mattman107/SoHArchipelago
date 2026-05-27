@@ -347,18 +347,21 @@ class SohWorld(World):
                     self.pre_fill_pool.remove(item)
             
             prefill_state = self.get_pre_fill_state()
-        
-        if goal is None:
-            # set region accessability of locations as the goal
-            accessibility_goal = {self.get_location(loc) for loc in locations}
-            goal = lambda state: all([state.can_reach(reg) for reg in accessibility_goal])
-
-        self.multiworld.completion_condition[self.player] = goal
 
         # get empty, non reserved locations
         empty_locations = self.get_empty_locations_from_list_shuffled(locations)
+        # slice the list so that there aren't as many for fill_restrictive to choose from. Helps performance
+        # give it the amount of items plus 100 (or till the end if it is less than 100) 
+        empty_locations = empty_locations[0:len(item_pool) + 100]
         items = [self.create_item(str(item)) for item in item_pool]
         self.preplaced_items.extend(items)
+        
+        if goal is None:
+            # set region accessability of locations as the goal
+            accessibility_goal = {loc for loc in empty_locations}
+            goal = lambda state: all([state.can_reach(reg) for reg in accessibility_goal])
+
+        self.multiworld.completion_condition[self.player] = goal
 
         if self.settings.disable_fill_overflow:
             fill_restrictive(self.multiworld, prefill_state, empty_locations, items, single_player_placement=True, lock=True)
@@ -366,7 +369,7 @@ class SohWorld(World):
             # Add any unplaced items to the item pool
             fill_restrictive(self.multiworld, prefill_state, empty_locations, items, single_player_placement=True, lock=True, allow_partial=True)
             self.add_items_to_item_pool_list(items)
-        
+
         for item in items:
             self.preplaced_items.remove(item)
 
