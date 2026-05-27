@@ -339,7 +339,7 @@ class SohWorld(World):
         for hint in hints:
             self.static_hints.update(hint.serialize())
             
-    def run_prefill(self, item_pool: list[Items], locations: list[Locations], prefill_state: CollectionState | None = None, goal: Callable[[CollectionState], bool] | None = None):
+    def run_prefill(self, item_pool: list[Items], locations: list[Locations], prefill_state: CollectionState | None = None, original_goal: Callable[[CollectionState], bool] | None = None):
         # check if we're using specific collectionstate
         if prefill_state is None:
             for item in item_pool:
@@ -349,25 +349,46 @@ class SohWorld(World):
             prefill_state = self.get_pre_fill_state()
 
         # get empty, non reserved locations
-        empty_locations = self.get_empty_locations_from_list_shuffled(locations)
+        # adding this extra makes it so we have to loop less if fill overflows and there are more locations and items to try placing
+        extra = 100
+        empty_locations_all = self.get_empty_locations_from_list_shuffled(locations)
+        count_empty_locations_all = len(empty_locations_all) + extra
         # slice the list so that there aren't as many for fill_restrictive to choose from. Helps performance
-        # give it the amount of items plus 100 (or till the end if it is less than 100) 
-        empty_locations = empty_locations[0:len(item_pool) + 100]
+        # give it the same amount of locations as there are items
+        chunk = len(item_pool) + extra
+        last_end = chunk
+        empty_locations = empty_locations_all[0:last_end]
         items = [self.create_item(str(item)) for item in item_pool]
         self.preplaced_items.extend(items)
+
+        def create_new_goal(empty_locations: list[Location]):
+            goal = lambda state: all([state.can_reach(loc) for loc in empty_locations])
+            return goal
         
-        if goal is None:
+        if original_goal is None:
             # set region accessability of locations as the goal
-            accessibility_goal = {loc for loc in empty_locations}
-            goal = lambda state: all([state.can_reach(reg) for reg in accessibility_goal])
+            goal = create_new_goal(empty_locations)
+        else:
+            goal = original_goal
 
         self.multiworld.completion_condition[self.player] = goal
 
         if self.settings.disable_fill_overflow:
             fill_restrictive(self.multiworld, prefill_state, empty_locations, items, single_player_placement=True, lock=True)
         else:
-            # Add any unplaced items to the item pool
             fill_restrictive(self.multiworld, prefill_state, empty_locations, items, single_player_placement=True, lock=True, allow_partial=True)
+
+            # Check if any items and locations are left. If so try again until we run out of either.
+            while len(items) > 0 and last_end < count_empty_locations_all:
+                fill_restrictive(self.multiworld, prefill_state, empty_locations, items, single_player_placement=True, lock=True, allow_partial=True)
+
+                empty_locations = empty_locations_all[last_end: chunk]
+                last_end += chunk
+
+                if original_goal is None:
+                    self.multiworld.completion_condition[self.player] = create_new_goal(empty_locations) 
+            
+            # Add any unplaced items to the item pool
             self.add_items_to_item_pool_list(items)
 
         for item in items:
