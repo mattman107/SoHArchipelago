@@ -354,7 +354,7 @@ class SohWorld(World):
         empty_locations_all = self.get_empty_locations_from_list_shuffled(locations)
         count_empty_locations_all = len(empty_locations_all) + extra
         # slice the list so that there aren't as many for fill_restrictive to choose from. Helps performance
-        # give it the same amount of locations as there are items
+        # give it the same amount of locations as there are items plus extra
         chunk = len(item_pool) + extra
         last_end = chunk
         empty_locations = empty_locations_all[0:last_end]
