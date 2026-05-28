@@ -9,7 +9,6 @@ class EventLocations(StrEnum):
     ROOT_DEKU_SHIELD = "Root Deku Shield"
     ROOT_HYLIAN_SHIELD = "Root Hylian Shield"
     TRIFORCE_HUNT_COMPLETION = "Triforce Hunt Completion"
-    ZELDAS_LETTER_FROM_SKIP_OPTION = "Zeldas Letter From Skip Option"
 
 
 def set_region_rules(world: "SohWorld") -> None:
