@@ -3954,3 +3954,9 @@ class HintKeys(StrEnum):
     KAK_50_SKULLS_HINT = "50 Skulls Hint"
     KAK_100_SKULLS_HINT = "100 Skulls Hint"
     MASK_SHOP_HINT = "Mask Shop Hint"
+
+class TimeOfDay(IntEnum):
+    NONE = auto()
+    DAY = auto()
+    NIGHT = auto()
+    ALL = DAY | NIGHT

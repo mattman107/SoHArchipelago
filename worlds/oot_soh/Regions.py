@@ -1,6 +1,7 @@
 from typing import NamedTuple, TYPE_CHECKING
 from worlds.AutoWorld import LogicMixin
 from BaseClasses import MultiWorld, Region, ItemClassification, LocationProgressType
+from .LogicHelpers import add_events, is_child, is_adult
 from .Enums import *
 from .Locations import SohLocation, base_location_table, \
     gold_skulltula_overworld_location_table, \
@@ -89,6 +90,7 @@ class SohRegion(Region):
 
     def __init__(self, name: str, player: int, multiworld: MultiWorld, hint: str | None = None):
         super().__init__(name, player, multiworld, hint)
+        self.provides_time = TimeOfDay.NONE
 
     def can_reach(self, state) -> bool:
         if state._soh_stale[self.player]:
@@ -118,6 +120,35 @@ def create_regions_and_locations(world: "SohWorld") -> None:
         region = SohRegion(region_name, world.player, world.multiworld)
         world.multiworld.regions.append(region)
         region.add_exits(region_data_table[region_name].connecting_regions)
+
+    if world.complex_tod_checking:
+        # Set regions where time passes
+        for regions in (Regions.HYRULE_FIELD, Regions.LAKE_HYLIA, Regions.GERUDO_VALLEY, Regions.GV_UPPER_STREAM, Regions.GV_LOWER_STREAM, 
+                        Regions.GV_CRATE_LEDGE, Regions.GV_GROTTO_LEDGE, Regions.GV_FORTRESS_SIDE, Regions.DESERT_COLOSSUS, Regions.SPIRIT_TEMPLE_OUTDOOR_HANDS, 
+                        Regions.HYRULE_CASTLE_GROUNDS, Regions.DEATH_MOUNTAIN_TRAIL, Regions.DEATH_MOUNTAIN_SUMMIT, Regions.ZR_FRONT, Regions.ZORA_RIVER):
+            world.get_region(str(regions)).provides_time = TimeOfDay.ALL
+
+        # OGC Night Time
+        world.get_region(str(Regions.GANONS_CASTLE_GROUNDS)).provides_time = TimeOfDay.NIGHT
+    else:
+        # Create events for regions where time passes both
+        for regions in (Regions.HYRULE_FIELD, Regions.LAKE_HYLIA, Regions.GERUDO_VALLEY, Regions.GV_UPPER_STREAM, Regions.GV_LOWER_STREAM, 
+                        Regions.GV_CRATE_LEDGE, Regions.GV_GROTTO_LEDGE, Regions.DESERT_COLOSSUS, Regions.SPIRIT_TEMPLE_OUTDOOR_HANDS, 
+                        Regions.DEATH_MOUNTAIN_TRAIL, Regions.DEATH_MOUNTAIN_SUMMIT, Regions.ZR_FRONT, Regions.ZORA_RIVER):
+            add_events(regions, world, [
+                (str(regions) + " Day Night Cycle Child", Events.CHILD_CAN_PASS_TIME, lambda bundle: is_child(bundle)),
+                (str(regions) + " Day Night Cycle Adult", Events.ADULT_CAN_PASS_TIME, lambda bundle: is_adult(bundle))
+            ])
+
+        # Adult only
+        add_events(Regions.GV_FORTRESS_SIDE, world, [
+            (str(Regions.GV_FORTRESS_SIDE) + " Day Night Cycle Adult", Events.ADULT_CAN_PASS_TIME, lambda bundle: is_adult(bundle))
+        ])
+
+        # Child only
+        add_events(Regions.HYRULE_CASTLE_GROUNDS, world, [
+            (str(Regions.HYRULE_CASTLE_GROUNDS) + " Day Night Cycle Child", Events.CHILD_CAN_PASS_TIME, lambda bundle: is_child(bundle))
+        ])
 
     # Create locations
 

@@ -1,7 +1,8 @@
 from collections import deque
+from collections.abc import Iterable
 from BaseClasses import CollectionState, MultiWorld
 from worlds.AutoWorld import LogicMixin
-from .Enums import Regions, Ages
+from .Enums import Regions, Ages, TimeOfDay
 import copy
 
 
@@ -17,6 +18,8 @@ class SohAgeLogic(LogicMixin):
             player: set() for player in players}
         self._soh_child_blocked_regions = {player: set() for player in players}
         self._soh_adult_blocked_regions = {player: set() for player in players}
+        self._soh_day_reachable_regions = {player: set() for player in players}
+        self._soh_night_reachable_regions = {player: set() for player in players}
         self._soh_age = {player: Ages.null for player in players}
 
     def copy_mixin(self, ret) -> CollectionState:
@@ -30,6 +33,10 @@ class SohAgeLogic(LogicMixin):
             regions) for player, regions in self._soh_child_blocked_regions.items()}
         ret._soh_adult_blocked_regions = {player: copy.copy(
             regions) for player, regions in self._soh_adult_blocked_regions.items()}
+        ret._soh_day_reachable_regions = {player: copy.copy(
+            regions) for player, regions in self._soh_day_reachable_regions.items()}
+        ret._soh_night_reachable_regions = {player: copy.copy(
+            regions) for player, regions in self._soh_night_reachable_regions.items()}
         ret._soh_age = {player: age for player, age in self._soh_age.items()}
         return ret
 
@@ -38,6 +45,8 @@ class SohAgeLogic(LogicMixin):
         self._soh_adult_reachable_regions[player] = set()
         self._soh_child_blocked_regions[player] = set()
         self._soh_adult_blocked_regions[player] = set()
+        self._soh_day_reachable_regions[player] = set()
+        self._soh_night_reachable_regions[player] = set()
         self._soh_stale[player] = True
 
     def _soh_update_age_reachable_regions(self, player):
@@ -87,3 +96,33 @@ class SohAgeLogic(LogicMixin):
             self._soh_age[player] = Ages.null
             return can_reach
         return self._soh_age[player] == age
+    
+    def _soh_reach_at_time(self, regionname: str, tod: TimeOfDay, already_checked: list[str], player: int):
+        name_map = {
+            TimeOfDay.DAY: self._soh_day_reachable_regions[player],
+            TimeOfDay.NIGHT: self._soh_night_reachable_regions[player],
+            TimeOfDay.ALL: self._soh_day_reachable_regions[player].intersection(self._soh_night_reachable_regions[player])
+        }
+        if regionname in name_map[tod]:
+            return True
+        region = self.multiworld.get_region(regionname, player)
+        if region.provides_time == TimeOfDay.ALL or regionname == str(Regions.ROOT):
+            self._soh_day_reachable_regions[player].add(regionname)
+            self._soh_night_reachable_regions[player].add(regionname)
+            return True
+        if region.provides_time == TimeOfDay.NIGHT:
+            self._soh_night_reachable_regions[player].add(regionname)
+            return tod == TimeOfDay.NIGHT
+        for entrance in region.entrances:
+            if entrance.parent_region.name in already_checked:
+                continue
+            if self._soh_reach_at_time(entrance.parent_region.name, tod, already_checked + [regionname], player):
+                if tod == TimeOfDay.DAY:
+                    self._soh_day_reachable_regions[player].add(regionname)
+                elif tod == TimeOfDay.NIGHT:
+                    self._soh_night_reachable_regions[player].add(regionname)
+                elif tod == TimeOfDay.ALL:
+                    self._soh_day_reachable_regions[player].add(regionname)
+                    self._soh_night_reachable_regions[player].add(regionname)
+                return True
+        return False

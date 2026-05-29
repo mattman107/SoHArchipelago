@@ -334,16 +334,26 @@ def is_adult(bundle: tuple[CollectionState, Regions, "SohWorld"]) -> bool:
     return state._soh_can_reach_as_age(parent_region, Ages.ADULT, world.player)  # type: ignore # noqa
 
 
+# TODO: Implement starting time of day if that ever gets added
 def at_day(bundle: tuple[CollectionState, Regions, "SohWorld"]) -> bool:
-    return ((is_child(bundle) and has_item(Events.CHILD_CAN_PASS_TIME, bundle))
-            or (is_adult(bundle) and has_item(Events.ADULT_CAN_PASS_TIME, bundle)))
-    # TODO: Implement starting time of day if that ever gets added
+    condition = can_use(Items.SUNS_SONG, bundle)
+    if bundle[2].complex_tod_checking:
+        condition = condition or bundle[0]._soh_reach_at_time(str(bundle[1]), TimeOfDay.DAY, [], bundle[2].player)
+    else:
+        condition = condition or ((is_child(bundle) and has_item(Events.CHILD_CAN_PASS_TIME, bundle)) or (is_adult(bundle) and has_item(Events.ADULT_CAN_PASS_TIME, bundle)))
+    
+    return condition
 
 
+# TODO: Implement starting time of day if that ever gets added
 def at_night(bundle: tuple[CollectionState, Regions, "SohWorld"]) -> bool:
-    return ((is_child(bundle) and has_item(Events.CHILD_CAN_PASS_TIME, bundle))
-            or (is_adult(bundle) and has_item(Events.ADULT_CAN_PASS_TIME, bundle)))
-    # TODO: Implement starting time of day if that ever gets added
+    condition = can_use(Items.SUNS_SONG, bundle)
+    if bundle[2].complex_tod_checking:
+        condition = condition or bundle[0]._soh_reach_at_time(str(bundle[1]), TimeOfDay.NIGHT, [], bundle[2].player)
+    else:
+        condition = condition or ((is_child(bundle) and has_item(Events.CHILD_CAN_PASS_TIME, bundle)) or (is_adult(bundle) and has_item(Events.ADULT_CAN_PASS_TIME, bundle)))
+
+    return condition
 
 
 def is_child(bundle: tuple[CollectionState, Regions, "SohWorld"]) -> bool:

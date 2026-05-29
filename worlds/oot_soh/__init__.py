@@ -123,6 +123,7 @@ class SohWorld(World):
         self.pre_fill_pool = list[Items]()
         self.reserved_pre_fill_locations = list[Locations]()
         self.static_hints = dict[str, list[list[int, int]]]()
+        self.complex_tod_checking = False
 
         apworld_manifest = orjson.loads(pkgutil.get_data(
             __name__, "archipelago.json").decode("utf-8"))

@@ -12,7 +12,6 @@ class EventLocations(StrEnum):
     HC_STORMS_GROTTO_BEHIND_WALLS_GOSSIP_STONE_SONG_FAIRY = "HC Storms Grotto Behind Walls Gossip Stone Song Fairy"
     HC_STORMS_GROTTO_BEHIND_WALLS_WANDERING_BUGS = "HC Storms Grotto Behind Walls Wandering Bugs"
     HC_OGC_RAINBOW_BRIDGE = "HC OGC Rainbow Bridge"
-    HC_DAY_NIGHT_CYCLE_CHILD = "HC Day Night Cycle Child"
 
 
 class LocalEvents(StrEnum):
@@ -35,9 +34,7 @@ def set_region_rules(world: "SohWorld") -> None:
          lambda bundle: call_gossip_fairy(bundle)),
         (EventLocations.HC_BUTTERFLY_FAIRY, Events.CAN_ACCESS_FAIRIES,
          lambda bundle: can_use(Items.STICKS, bundle)),
-        (EventLocations.HC_BUG_ROCK, Events.CAN_ACCESS_BUGS, lambda bundle: True),
-        (EventLocations.HC_DAY_NIGHT_CYCLE_CHILD,
-         Events.CHILD_CAN_PASS_TIME, lambda bundle: is_child(bundle)),
+        (EventLocations.HC_BUG_ROCK, Events.CAN_ACCESS_BUGS, lambda bundle: True)
     ])
     # Locations
     add_locations(Regions.HYRULE_CASTLE_GROUNDS, world, [
