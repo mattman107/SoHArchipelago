@@ -231,7 +231,8 @@ def create_regions_and_locations(world: "SohWorld") -> None:
         world.included_locations.update(links_pocket_location_table)
 
     # Child Zelda
-    world.included_locations.update(child_zelda_location_table)
+    if not world.options.skip_child_zelda:
+        world.included_locations.update(child_zelda_location_table)
 
     # Carpenters
     if world.options.fortress_carpenters == "normal":
@@ -403,19 +404,20 @@ def place_locked_items(world: "SohWorld") -> None:
     if world.options.start_with_links_pocket == "advancement":
         world.get_location(Locations.LINKS_POCKET).progress_type = LocationProgressType.PRIORITY
 
-    # If skip_child_zelda, connect the locations to root
+    # If skip_child_zelda, connect the locations to root and push items precollected
     if not world.options.skip_child_zelda:
+        # Zeldas Letter gets placed to it's location
+        place_locked_item(Locations.HC_ZELDAS_LETTER, Items.ZELDAS_LETTER, world)
         # If not skip_child_zelda and not shuffle_weird_egg, place the weird egg
         if not world.options.shuffle_weird_egg:
             place_locked_item(Locations.HC_MALON_EGG, Items.WEIRD_EGG, world)
     else:
-        connect_to_root(Locations.HC_MALON_EGG, world)
-        connect_to_root(Locations.HC_ZELDAS_LETTER, world)
+        world.push_precollected(world.create_item(Items.ZELDAS_LETTER, True))
+        world.push_precollected(world.create_item(Items.WEIRD_EGG, True))
+
         connect_to_root(Locations.SONG_FROM_IMPA, world)
         world.multiworld.regions.region_cache[world.player].pop(Regions.HC_GARDEN)
 
-    # Zeldas Letter always gets placed to it's location
-    place_locked_item(Locations.HC_ZELDAS_LETTER, Items.ZELDAS_LETTER, world)
         
     if world.options.shuffle_songs == "off":
         for location, song in song_vanilla_locations.items():
