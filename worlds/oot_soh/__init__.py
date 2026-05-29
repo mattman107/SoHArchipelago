@@ -340,6 +340,10 @@ class SohWorld(World):
             self.static_hints.update(hint.serialize())
             
     def run_prefill(self, item_pool: list[Items], locations: list[Locations], prefill_state: CollectionState | None = None, original_goal: Callable[[CollectionState], bool] | None = None):
+        def create_new_goal(empty_locations: list[Location]):
+            goal = lambda state: all([state.can_reach(loc) for loc in empty_locations])
+            return goal
+        
         # check if we're using specific collectionstate
         if prefill_state is None:
             for item in item_pool:
@@ -351,15 +355,16 @@ class SohWorld(World):
         # get empty, non reserved locations
         empty_locations_all = self.get_empty_locations_from_list_shuffled(locations)
         count_empty_locations_all = len(empty_locations_all)
-        # slice the list so that there aren't as many for fill_restrictive to choose from. Helps performance
         chunk = min(len(item_pool) + 100, count_empty_locations_all)
-        empty_locations = empty_locations_all[:chunk] if chunk != count_empty_locations_all else empty_locations_all
+
+        # If fill overflow is disabled or the chunk is as large as the original list, use all locations
+        if self.settings.disable_fill_overflow or chunk == count_empty_locations_all:
+            empty_locations = empty_locations_all
+        else:
+            empty_locations = empty_locations_all[:chunk]
+
         items = [self.create_item(str(item)) for item in item_pool]
         self.preplaced_items.extend(items)
-
-        def create_new_goal(empty_locations: list[Location]):
-            goal = lambda state: all([state.can_reach(loc) for loc in empty_locations])
-            return goal
         
         if original_goal is None:
             # set region accessability of locations as the goal
@@ -369,22 +374,20 @@ class SohWorld(World):
 
         self.multiworld.completion_condition[self.player] = goal
 
-        if self.settings.disable_fill_overflow:
-            fill_restrictive(self.multiworld, prefill_state, empty_locations, items, single_player_placement=True, lock=True)
-        else:
+        # Determines if a partial or full fill is occuring
+        fill_restrictive(self.multiworld, prefill_state, empty_locations, items, single_player_placement=True, lock=True, allow_partial=(not self.settings.disable_fill_overflow))
+
+        # Check if any items and locations are left. If so try again once more with the rest of the locations
+        if len(items) > 0 and chunk != count_empty_locations_all:
+            empty_locations = empty_locations_all[chunk:]
+
+            if original_goal is None:
+                self.multiworld.completion_condition[self.player] = create_new_goal(empty_locations) 
+
             fill_restrictive(self.multiworld, prefill_state, empty_locations, items, single_player_placement=True, lock=True, allow_partial=True)
-
-            # Check if any items and locations are left. If so try again once more with the rest of the locations
-            if len(items) > 0 and chunk != count_empty_locations_all:
-                empty_locations = empty_locations_all[chunk:]
-
-                if original_goal is None:
-                    self.multiworld.completion_condition[self.player] = create_new_goal(empty_locations) 
-
-                fill_restrictive(self.multiworld, prefill_state, empty_locations, items, single_player_placement=True, lock=True, allow_partial=True)
-            
-            # Add any unplaced items to the item pool
-            self.add_items_to_item_pool_list(items)
+        
+        # Add any unplaced items to the item pool
+        self.add_items_to_item_pool_list(items)
 
         for item in items:
             self.preplaced_items.remove(item)
