@@ -334,6 +334,7 @@ class SohWorld(CachedRuleBuilderWorld):
             amount = int(len(self.filler_pool) * (self.options.local_filler_percentage.value * .01))
             filler_items = self.filler_pool[:amount]
             filler_locations = self.get_empty_locations_from_list_shuffled(self.get_locations(), True)[: amount]
+            self.random.shuffle(filler_items)
             fast_fill(self.multiworld, filler_items, filler_locations)
             self.multiworld.itempool += self.filler_pool[amount:]
 
