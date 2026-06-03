@@ -506,28 +506,22 @@ def create_item_pool(world: "SohWorld") -> None:
             items_to_create[Items.PIECE_OF_HEART_WINNER] -= create_special_progression_item(world, Items.PIECE_OF_HEART_WINNER, ItemClassification.useful, items_to_create[Items.PIECE_OF_HEART_WINNER])
             items_to_create[Items.HEART_CONTAINER] -= create_special_progression_item(world, Items.HEART_CONTAINER, ItemClassification.useful, items_to_create[Items.HEART_CONTAINER])
         else:
-            # starting health is less than min_hearts_needed
-            # Get the total number of hearts that don't need to be progression
-            total_non_progression_hearts: int = min_hearts_needed - world.multiworld.state.soh_heart_count[world.player] 
+             # starting health is less than min_hearts_needed
+            # Get the total number of heart classifications we have to work with
+            total_non_progression_hearts: int = max_hearts - min_hearts_needed # 9
+
+            # Heart Piece amount to make useful.
+            non_progression_piece_amount: int = int((items_to_create[Items.PIECE_OF_HEART] + items_to_create[Items.PIECE_OF_HEART_WINNER]) / 4) # 9
+            
+            if total_non_progression_hearts >= non_progression_piece_amount: 
+                items_to_create[Items.PIECE_OF_HEART] -= create_special_progression_item(world, Items.PIECE_OF_HEART, ItemClassification.useful, ((non_progression_piece_amount * 4) - 1))
+                items_to_create[Items.PIECE_OF_HEART_WINNER] -= create_special_progression_item(world, Items.PIECE_OF_HEART_WINNER, ItemClassification.useful, 1)
+
+                total_non_progression_hearts -= non_progression_piece_amount # 17 - 9 = 8
+
             # Container amount to make useful
-            non_progression_container_amount: int = items_to_create[Items.HEART_CONTAINER]
-            # Heart Piece amount to make useful. Convert to regular heart here then convert back later for simplicity
-            non_progression_piece_amount: int = int((items_to_create[Items.PIECE_OF_HEART] + items_to_create[Items.PIECE_OF_HEART_WINNER]) / 4)
-            # Calcuate what needs to be useful. Try Heart Pieces first. This is because we would prefer the contains to be progression because there are less of them always
-            if total_non_progression_hearts < non_progression_piece_amount:
-                temp_non_progression_hearts = non_progression_piece_amount - total_non_progression_hearts
-                if world.options.item_pool == "minimal":
-                    non_progression_piece_amount = 0
-                elif world.options.item_pool == "scarce":
-                    non_progression_piece_amount = min(non_progression_piece_amount , temp_non_progression_hearts) if world.options.item_pool != "minimal" or non_progression_container_amount > 0 else 0
-
-                if non_progression_piece_amount > 0:
-                    items_to_create[Items.PIECE_OF_HEART] -= create_special_progression_item(world, Items.PIECE_OF_HEART, ItemClassification.useful, ((non_progression_piece_amount * 4) - 1))
-                    items_to_create[Items.PIECE_OF_HEART_WINNER] -= create_special_progression_item(world, Items.PIECE_OF_HEART_WINNER, ItemClassification.useful, 1)
-
-                # Try to convert the containers second
-                if total_non_progression_hearts <= non_progression_container_amount:
-                    items_to_create[Items.HEART_CONTAINER] -= create_special_progression_item(world, Items.HEART_CONTAINER, ItemClassification.useful, non_progression_container_amount - total_non_progression_hearts)        
+            if total_non_progression_hearts >= items_to_create[Items.HEART_CONTAINER]:
+                items_to_create[Items.HEART_CONTAINER] -= create_special_progression_item(world, Items.HEART_CONTAINER, ItemClassification.useful, items_to_create[Items.HEART_CONTAINER])        
 
     # if Greg isn't necessary to win, make him filler
     if not (world.options.rainbow_bridge == "greg" or (world.options.rainbow_bridge and world.options.rainbow_bridge_greg_modifier) or (world.options.ganons_castle_boss_key and world.options.ganons_castle_boss_key_greg_modifier)):
@@ -562,6 +556,9 @@ def create_item_pool(world: "SohWorld") -> None:
 
 
 def create_special_progression_item(world: "SohWorld", item: Items, classification: ItemClassification, amount: int = 1) -> int:
+    if amount < 1:
+        return 0
+
     items = [world.create_item(item, classification=classification)
              for _ in range(amount)]
 
