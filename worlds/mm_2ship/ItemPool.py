@@ -4,6 +4,9 @@ from typing import TYPE_CHECKING
 
 from BaseClasses import ItemClassification as IC
 
+from .Enums import Locations, Items
+
+
 if TYPE_CHECKING:
     from . import MM2ShipWorld
 
@@ -16,7 +19,6 @@ def create_item_pool(world: "MM2ShipWorld") -> None:
     then adds items that have no vanilla location (Hero's Shield, etc.).
     """
     from .Items import Items
-    from .Enums import Locations
     from .VanillaItems import vanilla_items
     from .LocationData import LOCATION_RCTYPE
     from collections import Counter
@@ -80,21 +82,21 @@ def create_item_pool(world: "MM2ShipWorld") -> None:
     # Add sword and shield if shuffled (line 158-159 in GeneratePools.cpp)
     # If not shuffled, these are given as starting items (see StartingItems.cpp)
     if world.options.shuffle_sword.value:
-        world.multiworld.itempool.append(world.create_item("Progressive Sword"))
+        world.multiworld.itempool.append(world.create_item(Items.PROGRESSIVE_SWORD))
     if world.options.shuffle_shield.value:
-        world.multiworld.itempool.append(world.create_item("Hero's Shield"))
+        world.multiworld.itempool.append(world.create_item(Items.SHIELD_HERO))
 
     # Add boss souls if shuffled
     if world.options.shuffle_boss_souls.value:
         boss_souls = [
-            "Soul of Goht",
-            "Soul of Gyorg",
-            "Soul of Odolwa",
-            "Soul of Twinmold",
+            Items.SOUL_BOSS_GOHT,
+            Items.SOUL_BOSS_GYORG,
+            Items.SOUL_BOSS_ODOLWA,
+            Items.SOUL_BOSS_TWINMOLD,
         ]
         # Skip Majora soul if triforce pieces are shuffled
         if not world.options.shuffle_triforce_pieces.value:
-            boss_souls.append("Soul of Majora")
+            boss_souls.append(Items.SOUL_BOSS_MAJORA)
 
         for soul in boss_souls:
             world.multiworld.itempool.append(world.create_item(soul))
@@ -102,28 +104,23 @@ def create_item_pool(world: "MM2ShipWorld") -> None:
     # Add enemy souls if shuffled
     if world.options.shuffle_enemy_souls.value:
         enemy_souls = [
-            "Soul of Aliens", "Soul of Armos", "Soul of Bad Bats", "Soul of Beamos",
-            "Soul of Boes", "Soul of Bubbles", "Soul of Captain Keeta", "Soul of Chuchus",
-            "Soul of Death Armos", "Soul of Deep Pythons", "Soul of Deku Babas", "Soul of Dexihands",
-            "Soul of Dinolfos", "Soul of Dodongos", "Soul of Dragonflies", "Soul of Eenos",
-            "Soul of Eyegores", "Soul of Freezards", "Soul of Garos", "Soul of Gekkos",
-            "Soul of Giant Bees", "Soul of Gomess", "Soul of Guays", "Soul of Hiploops",
-            "Soul of Igos du Ikana", "Soul of Iron Knuckles", "Soul of Keese", "Soul of Leevers",
-            "Soul of Like Likes", "Soul of Mad Scrubs", "Soul of Nejirons", "Soul of Octoroks",
-            "Soul of Peahats", "Soul of Pirates", "Soul of Poes", "Soul of Redeads",
-            "Soul of Shellblades", "Soul of Skullfish", "Soul of Skulltulas", "Soul of Snappers",
-            "Soul of Stalchildren", "Soul of Takkuri", "Soul of Tektites", "Soul of Wallmasters",
-            "Soul of Warts", "Soul of Wizrobes", "Soul of Wolfos",
+            Items.SOUL_ENEMY_ALIEN, Items.SOUL_ENEMY_ARMOS, Items.SOUL_ENEMY_BAD_BAT, Items.SOUL_ENEMY_BEAMOS, 
+            Items.SOUL_ENEMY_BOE, Items.SOUL_ENEMY_BUBBLE, Items.SOUL_ENEMY_CAPTAIN_KEETA, Items.SOUL_ENEMY_CHUCHU, 
+            Items.SOUL_ENEMY_DEATH_ARMOS, Items.SOUL_ENEMY_DEEP_PYTHON, Items.SOUL_ENEMY_DEKU_BABA, Items.SOUL_ENEMY_DEXIHAND, 
+            Items.SOUL_ENEMY_DINOLFOS, Items.SOUL_ENEMY_DODONGO, Items.SOUL_ENEMY_DRAGONFLY, Items.SOUL_ENEMY_EENO, Items.SOUL_ENEMY_EYEGORE, 
+            Items.SOUL_ENEMY_FREEZARD, Items.SOUL_ENEMY_GARO, Items.SOUL_ENEMY_GEKKO, Items.SOUL_ENEMY_GIANT_BEE, Items.SOUL_ENEMY_GOMESS, 
+            Items.SOUL_ENEMY_GUAY, Items.SOUL_ENEMY_HIPLOOP, Items.SOUL_ENEMY_IGOS_DU_IKANA, Items.SOUL_ENEMY_IRON_KNUCKLE, Items.SOUL_ENEMY_KEESE, 
+            Items.SOUL_ENEMY_LEEVER, Items.SOUL_ENEMY_LIKE_LIKE, Items.SOUL_ENEMY_MAD_SCRUB, Items.SOUL_ENEMY_NEJIRON, Items.SOUL_ENEMY_OCTOROK, 
+            Items.SOUL_ENEMY_PEAHAT, Items.SOUL_ENEMY_PIRATE, Items.SOUL_ENEMY_POE, Items.SOUL_ENEMY_REDEAD, Items.SOUL_ENEMY_SHELLBLADE, Items.SOUL_ENEMY_SKULLFISH, 
+            Items.SOUL_ENEMY_SKULLTULA, Items.SOUL_ENEMY_SNAPPER, Items.SOUL_ENEMY_STALCHILD, Items.SOUL_ENEMY_TAKKURI, Items.SOUL_ENEMY_TEKTITE, 
+            Items.SOUL_ENEMY_WALLMASTER, Items.SOUL_ENEMY_WART, Items.SOUL_ENEMY_WIZROBE, Items.SOUL_ENEMY_WOLFOS
         ]
         for soul in enemy_souls:
             world.multiworld.itempool.append(world.create_item(soul))
 
     # Add clock shuffle items if shuffled
     if world.options.clock_shuffle.value:
-        time_items = [
-            "Time (Day 1)", "Time (Night 1)", "Time (Day 2)",
-            "Time (Night 2)", "Time (Day 3)", "Time (Night 3)",
-        ]
+        time_items = [Items.TIME_DAY_1, Items.TIME_DAY_2, Items.TIME_DAY_3, Items.TIME_NIGHT_1, Items.TIME_NIGHT_2, Items.TIME_NIGHT_3]
         for time_item in time_items:
             world.multiworld.itempool.append(world.create_item(time_item))
 
@@ -133,26 +130,26 @@ def create_item_pool(world: "MM2ShipWorld") -> None:
 
     # Add ocarina buttons if shuffled
     if world.options.shuffle_ocarina_buttons.value:
-        buttons = ["A Button", "C Down Button", "C Right Button", "C Left Button", "C Up Button"]
+        buttons = [Items.OCARINA_BUTTON_A, Items.OCARINA_BUTTON_C_DOWN, Items.OCARINA_BUTTON_C_RIGHT, Items.OCARINA_BUTTON_C_LEFT, Items.OCARINA_BUTTON_C_UP]
         for button in buttons:
             world.multiworld.itempool.append(world.create_item(button))
 
     # Add songs if shuffled
     if world.options.shuffle_song_sun.value:
-        world.multiworld.itempool.append(world.create_item("Sun's Song"))
+        world.multiworld.itempool.append(world.create_item(Items.SONG_SUN))
     if world.options.shuffle_song_time.value:
-        world.multiworld.itempool.append(world.create_item("Song of Time"))
+        world.multiworld.itempool.append(world.create_item(Items.SONG_TIME))
     if world.options.shuffle_song_double_time.value:
-        world.multiworld.itempool.append(world.create_item("Song of Double Time"))
+        world.multiworld.itempool.append(world.create_item(Items.SONG_DOUBLE_TIME))
     if world.options.shuffle_song_inverted_time.value:
-        world.multiworld.itempool.append(world.create_item("Inverted Song of Time"))
+        world.multiworld.itempool.append(world.create_item(Items.SONG_INVERTED_TIME))
     if world.options.shuffle_song_saria.value:
-        world.multiworld.itempool.append(world.create_item("Saria's Song"))
+        world.multiworld.itempool.append(world.create_item(Items.SONG_SARIA))
 
     # Add triforce pieces if shuffled
     if world.options.shuffle_triforce_pieces.value:
         for _ in range(world.options.triforce_pieces_max.value):
-            world.multiworld.itempool.append(world.create_item("Piece of the Triforce"))
+            world.multiworld.itempool.append(world.create_item(Items.TRIFORCE_PIECE))
 
     # Step 3: Trim stray fairies and skulltula tokens to max counts
     # This matches GeneratePools.cpp lines 233-269
@@ -161,10 +158,10 @@ def create_item_pool(world: "MM2ShipWorld") -> None:
 
     # Stray fairies - trim to max count
     stray_fairy_items = [
-        "Stone Tower Stray Fairy",
-        "Great Bay Stray Fairy",
-        "Snowhead Stray Fairy",
-        "Woodfall Stray Fairy",
+        Items.STONE_TOWER_STRAY_FAIRY,
+        Items.SNOWHEAD_STRAY_FAIRY,
+        Items.WOODFALL_STRAY_FAIRY,
+        Items.GREAT_BAY_STRAY_FAIRY
     ]
     max_fairies = world.options.stray_fairies_max.value
     for fairy_item in stray_fairy_items:
@@ -178,8 +175,8 @@ def create_item_pool(world: "MM2ShipWorld") -> None:
 
     # Skulltula tokens - trim to max count
     skulltula_items = [
-        "Swamp Gold Skulltula Token",
-        "Ocean Gold Skulltula Token",
+        Items.GS_TOKEN_SWAMP,
+        Items.GS_TOKEN_OCEAN
     ]
     max_skulltulas = world.options.skulltula_tokens_max.value
     for skulltula_item in skulltula_items:
@@ -215,24 +212,10 @@ def create_plentiful_and_trap_items(world: "MM2ShipWorld") -> None:
                 continue
 
             # Skip triforce pieces (user specifies exact count)
-            if item.name == "Piece of the Triforce":
-                continue
-            if item.name == "Swamp Gold Skulltula Token":
-                continue
-            if item.name == "Ocean Gold Skulltula Token":
-                continue
-            if item.name == "Woodfall Stray Fairy":
-                continue
-            if item.name == "Snowhead Stray Fairy":
-                continue
-            if item.name == "Great Bay Stray Fairy":
-                continue
-            if item.name == "Stone Tower Stray Fairy":
-                continue
-            if item.name == "Heart Container":
-                continue
-            if item.name == "Heart Piece":
-                continue
+            for item_name in (str(Items.TRIFORCE_PIECE), str(Items.GS_TOKEN_SWAMP), str(Items.GS_TOKEN_OCEAN), str(Items.WOODFALL_STRAY_FAIRY), 
+                              str(Items.SNOWHEAD_STRAY_FAIRY), str(Items.GREAT_BAY_STRAY_FAIRY), str(Items.STONE_TOWER_STRAY_FAIRY), str(Items.HEART_CONTAINER), str(Items.HEART_PIECE)):
+                if item.name == item_name:
+                    continue
 
             # Add based on classification
             if item.classification in (IC.progression, IC.useful):
@@ -247,7 +230,7 @@ def create_plentiful_and_trap_items(world: "MM2ShipWorld") -> None:
     # Add traps if shuffled
     if world.options.shuffle_traps.value:
         for _ in range(world.options.trap_amount.value):
-            world.multiworld.itempool.append(world.create_item("Knockoff Item"))
+            world.multiworld.itempool.append(world.create_item(Items.KNOCKOFF_ITEM))
 
     # Now fill remaining locations with filler items
     # Count how many items we've added for THIS player
@@ -265,7 +248,5 @@ def get_filler_item(world: "MM2ShipWorld") -> str:
     """
     Choose a filler item name. Prefers rupees and consumables.
     """
-    filler_options = [
-        "Junk",
-    ]
+    filler_options = [Items.JUNK]
     return world.random.choice(filler_options)

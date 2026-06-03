@@ -4,7 +4,7 @@ from typing import NamedTuple, TYPE_CHECKING
 
 from BaseClasses import MultiWorld, Region
 
-from .Enums import Regions, Locations
+from .Enums import Regions, Locations, Items
 from .Locations import MM2ShipLocation, location_table
 from .LocationData import LOCATION_RCTYPE
 
@@ -86,13 +86,13 @@ def create_regions_and_locations(world: "MM2ShipWorld") -> None:
 
     # Regions enum -> region name strings
     for entry in Regions:
-        region_data_table[entry.value] = MM2ShipRegionData([])
+        region_data_table[str(entry)] = MM2ShipRegionData([])
 
     # Start region (not part of enum)
-    region_data_table.setdefault("Menu", MM2ShipRegionData(["Clock Town South"]))
+    region_data_table.setdefault("Menu", MM2ShipRegionData([str(Regions.CLOCK_TOWN_SOUTH)]))
 
     # Safety: ensure the hub exists
-    region_data_table.setdefault("Clock Town South", MM2ShipRegionData([]))
+    region_data_table.setdefault(str(Regions.CLOCK_TOWN_SOUTH), MM2ShipRegionData([]))
 
     # Create regions
     for region_name, data in region_data_table.items():
@@ -100,7 +100,7 @@ def create_regions_and_locations(world: "MM2ShipWorld") -> None:
         world.multiworld.regions.append(region)
         region.add_exits(data.connecting_regions)
 
-    hub = world.get_region("Clock Town South")
+    hub = world.get_region(str(Regions.CLOCK_TOWN_SOUTH))
 
     # Create locations and attach to hub, filtering based on options.
     # Inactive locations are skipped entirely — no AP item is placed there and they
@@ -123,7 +123,7 @@ def create_regions_and_locations(world: "MM2ShipWorld") -> None:
 
         # Place Victory event item at Victory location
         if loc == Locations.VICTORY:
-            loc_obj.place_locked_item(world.create_item("Victory", create_as_event=True))
+            loc_obj.place_locked_item(world.create_item(Items.VICTORY, create_as_event=True))
 
         # Boss warp locations are always created. When not shuffled, pre-fill
         # with the vanilla item so the player receives it from the server on check.
