@@ -7,6 +7,7 @@ from typing import Any, ClassVar
 import orjson
 
 from BaseClasses import Tutorial
+from rule_builder.rules import Has
 from worlds.AutoWorld import WebWorld, World
 from settings import Group, Bool
 
@@ -142,10 +143,11 @@ class MM2ShipWorld(World):
 
 
     def set_rules(self) -> None:
-        # Victory condition: collect the Victory event (triggered by C++ code when beating Majora or collecting triforce pieces)
-        self.multiworld.completion_condition[self.player] = lambda state: state.has("Victory", self.player)
         if self.options.true_no_logic.value:
             return
+        # Victory condition: collect the Victory event (triggered by C++ code when beating Majora or collecting triforce pieces)
+        self.set_completion_rule(Has(Items.VICTORY))
+
 
 
     def fill_slot_data(self) -> dict[str, Any]:
