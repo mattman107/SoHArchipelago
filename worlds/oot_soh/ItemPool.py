@@ -498,27 +498,36 @@ def create_item_pool(world: "SohWorld") -> None:
         items_to_create[Items.GOLD_SKULLTULA_TOKEN] -= create_special_progression_item(
             world, Items.GOLD_SKULLTULA_TOKEN, ItemClassification.useful | ItemClassification.deprioritized | ItemClassification.skip_balancing, items_to_create[Items.GOLD_SKULLTULA_TOKEN] - world.randomized_progressive_skulltula_count)
 
-    # If hearts aren't logically relevent (or you have enough to do everything) make them useful
-    min_hearts_needed: int = 3
-    if not (world.options.enable_all_tricks or str(Tricks.FEWER_TUNIC_REQUIREMENTS) in world.options.tricks_in_logic.value or world.multiworld.state.soh_heart_count[world.player] < min_hearts_needed):
-        progression_hearts: int = min_hearts_needed - world.multiworld.state.soh_heart_count[world.player]
-        non_progression_container_amount: int = 0
-        non_progression_piece_amount: int = 0
-        if progression_hearts > 0 and items_to_create[Items.HEART_CONTAINER] > 0:
-            non_progression_container_amount = items_to_create[Items.HEART_CONTAINER] - progression_hearts
+    # If you start with enough hearts to do everything and tricks aren't enabled make the rest of them useful
+    if not (world.options.enable_all_tricks or str(Tricks.FEWER_TUNIC_REQUIREMENTS) in world.options.tricks_in_logic.value):
+        min_hearts_needed: int = 3
+        if world.multiworld.state.soh_heart_count[world.player] >= min_hearts_needed:
+            items_to_create[Items.PIECE_OF_HEART] -= create_special_progression_item(world, Items.PIECE_OF_HEART, ItemClassification.useful, items_to_create[Items.PIECE_OF_HEART])
+            items_to_create[Items.PIECE_OF_HEART_WINNER] -= create_special_progression_item(world, Items.PIECE_OF_HEART_WINNER, ItemClassification.useful, items_to_create[Items.PIECE_OF_HEART_WINNER])
+            items_to_create[Items.HEART_CONTAINER] -= create_special_progression_item(world, Items.HEART_CONTAINER, ItemClassification.useful, items_to_create[Items.HEART_CONTAINER])
+        else:
+            # starting health is less than min_hearts_needed
+            # Get the total number of hearts that don't need to be progression
+            total_non_progression_hearts: int = min_hearts_needed - world.multiworld.state.soh_heart_count[world.player] 
+            # Container amount to make useful
+            non_progression_container_amount: int = items_to_create[Items.HEART_CONTAINER]
+            # Heart Piece amount to make useful. Convert to regular heart here then convert back later for simplicity
+            non_progression_piece_amount: int = int((items_to_create[Items.PIECE_OF_HEART] + items_to_create[Items.PIECE_OF_HEART_WINNER]) / 4)
+            # Calcuate what needs to be useful. Try Heart Pieces first. This is because we would prefer the contains to be progression because there are less of them always
+            if total_non_progression_hearts < non_progression_piece_amount:
+                temp_non_progression_hearts = non_progression_piece_amount - total_non_progression_hearts
+                if world.options.item_pool == "minimal":
+                    non_progression_piece_amount = 0
+                elif world.options.item_pool == "scarce":
+                    non_progression_piece_amount = min(non_progression_piece_amount , temp_non_progression_hearts) if world.options.item_pool != "minimal" or non_progression_container_amount > 0 else 0
 
-        if non_progression_container_amount == 0:
-            non_progression_container_amount = progression_hearts * 4
+                if non_progression_piece_amount > 0:
+                    items_to_create[Items.PIECE_OF_HEART] -= create_special_progression_item(world, Items.PIECE_OF_HEART, ItemClassification.useful, ((non_progression_piece_amount * 4) - 1))
+                    items_to_create[Items.PIECE_OF_HEART_WINNER] -= create_special_progression_item(world, Items.PIECE_OF_HEART_WINNER, ItemClassification.useful, 1)
 
-        items_to_create[Items.HEART_CONTAINER] -= create_special_progression_item(
-            world, Items.HEART_CONTAINER, ItemClassification.useful | ItemClassification.skip_balancing, non_progression_container_amount)
-        
-        if world.options.item_pool != "minimal":
-            items_to_create[Items.PIECE_OF_HEART] -= create_special_progression_item(
-                world, Items.PIECE_OF_HEART, ItemClassification.useful | ItemClassification.skip_balancing, non_progression_piece_amount - 1)
-            items_to_create[Items.PIECE_OF_HEART_WINNER] -= create_special_progression_item(
-                world, Items.HEART_CONTAINER, ItemClassification.useful | ItemClassification.skip_balancing, 1)
-        
+                # Try to convert the containers second
+                if total_non_progression_hearts <= non_progression_container_amount:
+                    items_to_create[Items.HEART_CONTAINER] -= create_special_progression_item(world, Items.HEART_CONTAINER, ItemClassification.useful, non_progression_container_amount - total_non_progression_hearts)        
 
     # if Greg isn't necessary to win, make him filler
     if not (world.options.rainbow_bridge == "greg" or (world.options.rainbow_bridge and world.options.rainbow_bridge_greg_modifier) or (world.options.ganons_castle_boss_key and world.options.ganons_castle_boss_key_greg_modifier)):
