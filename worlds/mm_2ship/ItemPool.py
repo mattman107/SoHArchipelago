@@ -205,6 +205,8 @@ def create_plentiful_and_trap_items(world: "MM2ShipWorld") -> None:
     # Plentiful items: duplicate major items if enabled
     if world.options.plentiful_items.value:
         plentiful_candidates = []
+        skip_items = (str(items) for items in (Items.TRIFORCE_PIECE, Items.GS_TOKEN_SWAMP, Items.GS_TOKEN_OCEAN, Items.WOODFALL_STRAY_FAIRY, 
+                                                       Items.SNOWHEAD_STRAY_FAIRY, Items.GREAT_BAY_STRAY_FAIRY, Items.STONE_TOWER_STRAY_FAIRY, Items.HEART_CONTAINER, Items.HEART_PIECE))
 
         # Only look at items for THIS player
         for item in world.multiworld.itempool:
@@ -212,8 +214,7 @@ def create_plentiful_and_trap_items(world: "MM2ShipWorld") -> None:
                 continue
 
             # Skip triforce pieces (user specifies exact count)
-            for item_name in (str(Items.TRIFORCE_PIECE), str(Items.GS_TOKEN_SWAMP), str(Items.GS_TOKEN_OCEAN), str(Items.WOODFALL_STRAY_FAIRY), 
-                              str(Items.SNOWHEAD_STRAY_FAIRY), str(Items.GREAT_BAY_STRAY_FAIRY), str(Items.STONE_TOWER_STRAY_FAIRY), str(Items.HEART_CONTAINER), str(Items.HEART_PIECE)):
+            for item_name in skip_items:
                 if item.name == item_name:
                     continue
 
