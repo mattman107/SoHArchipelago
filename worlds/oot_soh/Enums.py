@@ -302,6 +302,7 @@ class Regions(StrEnum):
     DODONGOS_CAVERN_BOSS_ENTRYWAY = "Dodongos Cavern Boss Entryway"
     DODONGOS_CAVERN_BOSS_EXIT = "Dodongos Cavern Boss Exit"
     DODONGOS_CAVERN_BOSS_ROOM = "Dodongos Cavern Boss Room"
+    JABU_JABUS_BELLY_GS_WATER_SWITCH_ROOM_REGION = "Jabu Jabus Belly GS Water Switch Room Region"
     JABU_JABUS_BELLY_BEGINNING = "Jabu Jabus Belly Beginning"
     JABU_JABUS_BELLY_MAIN = "Jabu Jabus Belly Main"
     JABU_JABUS_BELLY_B1_NORTH = "Jabu Jabus Belly B1 North"

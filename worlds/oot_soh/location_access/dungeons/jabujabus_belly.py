@@ -76,6 +76,12 @@ def set_region_rules(world: "SohWorld") -> None:
          bundle) | (can_do_trick(Tricks.JABU_BOSS_HOVER, bundle) & can_use(Items.HOVER_BOOTS, bundle)))
     ])
 
+    # Jabu Jabu's GS Water Switch Room Region
+    # Locations
+    add_locations(Regions.JABU_JABUS_BELLY_GS_WATER_SWITCH_ROOM_REGION, world, [
+        (Locations.JABU_JABUS_BELLY_GS_WATER_SWITCH_ROOM, lambda bundle: True_())
+    ])
+
     # Jabu Jabu's Belly B1 North
     # Events
     add_events(Regions.JABU_JABUS_BELLY_B1_NORTH, world, [
@@ -87,8 +93,6 @@ def set_region_rules(world: "SohWorld") -> None:
     # Locations
     add_locations(Regions.JABU_JABUS_BELLY_B1_NORTH, world, [
         (Locations.JABU_JABUS_BELLY_GS_LOBBY_BASEMENT_LOWER,
-         lambda bundle: hookshot_or_boomerang(bundle)),
-        (Locations.JABU_JABUS_BELLY_GS_WATER_SWITCH_ROOM,
          lambda bundle: hookshot_or_boomerang(bundle)),
         (Locations.JABU_JABUS_BELLY_TWO_OCTOROK_POT1, lambda bundle: can_break_pots(bundle) & (can_use(Items.BOOMERANG, bundle) | (
             can_use(Items.HOVER_BOOTS, bundle) & can_kill_enemy(bundle, Enemies.OCTOROK, EnemyDistance.BOOMERANG, False)))),
@@ -110,6 +114,7 @@ def set_region_rules(world: "SohWorld") -> None:
             bundle) | has_item(Items.BRONZE_SCALE, bundle)),
         (Regions.JABU_JABUS_BELLY_LOBBY_BASEMENT_UPPER_GS,
          lambda bundle: hookshot_or_boomerang(bundle)),
+        (Regions.JABU_JABUS_BELLY_GS_WATER_SWITCH_ROOM_REGION, lambda bundle: hookshot_or_boomerang(bundle))
     ])
 
     # Jabu Jabu's Belly Water Switch Room Ledge
@@ -120,8 +125,6 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Locations
     add_locations(Regions.JABU_JABUS_BELLY_WATER_SWITCH_ROOM_LEDGE, world, [
-        (Locations.JABU_JABUS_BELLY_GS_WATER_SWITCH_ROOM, lambda bundle: has_item(Items.BRONZE_SCALE, bundle) | (is_adult(
-            bundle) & can_use(Items.HOVER_BOOTS, bundle)) | can_kill_enemy(bundle, Enemies.GOLD_SKULLTULA, EnemyDistance.BOMB_THROW)),
         (Locations.JABU_JABUS_BELLY_BASEMENT_POT1,
          lambda bundle: can_break_pots(bundle)),
         (Locations.JABU_JABUS_BELLY_BASEMENT_POT2,
@@ -132,22 +135,20 @@ def set_region_rules(world: "SohWorld") -> None:
     # Connections
     connect_regions(Regions.JABU_JABUS_BELLY_WATER_SWITCH_ROOM_LEDGE, world, [
         (Regions.JABU_JABUS_BELLY_B1_NORTH, lambda bundle: True_()),
-        (Regions.JABU_JABUS_BELLY_WATER_SWITCH_ROOM_SOUTH, lambda bundle: True_())
+        (Regions.JABU_JABUS_BELLY_WATER_SWITCH_ROOM_SOUTH, lambda bundle: True_()),
+        (Regions.JABU_JABUS_BELLY_GS_WATER_SWITCH_ROOM_REGION, lambda bundle: has_item(Items.BRONZE_SCALE, bundle) | (is_adult(bundle) & can_use(Items.HOVER_BOOTS, bundle)) | can_kill_enemy(bundle, Enemies.GOLD_SKULLTULA, EnemyDistance.BOMB_THROW)),
+
     ])
 
     # Jabu Jabu's Belly Water Switch Room South
-    # Locations
-    add_locations(Regions.JABU_JABUS_BELLY_WATER_SWITCH_ROOM_SOUTH, world, [
-        (Locations.JABU_JABUS_BELLY_GS_WATER_SWITCH_ROOM,
-         lambda bundle: hookshot_or_boomerang(bundle))
-    ])
     # Connections
     connect_regions(Regions.JABU_JABUS_BELLY_WATER_SWITCH_ROOM_SOUTH, world, [
         (Regions.JABU_JABUS_BELLY_B1_NORTH, lambda bundle: is_adult(
             bundle) | has_item(Items.BRONZE_SCALE, bundle)),
         (Regions.JABU_JABUS_BELLY_WATER_SWITCH_ROOM_LEDGE, lambda bundle: has_item(
             Items.BRONZE_SCALE, bundle) | can_use(Items.HOVER_BOOTS, bundle)),
-        (Regions.JABU_JABUS_BELLY_MAIN, lambda bundle: can_use_projectile(bundle))
+        (Regions.JABU_JABUS_BELLY_MAIN, lambda bundle: can_use_projectile(bundle)),
+        (Regions.JABU_JABUS_BELLY_GS_WATER_SWITCH_ROOM_REGION, lambda bundle: hookshot_or_boomerang(bundle))
     ])
 
     # Jabu Jabu's Belly Compass Room
