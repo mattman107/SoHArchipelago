@@ -193,8 +193,6 @@ def set_region_rules(world: "SohWorld") -> None:
     # Bottom of the Well Basement
     # Locations
     add_locations(Regions.BOTTOM_OF_THE_WELL_BASEMENT, world, [
-        (Locations.BOTTOM_OF_THE_WELL_MAP_CHEST,
-         lambda bundle: blast_or_smash(bundle)),
         (Locations.BOTTOM_OF_THE_WELL_BASEMENT_POT1,
          lambda bundle: can_break_pots(bundle)),
         (Locations.BOTTOM_OF_THE_WELL_BASEMENT_POT2,
@@ -251,19 +249,22 @@ def set_region_rules(world: "SohWorld") -> None:
         (Regions.BOTTOM_OF_THE_WELL_SOUTHWEST_ROOM, lambda bundle: is_child(
             bundle) & can_pass_enemy(bundle, Enemies.BIG_SKULLTULA)),
         (Regions.BOTTOM_OF_THE_WELL_BASEMENT_USEFUL_BOMB_FLOWERS, lambda bundle: blast_or_smash(bundle) | can_use(
-            Items.DINS_FIRE, bundle) | (can_use(Items.STICKS, bundle) & can_do_trick(Tricks.BOTW_BASEMENT, bundle)))
+            Items.DINS_FIRE, bundle) | (can_use(Items.STICKS, bundle) & can_do_trick(Tricks.BOTW_BASEMENT, bundle))),
+        (Regions.BOTTOM_OF_THE_WELL_MAP_CHEST_REGION, lambda bundle: blast_or_smash(bundle))
+    ])
+
+    # Bottom of the Well Map Chest Region
+    # Locations
+    add_locations(Regions.BOTTOM_OF_THE_WELL_MAP_CHEST_REGION, world, [
+        (Locations.BOTTOM_OF_THE_WELL_MAP_CHEST, lambda bundle: True_())
     ])
 
     # Bottom of the Well Useful Bomb Flowers
-    # Locations
-    add_locations(Regions.BOTTOM_OF_THE_WELL_BASEMENT_USEFUL_BOMB_FLOWERS, world, [
-        (Locations.BOTTOM_OF_THE_WELL_MAP_CHEST,
-         lambda bundle: has_item(Items.GORONS_BRACELET, bundle))
-    ])
     # Connections
     connect_regions(Regions.BOTTOM_OF_THE_WELL_BASEMENT_USEFUL_BOMB_FLOWERS, world, [
         (Regions.BOTTOM_OF_THE_WELL_BASEMENT,
-         lambda bundle: can_detonate_upright_bomb_flower(bundle))
+         lambda bundle: can_detonate_upright_bomb_flower(bundle)),
+        (Regions.BOTTOM_OF_THE_WELL_MAP_CHEST_REGION, lambda bundle: has_item(Items.GORONS_BRACELET, bundle))
     ])
 
     # Bottom of the Well Basement Platform

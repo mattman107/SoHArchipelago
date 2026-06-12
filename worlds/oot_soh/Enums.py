@@ -596,6 +596,7 @@ class Regions(StrEnum):
     # SHADOW_TEMPLE_MQ_SPIKE_WALLS_ROOM = "Shadow Temple MQ Spike Walls Room"
     SHADOW_TEMPLE_BOSS_ENTRYWAY = "Shadow Temple Boss Entryway"
     SHADOW_TEMPLE_BOSS_ROOM = "Shadow Temple Boss Room"
+    BOTTOM_OF_THE_WELL_MAP_CHEST_REGION = "Bottom of the Well Map Chest Region"
     BOTTOM_OF_THE_WELL_PERIMETER = "Bottom of the Well Perimeter"
     BOTTOM_OF_THE_WELL_BEHIND_FAKE_WALLS = "Bottom of the Well Behind Fake Walls"
     BOTTOM_OF_THE_WELL_SOUTHWEST_ROOM = "Bottom of the Well Southwest Room"
