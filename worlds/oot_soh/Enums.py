@@ -146,6 +146,7 @@ class Regions(StrEnum):
     KAK_SHOOTING_GALLERY = "Kak Shooting Gallery"
     KAK_POTION_SHOP_FRONT = "Kak Potion Shop Front"
     KAK_POTION_SHOP_BACK = "Kak Potion Shop Back"
+    KAK_WATCHTOWER_GS_REGION = "Kak Watchtower GS Region"
     KAK_WATCHTOWER = "Kak Watchtower"
     KAK_ROOFTOP = "Kak Rooftop"
     KAK_IMPAS_ROOFTOP = "Kak Impas Rooftop"
