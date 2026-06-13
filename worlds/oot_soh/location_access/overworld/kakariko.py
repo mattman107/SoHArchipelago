@@ -196,10 +196,11 @@ def set_region_rules(world: "SohWorld") -> None:
 
     # Kak Watchtower
     # Locations
-    add_locations(Regions.KAK_WATCHTOWER, world, [
-        (Locations.KAK_GS_WATCHTOWER,
-         lambda bundle: is_child(bundle) & can_use(Items.DINS_FIRE, bundle) & can_get_nighttime_gs(bundle)),
-    ])
+    # Should be added to a separate region and put the location there when OoT age change logic gets added.
+    # add_locations(Regions.KAK_WATCHTOWER, world, [
+    #     (Locations.KAK_GS_WATCHTOWER,
+    #      lambda bundle: is_child(bundle) & can_use(Items.DINS_FIRE, bundle) & can_get_nighttime_gs(bundle)),
+    # ])
     # Connections
     connect_regions(Regions.KAK_WATCHTOWER, world, [
         (Regions.KAKARIKO_VILLAGE, lambda bundle: True_()),
