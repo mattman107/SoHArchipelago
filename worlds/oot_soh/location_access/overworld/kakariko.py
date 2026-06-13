@@ -61,6 +61,9 @@ def set_region_rules(world: "SohWorld") -> None:
             bundle) & can_get_nighttime_gs(bundle)),
         (Locations.KAK_GS_TREE,
          lambda bundle: is_child(bundle) & can_get_nighttime_gs(bundle) & can_bonk_trees(bundle)),
+        (Locations.KAK_GS_WATCHTOWER, lambda bundle: is_child(bundle) & (
+            can_kill_enemy(bundle, Enemies.GOLD_SKULLTULA, EnemyDistance.LONGSHOT) | (
+                can_do_trick(Tricks.KAK_TOWER_GS, bundle) & can_jump_slash_except_hammer(bundle))) & can_get_nighttime_gs(bundle)),
         (Locations.KAK_NEAR_POTION_SHOP_POT1, lambda bundle: is_child(
             bundle) & can_break_pots(bundle)),
         (Locations.KAK_NEAR_POTION_SHOP_POT2, lambda bundle: is_child(
@@ -169,9 +172,6 @@ def set_region_rules(world: "SohWorld") -> None:
         (Regions.KAK_BEHIND_GATE,
          lambda bundle: is_adult(bundle) | has_item(Events.KAKARIKO_GATE_OPEN, bundle)),
         (Regions.KAK_BACKYARD, lambda bundle: is_adult(bundle) | at_day(bundle)),
-        (Regions.KAK_WATCHTOWER_GS_REGION, lambda bundle: is_child(bundle) & (
-            can_kill_enemy(bundle, Enemies.GOLD_SKULLTULA, EnemyDistance.LONGSHOT) | (
-                can_do_trick(Tricks.KAK_TOWER_GS, bundle) & can_jump_slash_except_hammer(bundle))) & can_get_nighttime_gs(bundle))
     ])
 
     # Kak Impas Ledge
@@ -194,19 +194,17 @@ def set_region_rules(world: "SohWorld") -> None:
         (Regions.KAKARIKO_VILLAGE, lambda bundle: True_()),
     ])
 
-    # Kak Watchtower GS Region
-    # Locations
-    add_locations(Regions.KAK_WATCHTOWER_GS_REGION, world, [
-        (Locations.KAK_GS_WATCHTOWER, lambda bundle: True_())
-    ])
-
     # Kak Watchtower
+    # Locations
+    add_locations(Regions.KAK_WATCHTOWER, world, [
+        (Locations.KAK_GS_WATCHTOWER,
+         lambda bundle: is_child(bundle) & can_use(Items.DINS_FIRE, bundle) & can_get_nighttime_gs(bundle)),
+    ])
     # Connections
     connect_regions(Regions.KAK_WATCHTOWER, world, [
         (Regions.KAKARIKO_VILLAGE, lambda bundle: True_()),
         (Regions.KAK_ROOFTOP, lambda bundle: can_do_trick(
             Tricks.KAK_MAN_ON_ROOF, bundle) & is_child(bundle)),
-        (Regions.KAK_WATCHTOWER_GS_REGION, lambda bundle: is_child(bundle) & can_use(Items.DINS_FIRE, bundle) & can_get_nighttime_gs(bundle)),
     ])
 
     # Kak Rooftop
