@@ -269,8 +269,6 @@ class CanAffordSlot(Rule, game="Ship of Harkinian"):
 
 
 def get_wallet_for_shop_slot(location: Locations, world: "SohWorld") -> tuple[str, int]:
-    assert location in world.shop_prices, f'Shop location "{str(location)}" does not have a price assigned'
-
     price = world.shop_prices.get(location, 500)
     for wallet, amount in wallet_capacities.items():
         if amount >= price:
