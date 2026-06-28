@@ -624,13 +624,19 @@ class ShuffleBossEntrances(Toggle):
     display_name = "Shuffle Boss Entrances"
 
 
-class ShuffleInteriorEntrances(Toggle):
+class ShuffleInteriorEntrances(Choice):
     """
-    Shuffle the "simple" interior entrances (houses, shops, etc.) among
-    themselves. Special/linked interiors (Temple of Time, Link's house, the
-    windmill, the Kakariko potion shop) are not included yet.
+    Shuffle the entrances to interiors (houses, shops, etc.).
+    Off - Interior entrances are vanilla.
+    Simple - Shuffle the "simple" interiors (houses, shops) among themselves.
+    All - Also include the special/linked interiors (Temple of Time, Link's house,
+    the windmill, and the Kakariko potion shop's two linked doors) in the shuffle.
     """
     display_name = "Shuffle Interior Entrances"
+    option_off = 0
+    option_simple = 1
+    option_all = 2
+    default = 0
 
 
 class ShuffleGrottoEntrances(Toggle):
@@ -638,6 +644,50 @@ class ShuffleGrottoEntrances(Toggle):
     Shuffle grotto and grave entrances among themselves.
     """
     display_name = "Shuffle Grotto Entrances"
+
+
+class ShuffleThievesHideoutEntrances(Toggle):
+    """
+    Shuffle the entrances to the cells/rooms of the Gerudo Thieves' Hideout among
+    themselves (where the jailed carpenters and the Gerudo Membership Card are).
+    """
+    display_name = "Shuffle Thieves' Hideout Entrances"
+
+
+class ShuffleOverworldEntrances(Toggle):
+    """
+    Shuffle the overworld loading zones between areas (e.g. the paths between
+    Hyrule Field, Kakariko, the Market, Death Mountain, the forest, etc.) among
+    themselves. Entrances stay two-way: the way back mirrors the way in.
+    """
+    display_name = "Shuffle Overworld Entrances"
+
+
+class ShuffleOwlDrops(Toggle):
+    """
+    Randomize where Kaepora Gaebora (the owl) drops you off when he offers you a
+    flight from Lake Hylia or Death Mountain Trail. Owl drops are one-way; you
+    will land somewhere other than the vanilla destination.
+    """
+    display_name = "Shuffle Owl Drops"
+
+
+class ShuffleWarpSongs(Toggle):
+    """
+    Randomize where the six warp songs (Minuet, Bolero, Serenade, Requiem,
+    Nocturne, Prelude) send you. Warp songs are one-way; playing a song still
+    requires learning it, it simply takes you to a new destination.
+    """
+    display_name = "Shuffle Warp Songs"
+
+
+class ShuffleOverworldSpawns(Toggle):
+    """
+    Randomize the positions Link spawns at when starting the game (and when
+    re-entering the overworld after credits). The child and adult spawn points
+    are one-way and may be moved to a different destination.
+    """
+    display_name = "Shuffle Overworld Spawns"
 
 
 class ShuffleBossSouls(Choice):
@@ -1654,6 +1704,11 @@ class SohOptions(PerGameCommonOptions):
     shuffle_boss_entrances: ShuffleBossEntrances
     shuffle_interior_entrances: ShuffleInteriorEntrances
     shuffle_grotto_entrances: ShuffleGrottoEntrances
+    shuffle_thieves_hideout_entrances: ShuffleThievesHideoutEntrances
+    shuffle_overworld_entrances: ShuffleOverworldEntrances
+    shuffle_owl_drops: ShuffleOwlDrops
+    shuffle_warp_songs: ShuffleWarpSongs
+    shuffle_overworld_spawns: ShuffleOverworldSpawns
     shuffle_boss_souls: ShuffleBossSouls
     shuffle_fountain_fairies: ShuffleFountainFairies
     shuffle_stone_fairies: ShuffleStoneFairies
@@ -1971,10 +2026,11 @@ soh_option_groups = [
         ShuffleBossEntrances,
         ShuffleInteriorEntrances,
         ShuffleGrottoEntrances,
-        # Overworld Entrances
-        # Owl Drops
-        # Warp Songs
-        # Overworld Spawns
+        ShuffleThievesHideoutEntrances,
+        ShuffleOverworldEntrances,
+        ShuffleOwlDrops,
+        ShuffleWarpSongs,
+        ShuffleOverworldSpawns,
         # Decouple Entrances
     ]),
     OptionGroup("Shuffle Items", [

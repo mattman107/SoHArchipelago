@@ -8,16 +8,24 @@ beatable) and emits the resulting pairs into slot data in the format Ship's
 See ``ER_AP_00_SHARED_CONTRACT.md`` for the slot-data contract and
 ``ER_AP_01_ARCHIPELAGO_apworld.md`` for the apworld build plan.
 
-Pools implemented (all coupled / two-way):
+Coupled (two-way) pools:
   * dungeon entrances (+ optionally Ganon's Castle)
   * boss-room entrances (child + adult bosses, age-aware)
-  * interior entrances (the "simple" tier; special interiors are excluded)
+  * interior entrances ("simple" tier, or "all" to mix in the special/linked
+    interiors: Temple of Time, Link's house, the windmill, the Kak potion shop)
   * grotto + grave entrances (dead-end grottos and graves)
 
-Blue warps are intentionally NOT emitted yet: Ship leaves any un-overridden
-entrance vanilla, so a shuffled boss/dungeon simply blue-warps to its *original*
-overworld spot (cosmetic only; the seed stays beatable). Emitting blue-warp
-overrides is a planned fast-follow.
+One-way pools (a single source edge repointed, no reverse):
+  * overworld spawns (child / adult start positions)
+  * warp songs (the six song destinations)
+  * owl drops (Lake Hylia / Death Mountain Trail owl flights)
+
+Blue warps are *derived* from the boss/dungeon placement rather than shuffled, and
+are emitted whenever either of those pools is shuffled.
+
+All pools use a custom age-aware matcher + a full-accessibility validation gate
+(see ``_seed_is_valid``); the Archipelago Generic Entrance Randomizer is not used
+(its greedy staged placement deadlocks on this graph's age scarcity).
 """
 
 from dataclasses import dataclass
@@ -35,16 +43,111 @@ import logging
 logger = logging.getLogger("SOH_OOT.ER")
 
 
+# ===========================================================================
+# AP-VS-SHIP DIVERGENCES
+# ===========================================================================
+# This module is a port of Ship of Harkinian's entrance shuffle (the upstream
+# C++ in ``soh/soh/Enhancements/randomizer/entrance.cpp`` +
+# ``soh/include/tables/entrance_table.h``). The points below are every place this
+# AP port deliberately diverges from upstream, or depends on something that
+# upstream might change. When re-syncing this apworld's logic to a newer Ship,
+# re-verify each one. Individual code sites are tagged ``DIVERGENCE #N``.
+#
+# #1  SLOT-DATA CONTRACT IS THE ONLY THING SHIP CONSUMES.
+#     We emit ``{type, index, destination, override, overrideDestination}`` per
+#     entrance; Ship's ``EntranceShuffler::ParseEntrances`` -> ``ApplyEntranceOverrides``
+#     reads them. ApplyEntranceOverrides rewires purely by ``index`` -> ``override``
+#     (connecting ``index`` to override's *original* connected region) and IGNORES
+#     ``type``/``destination``/``overrideDestination`` -- EXCEPT the all-zero "null
+#     override" skip (see #2). The ``ENTR_*`` index numbers are the real contract;
+#     keep them in sync with entrance_table.h. AP region names below matter only
+#     for locating local ``Entrance`` objects + reachability, never for Ship.
+#
+# #2  ONE-WAY ENTRANCES EMIT destination = overrideDestination = -1, NOT 0.
+#     (spawns / warp songs / owl drops / blue warps -- ``_ONE_WAY_NO_DEST``.) Ship's
+#     CreateEntranceOverrides emits -1 for entrances with no reverse; and 0 is unsafe
+#     because (a) an all-zero override is treated as "unshuffled" and skipped, and
+#     (b) 0 is a real index (ENTR_DEKU_TREE_ENTRANCE == 0x000). Two-way pools emit
+#     the real reverse indices.
+#
+# #3  `type` VALUES come from Ship's ``enum class EntranceType`` (entrance.h), NOT
+#     the values in the older ``ER_AP_00_SHARED_CONTRACT.md`` (which lists Dungeon=0
+#     -- wrong). We send the true enum values for the tracker/hints. If upstream
+#     renumbers EntranceType, update the ENTRANCE_TYPE_* constants below.
+#
+# #4  AP REGION-GRAPH COLLAPSES / RENAMES some Ship transition regions, so our
+#     entrance endpoints differ from Ship's ``RR_*`` even though the ``ENTR_*`` index
+#     is identical. Re-verify if upstream restructures regions OR if this apworld's
+#     location_access graph is re-synced to upstream names. Known cases:
+#       - Dungeon sides: Fire=DMC_CENTRAL_LOCAL, Water=LH_FROM_WATER_TEMPLE,
+#         BotW=KAK_WELL, Ice=ZF_LEDGE, GTG=GF_TO_GTG/GF_EXITING_GTG (see DUNGEON_ENTRANCES).
+#       - Link's House porch (RR_KF_LINKS_PORCH) collapsed into KOKIRI_FOREST.
+#       - Overworld buffers collapsed: KF_OUTSIDE_LOST_WOODS -> KOKIRI_FOREST,
+#         HF_TO_LAKE_HYLIA -> HYRULE_FIELD. DMC "pots/upper entry" buffers are absent;
+#         AP uses asymmetric DMC_*_LOCAL (forward) / DMC_*_NEARBY (reverse). See the
+#         per-row notes in OVERWORLD_ENTRANCES and the ``_ow`` docstring.
+#
+# #TH THIEVES' HIDEOUT is modeled differently in AP (the AP graph itself notes a
+#     "deviation from ship logic due to the union of locations"). All 13 FORWARD
+#     doorways (fortress -> cell) match Ship 1:1, but the AP REVERSE edges are a
+#     simplified connected maze that does NOT mirror Ship's 13 entrance pairs (e.g.
+#     AP's Double Cell is entered from Above-GTG/Top-of-Vines yet exits to Outskirts/
+#     Near-Grotto; Ship's Steep-Slope reverses are absent entirely). Ship also unifies
+#     two kitchen corridor regions into AP's single THIEVES_HIDEOUT_KITCHEN_TOP. So we
+#     shuffle FORWARD-ONLY (REVERSE_KEEP): permute the 13 forward doors, leave AP's
+#     reverse maze untouched, and still emit the faithful coupled fwd/rev overrides
+#     (ENTR_THIEVES_HIDEOUT_* / ENTR_GERUDOS_FORTRESS_*) for Ship. Correct because the
+#     Gerudo Fortress is one connected area: any forward permutation keeps every cell
+#     reachable + exitable, and Ship's coupled reverses only ever return you the way
+#     you came. To make this a TRUE coupled shuffle, the AP location_access hideout
+#     graph would need its reverse edges rewired to match Ship's pairs (a region-graph
+#     change that would fight the AP port's intentional simplification -- not done).
+#
+# #5  OMITTED ENTRANCES (intentional, pending features):
+#       - GV Lower Stream -> Lake Hylia overworld one-way (ENTR 0x219): only shuffled
+#         when decoupled entrances are on; belongs with future decoupled work.
+#       - One-way TARGET pool is currently the 10 one-way landings only -- a strict
+#         subset of Ship's target set (which also includes Overworld/Interior/
+#         SpecialInterior/GrottoGrave landings). Expanding it is a follow-up now that
+#         OVERWORLD_ENTRANCES exists. See the one-way section.
+#       - Decoupled and mixed entrance pools are not implemented yet.
+#
+# #6  PLACEMENT ALGORITHM DIFFERS (but the *result* is contract-compatible). Ship
+#     uses incremental assumed-fill placement with per-entrance reachability checks;
+#     we use a custom age-aware matcher (Kuhn) + a full re-validation gate with retry
+#     (``_seed_is_valid`` / ``_find_matching``). The Archipelago Generic Entrance
+#     Randomizer is NOT used (it deadlocks on this graph's age scarcity). One
+#     consequence with no Ship analogue: pool ORDER matters for our convergence --
+#     the overworld backbone must be shuffled before interiors/grottos (see
+#     ``shuffle_entrances``).
+#
+# #7  VALIDATION GATE ports Ship's ``ValidateWorld`` / ``ValidateEntrances``
+#     (entrance.cpp:796 / 3drando/fill.cpp:606). ``_age_exits_are_safe`` is Ship's
+#     child/adultForbidden hard-check. ``_world_age_invariants_hold`` (gated by
+#     ``check_other_access``) is Ship's ``checkOtherEntranceAccess`` "sphere-zero"
+#     requirement: with NO items, a valid start area is reachable, time passes as both
+#     ages, and ToT is reachable as the other age. NOTE: assumes an open Door of Time;
+#     revisit for closed/song-only DoT (where seeds force a child start).
+# ===========================================================================
+
+
 # Ship's `EntranceType` enum values (soh `enum class EntranceType`, entrance.h).
 # Emitted as the `type` field. Ship's ApplyEntranceOverrides() rewires purely by
 # index -> override and ignores `type`, but the entrance tracker/hints read it,
 # so we send the true values rather than a placeholder.
+ENTRANCE_TYPE_OWL_DROP = 1
+ENTRANCE_TYPE_SPAWN = 2
+ENTRANCE_TYPE_WARP_SONG = 3
+ENTRANCE_TYPE_BLUE_WARP = 4
 ENTRANCE_TYPE_DUNGEON = 5
 ENTRANCE_TYPE_GANON_DUNGEON = 6
 ENTRANCE_TYPE_CHILD_BOSS = 10
 ENTRANCE_TYPE_ADULT_BOSS = 12
 ENTRANCE_TYPE_INTERIOR = 15
+ENTRANCE_TYPE_SPECIAL_INTERIOR = 17
+ENTRANCE_TYPE_THIEVES_HIDEOUT = 18
 ENTRANCE_TYPE_GROTTO_GRAVE = 20
+ENTRANCE_TYPE_OVERWORLD = 22
 
 # Grotto indices are computed from a base + offset (soh randomizerTypes.h).
 _GROTTO_LOAD_START = 0x0700
@@ -70,8 +173,16 @@ MAX_SHUFFLE_ATTEMPTS = 50
 #               the forward edge. Used for boss rooms, whose only logical content
 #               is the boss reward (reached via the forward door) and whose
 #               vanilla reverse edges would otherwise create phantom paths.
+#   "keep"    - leave the reverse AP edges exactly as they are (don't repoint or
+#               disconnect). Only the forward edges are permuted; the slot data
+#               still emits the faithful coupled forward+reverse index pairs. Used
+#               for the Thieves' Hideout, whose AP reverse edges are a simplified
+#               connected maze that doesn't mirror Ship's entrance pairs 1:1 (see
+#               DIVERGENCE #TH). Safe because the Gerudo Fortress is one connected
+#               area: any forward permutation keeps every cell reachable + exitable.
 REVERSE_COUPLE = "couple"
 REVERSE_DEADEND = "deadend"
+REVERSE_KEEP = "keep"
 
 
 @dataclass(frozen=True)
@@ -219,6 +330,12 @@ def _i(name: str, parent: Regions, child: Regions, fwd_index: int, rev_index: in
                        ENTRANCE_TYPE_INTERIOR, child, rev_child or parent)
 
 
+def _si(name: str, parent: Regions, child: Regions, fwd_index: int, rev_index: int,
+        rev_child: "Regions | None" = None) -> EntranceDef:
+    return EntranceDef(name, parent, child, fwd_index, rev_index,
+                       ENTRANCE_TYPE_SPECIAL_INTERIOR, child, rev_child or parent)
+
+
 def _g(name: str, parent: Regions, child: Regions, offset: int,
        rev_child: "Regions | None" = None) -> EntranceDef:
     return EntranceDef(name, parent, child,
@@ -281,6 +398,25 @@ INTERIOR_ENTRANCES: list[EntranceDef] = [
 ]
 
 
+# Special/linked interiors (Ship EntranceType::SpecialInterior). Added to the
+# interior pool only on the "All" setting (Ship mixes them in -- entrance.cpp:1295).
+# Unlike the simple tier these are mostly NOT dead ends: Temple of Time leads on to
+# the Door of Time (gating the adult game), the Kak potion shop's two doors are a
+# pass-through (Front <-> Back, adult-gated), and the windmill links Kakariko to the
+# graveyard via Dampe's grave. So this pool is shuffled with per-edge needs and the
+# global age/time invariants enabled (check_other_access) -- the validation gate
+# absorbs the cap-stability slack the pass-throughs introduce. Ship models Link's
+# House behind a porch region (RR_KF_LINKS_PORCH) that this apworld collapses into
+# the Kokiri Forest doorway, so the forward edge is Kokiri Forest -> KF Link's House.
+SPECIAL_INTERIOR_ENTRANCES: list[EntranceDef] = [
+    _si("Link's House", Regions.KOKIRI_FOREST, Regions.KF_LINKS_HOUSE, 0x272, 0x211),
+    _si("Temple of Time", Regions.TOT_ENTRANCE, Regions.TEMPLE_OF_TIME, 0x053, 0x472),
+    _si("Windmill", Regions.KAKARIKO_VILLAGE, Regions.KAK_WINDMILL, 0x453, 0x351),
+    _si("Kak Potion Shop Front", Regions.KAKARIKO_VILLAGE, Regions.KAK_POTION_SHOP_FRONT, 0x384, 0x44B),
+    _si("Kak Potion Shop Back", Regions.KAK_BACKYARD, Regions.KAK_POTION_SHOP_BACK, 0x3EC, 0x4FF),
+]
+
+
 # Grotto + grave entrances (Ship EntranceType::GrottoGrave). Matches Ship's pool.
 # Grotto indices are load/exit = 0x0700/0x0800 + offset. HC Storms Grotto and
 # Dampe's Grave each add a redundant shortcut (to Castle Grounds / the windmill);
@@ -328,6 +464,129 @@ GROTTO_ENTRANCES: list[EntranceDef] = [
     _grave("Heart Piece Grave", Regions.GRAVEYARD_HEART_PIECE_GRAVE, 0x31C, 0x361),
     _grave("Composers Grave", Regions.GRAVEYARD_COMPOSERS_GRAVE, 0x02D, 0x50B),
     _grave("Dampe's Grave", Regions.GRAVEYARD_DAMPES_GRAVE, 0x44F, 0x359),
+]
+
+
+def _ow(name: str, fwd_parent: Regions, fwd_child: Regions, fwd_index: int,
+        rev_parent: Regions, rev_child: Regions, rev_index: int) -> EntranceDef:
+    """Build a two-way Overworld entrance pair.
+
+    Overworld rows are frequently *asymmetric* in this apworld: ``fwd_child`` (the
+    region the forward edge leads to) often differs from ``rev_parent`` (the region
+    the reverse edge departs from), because AP collapses Ship's transition buffer
+    regions differently per direction. So every endpoint is given explicitly rather
+    than mirrored. See AP-VS-SHIP DIVERGENCES #4 at the top of the module."""
+    return EntranceDef(name, fwd_parent, fwd_child, fwd_index, rev_index,
+                       ENTRANCE_TYPE_OVERWORLD, rev_parent, rev_child)
+
+
+# Overworld entrances (Ship EntranceType::Overworld). 26 two-way pairs; indices
+# verified against entrance_table.h, region pairs verified against this apworld's
+# location_access graph. The forward index is Ship's "exit A->B", the reverse is
+# "exit B->A". Several rows are asymmetric or route through a region AP names
+# differently than Ship -- each such row is annotated; see the AP-VS-SHIP
+# DIVERGENCES note for the general pattern.
+#
+# Ship's GV Lower Stream -> Lake Hylia overworld entrance (ENTR 0x219) is one-way
+# and is only shuffled when decoupled entrances are on; it is intentionally OMITTED
+# here and belongs with the future decoupled-entrances work.
+OVERWORLD_ENTRANCES: list[EntranceDef] = [
+    # AP collapses Ship's KF_OUTSIDE_LOST_WOODS buffer into Kokiri Forest, so the
+    # Kokiri<->Lost-Woods rows depart from KOKIRI_FOREST and the bridge row lands
+    # on the LW_BRIDGE_FROM_FOREST buffer (forward) but returns from LW_BRIDGE.
+    _ow("KF/LW Bridge", Regions.KOKIRI_FOREST, Regions.LW_BRIDGE_FROM_FOREST, 0x5E0,
+        Regions.LW_BRIDGE, Regions.KOKIRI_FOREST, 0x20D),
+    _ow("KF/Lost Woods", Regions.KOKIRI_FOREST, Regions.LOST_WOODS, 0x11E,
+        Regions.LW_FOREST_EXIT, Regions.KOKIRI_FOREST, 0x286),
+    _ow("Lost Woods/GC Woods Warp", Regions.LOST_WOODS, Regions.GC_WOODS_WARP, 0x4E2,
+        Regions.GC_WOODS_WARP, Regions.LOST_WOODS, 0x4D6),
+    _ow("Lost Woods/ZR Shortcut", Regions.LOST_WOODS, Regions.ZR_FROM_SHORTCUT, 0x1DD,
+        Regions.ZR_FROM_SHORTCUT, Regions.LOST_WOODS, 0x4DA),
+    _ow("LW Beyond Mido/SFM", Regions.LW_BEYOND_MIDO, Regions.SFM_ENTRYWAY, 0x0FC,
+        Regions.SFM_ENTRYWAY, Regions.LW_BEYOND_MIDO, 0x1A9),
+    _ow("LW Bridge/Hyrule Field", Regions.LW_BRIDGE, Regions.HYRULE_FIELD, 0x185,
+        Regions.HYRULE_FIELD, Regions.LW_BRIDGE, 0x4DE),
+    # AP collapses Ship's HF_TO_LAKE_HYLIA buffer into Hyrule Field.
+    _ow("Hyrule Field/Lake Hylia", Regions.HYRULE_FIELD, Regions.LAKE_HYLIA, 0x102,
+        Regions.LAKE_HYLIA, Regions.HYRULE_FIELD, 0x189),
+    _ow("Hyrule Field/Gerudo Valley", Regions.HYRULE_FIELD, Regions.GERUDO_VALLEY, 0x117,
+        Regions.GERUDO_VALLEY, Regions.HYRULE_FIELD, 0x18D),
+    _ow("Hyrule Field/Market Entrance", Regions.HYRULE_FIELD, Regions.MARKET_ENTRANCE, 0x276,
+        Regions.MARKET_ENTRANCE, Regions.HYRULE_FIELD, 0x1FD),
+    _ow("Hyrule Field/Kakariko", Regions.HYRULE_FIELD, Regions.KAKARIKO_VILLAGE, 0x0DB,
+        Regions.KAKARIKO_VILLAGE, Regions.HYRULE_FIELD, 0x17D),
+    _ow("Hyrule Field/Zora's River", Regions.HYRULE_FIELD, Regions.ZR_FRONT, 0x0EA,
+        Regions.ZR_FRONT, Regions.HYRULE_FIELD, 0x181),
+    _ow("Hyrule Field/Lon Lon Ranch", Regions.HYRULE_FIELD, Regions.LON_LON_RANCH, 0x157,
+        Regions.LON_LON_RANCH, Regions.HYRULE_FIELD, 0x1F9),
+    _ow("LH Shortcut/Zora's Domain", Regions.LH_FROM_SHORTCUT, Regions.ZORAS_DOMAIN, 0x328,
+        Regions.ZORAS_DOMAIN, Regions.LH_FROM_SHORTCUT, 0x560),
+    _ow("Gerudo Valley/GF Outskirts", Regions.GV_FORTRESS_SIDE, Regions.GERUDO_FORTRESS_OUTSKIRTS, 0x129,
+        Regions.GERUDO_FORTRESS_OUTSKIRTS, Regions.GV_FORTRESS_SIDE, 0x22D),
+    _ow("GF Gate/Haunted Wasteland", Regions.GF_OUTSIDE_GATE, Regions.WASTELAND_NEAR_FORTRESS, 0x130,
+        Regions.WASTELAND_NEAR_FORTRESS, Regions.GF_OUTSIDE_GATE, 0x3AC),
+    _ow("Wasteland/Desert Colossus", Regions.WASTELAND_NEAR_COLOSSUS, Regions.DESERT_COLOSSUS, 0x123,
+        Regions.DESERT_COLOSSUS, Regions.WASTELAND_NEAR_COLOSSUS, 0x365),
+    _ow("Market Entrance/Market", Regions.MARKET_ENTRANCE, Regions.MARKET, 0x0B1,
+        Regions.MARKET, Regions.MARKET_ENTRANCE, 0x033),
+    _ow("Market/Castle Grounds", Regions.MARKET, Regions.CASTLE_GROUNDS, 0x138,
+        Regions.CASTLE_GROUNDS, Regions.MARKET, 0x25A),
+    _ow("Market/Temple of Time", Regions.MARKET, Regions.TOT_ENTRANCE, 0x171,
+        Regions.TOT_ENTRANCE, Regions.MARKET, 0x25E),
+    _ow("Kakariko/Graveyard", Regions.KAKARIKO_VILLAGE, Regions.THE_GRAVEYARD, 0x0E4,
+        Regions.THE_GRAVEYARD, Regions.KAKARIKO_VILLAGE, 0x195),
+    _ow("Kak Behind Gate/DM Trail", Regions.KAK_BEHIND_GATE, Regions.DEATH_MOUNTAIN_TRAIL, 0x13D,
+        Regions.DEATH_MOUNTAIN_TRAIL, Regions.KAK_BEHIND_GATE, 0x191),
+    _ow("DM Trail/Goron City", Regions.DEATH_MOUNTAIN_TRAIL, Regions.GORON_CITY, 0x14D,
+        Regions.GORON_CITY, Regions.DEATH_MOUNTAIN_TRAIL, 0x1B9),
+    # Asymmetric: AP has no DMC "pots entry" buffer -- the forward lands in
+    # DMC_LOWER_LOCAL but the reverse departs from DMC_LOWER_NEARBY.
+    _ow("Goron City/DMC (Darunia)", Regions.GC_DARUNIAS_CHAMBER, Regions.DMC_LOWER_LOCAL, 0x246,
+        Regions.DMC_LOWER_NEARBY, Regions.GC_DARUNIAS_CHAMBER, 0x1C1),
+    # Asymmetric: forward lands in DMC_UPPER_LOCAL, reverse departs DMC_UPPER_NEARBY.
+    _ow("DM Summit/DMC (Upper)", Regions.DEATH_MOUNTAIN_SUMMIT, Regions.DMC_UPPER_LOCAL, 0x147,
+        Regions.DMC_UPPER_NEARBY, Regions.DEATH_MOUNTAIN_SUMMIT, 0x1BD),
+    _ow("Zora's River/Zora's Domain", Regions.ZR_BEHIND_WATERFALL, Regions.ZORAS_DOMAIN, 0x108,
+        Regions.ZORAS_DOMAIN, Regions.ZR_BEHIND_WATERFALL, 0x19D),
+    _ow("Zora's Domain/Zora's Fountain", Regions.ZD_BEHIND_KING_ZORA, Regions.ZORAS_FOUNTAIN, 0x225,
+        Regions.ZORAS_FOUNTAIN, Regions.ZD_BEHIND_KING_ZORA, 0x1A1),
+]
+
+
+def _th(name: str, fortress: Regions, cell: Regions,
+        fwd_index: int, rev_index: int) -> EntranceDef:
+    """Build a Thieves' Hideout entrance (fortress doorway -> hideout cell).
+
+    Reverse handled in REVERSE_KEEP mode (rev_parent/rev_child left None, so the AP
+    reverse edges are never touched), but ``rev_index`` is still the real Ship
+    ENTR_GERUDOS_FORTRESS_* so the coupled reverse override is emitted faithfully.
+    See AP-VS-SHIP DIVERGENCES #TH."""
+    return EntranceDef(name, fortress, cell, fwd_index, rev_index,
+                       ENTRANCE_TYPE_THIEVES_HIDEOUT)
+
+
+# Thieves' Hideout entrances (Ship EntranceType::ThievesHideout). 13 forward
+# fortress->cell doorways; ENTR indices verified against entrance_table.h, forward
+# edges verified present in the AP graph. Forward-only shuffle (REVERSE_KEEP): the
+# AP hideout reverse edges are a simplified maze that does not mirror Ship's pairs
+# (see DIVERGENCE #TH), so we permute only the forward doors and emit the faithful
+# coupled fwd/rev index pairs. fwd = ENTR_THIEVES_HIDEOUT_*, rev = ENTR_GERUDOS_FORTRESS_*.
+THIEVES_HIDEOUT_ENTRANCES: list[EntranceDef] = [
+    _th("Hideout 1 Torch (Outskirts)", Regions.GERUDO_FORTRESS_OUTSKIRTS, Regions.THIEVES_HIDEOUT_1_TORCH_CELL, 0x486, 0x231),
+    _th("Hideout 1 Torch (Near Grotto)", Regions.GF_NEAR_GROTTO, Regions.THIEVES_HIDEOUT_1_TORCH_CELL, 0x48A, 0x235),
+    _th("Hideout Kitchen Corridor (Near Grotto)", Regions.GF_NEAR_GROTTO, Regions.THIEVES_HIDEOUT_KITCHEN_CORRIDOR, 0x48E, 0x239),
+    _th("Hideout Kitchen Corridor (Above GTG)", Regions.GF_ABOVE_GTG, Regions.THIEVES_HIDEOUT_KITCHEN_CORRIDOR, 0x492, 0x2AA),
+    _th("Hideout Steep Slope (Near Grotto)", Regions.GF_NEAR_GROTTO, Regions.THIEVES_HIDEOUT_STEEP_SLOPE_CELL, 0x496, 0x2BA),
+    _th("Hideout Steep Slope (Lower Vines)", Regions.GF_BOTTOM_OF_LOWER_VINES, Regions.THIEVES_HIDEOUT_STEEP_SLOPE_CELL, 0x49A, 0x2BE),
+    _th("Hideout Double Cell (Above GTG)", Regions.GF_ABOVE_GTG, Regions.THIEVES_HIDEOUT_DOUBLE_CELL, 0x49E, 0x2C2),
+    _th("Hideout Double Cell (Lower Vines)", Regions.GF_TOP_OF_LOWER_VINES, Regions.THIEVES_HIDEOUT_DOUBLE_CELL, 0x4A2, 0x2C6),
+    # Ship's KITCHEN_BY_CORRIDOR and KITCHEN_OPPOSITE_CORRIDOR are both modeled as the
+    # single AP region THIEVES_HIDEOUT_KITCHEN_TOP (DIVERGENCE #TH).
+    _th("Hideout Kitchen Top (Lower Vines)", Regions.GF_TOP_OF_LOWER_VINES, Regions.THIEVES_HIDEOUT_KITCHEN_TOP, 0x4A6, 0x2D2),
+    _th("Hideout Kitchen Top (Near GS)", Regions.GF_NEAR_GS, Regions.THIEVES_HIDEOUT_KITCHEN_TOP, 0x4AA, 0x2D6),
+    _th("Hideout Break Room (Below Chest)", Regions.GF_BELOW_CHEST, Regions.THIEVES_HIDEOUT_BREAK_ROOM, 0x4AE, 0x2DA),
+    _th("Hideout Break Room Corridor (Above Jail)", Regions.GF_ABOVE_JAIL, Regions.THIEVES_HIDEOUT_BREAK_ROOM_CORRIDOR, 0x4B2, 0x2DE),
+    _th("Hideout Dead End (Below GS)", Regions.GF_BELOW_GS, Regions.THIEVES_HIDEOUT_DEAD_END_CELL, 0x570, 0x3A4),
 ]
 
 
@@ -534,6 +793,17 @@ def _interior_location_names(interior: "Region") -> set[str]:
     return names
 
 
+# Prefix for the throwaway "source -> interior" edges the needs-probes inject. A
+# plain "{source} -> {interior}" name collides with real entrances when the interior
+# is also a spawn target (Link's House is the child spawn, Temple of Time the adult
+# spawn), so probe edges get a unique, non-colliding name.
+_PROBE_PREFIX = "__er_probe__ "
+
+
+def _probe_entrance_name(src_region: "Region", interior: "Region") -> str:
+    return f"{_PROBE_PREFIX}{src_region.name} -> {interior.name}"
+
+
 def _reachable_location_names(world: "SohWorld") -> set[str]:
     state = world.get_pre_fill_state()
     return {loc.name for loc in world.get_locations() if loc.can_reach(state)}
@@ -555,7 +825,8 @@ def _probe_interior(world: "SohWorld", fwd: "_Edge",
     entrance.connected_region = None
 
     src_region = world.get_region(source)
-    temp = world.create_entrance(src_region, interior, True_())
+    temp = world.create_entrance(src_region, interior, True_(),
+                                 name=_probe_entrance_name(src_region, interior))
     try:
         return _reachable_location_names(world)
     finally:
@@ -625,7 +896,8 @@ def _compute_needs(world: "SohWorld",
 
     def reachable_owned(source: Regions) -> set[str]:
         src_region = world.get_region(source)
-        temps = [world.create_entrance(src_region, interior, True_())
+        temps = [world.create_entrance(src_region, interior, True_(),
+                                       name=_probe_entrance_name(src_region, interior))
                  for interior in interiors]
         try:
             state = world.get_pre_fill_state()
@@ -781,17 +1053,17 @@ def _world_age_invariants_hold(world: "SohWorld") -> bool:
     """Global age/time guarantees Ship enforces once spawns, the overworld, or
     special interiors get shuffled (entrance.cpp:873-898).
 
-    Dormant for the current coupled dead-end pools (they never move spawns or the
+    Dormant for the coupled dead-end pools (they never move spawns or the
     overworld, so these always hold); callers opt in via ``check_other_access``. The
-    upcoming GER-backed pass-through / overworld / spawn pools are what will turn it
-    on. All checks use an item-less state -- the guarantees must hold with no items.
+    "all" interior pool and the one-way pools (spawns / warp songs / owl drops) turn
+    it on. All checks use an item-less state -- the guarantees must hold with no items.
 
-    NOTE (refine with the GER work): the Temple-of-Time-after-time-travel check
+    NOTE (refine with the overworld pool): the Temple-of-Time-after-time-travel check
     assumes the Door of Time can be opened item-less (true with the default open
     door). With a closed Door of Time -- where the seed is forced to a child start --
     reaching ToT as adult needs Song of Time + stones, which an item-less state lacks.
     Ship's own search handles this via its settings; pin the exact semantics down when
-    wiring GER, which owns the validation search."""
+    the overworld pool lands (it stresses these invariants the hardest)."""
     player = world.player
     state = _item_less_state(world)
 
@@ -922,6 +1194,298 @@ def _shuffle_pool(world: "SohWorld", label: str, entries: list[EntranceDef],
         f"{world.player} after {MAX_SHUFFLE_ATTEMPTS} attempts.")
 
 
+# --- Blue warps --------------------------------------------------------------
+#
+# A dungeon boss's blue warp ejects the player from the boss room to an overworld
+# spot. Blue warps are not shuffled themselves; they are *derived* from the boss
+# (and dungeon) placement, so a shuffled boss drops you at the overworld of the
+# dungeon slot it now occupies instead of its vanilla home. We port Ship's
+# resolution (entrance.cpp:1525-1607): the blue warp adopts the blue-warp target
+# of whichever dungeon slot now holds that boss. Reading each boss slot's forward
+# entrance after the shuffle yields the boss room now behind it; the slot keeps
+# its own blue-warp index. (Ship does not chain through dungeon-entrance
+# relocation here, so with bosses unshuffled this collapses to identity overrides,
+# which we still emit to mirror Ship's CreateEntranceOverrides.)
+
+# Blue-warp ENTR indices keyed by the boss room they eject from (entrance.cpp
+# BlueWarp table + entrance_table.h).
+_BLUE_WARP_BY_BOSS_ROOM: dict[Regions, int] = {
+    Regions.DEKU_TREE_BOSS_ROOM: 0x457,
+    Regions.DODONGOS_CAVERN_BOSS_ROOM: 0x47A,
+    Regions.JABU_JABUS_BELLY_BOSS_ROOM: 0x10E,
+    Regions.FOREST_TEMPLE_BOSS_ROOM: 0x608,
+    Regions.FIRE_TEMPLE_BOSS_ROOM: 0x564,
+    Regions.WATER_TEMPLE_BOSS_ROOM: 0x60C,
+    Regions.SPIRIT_TEMPLE_BOSS_ROOM: 0x610,
+    Regions.SHADOW_TEMPLE_BOSS_ROOM: 0x580,
+}
+# Ganon's Tower blue warp (Castle Grounds). Tied to the Ganon's-tower entrance
+# shuffle (our dungeon "on + Ganon"); Ship's resolution leaves it identity.
+_GANON_BLUE_WARP_INDEX = 0x23F
+
+
+def _blue_warp_overrides(world: "SohWorld",
+                         include_ganon: bool) -> list[dict[str, int]]:
+    """Derive BlueWarp (type 4) override elements from the current boss placement.
+
+    Call after the boss/dungeon pools have been applied. For each dungeon boss
+    slot, its forward entrance now points at whatever boss room was placed behind
+    it; that boss room's blue warp must send the player to this slot's overworld,
+    so we emit ``index = blue_warp(boss_room_now_here)``,
+    ``override = blue_warp(this_slot)``. One-way, so the destination fields are
+    ``-1`` (see ``_ONE_WAY_NO_DEST``)."""
+    out: list[dict[str, int]] = []
+    for d in BOSS_ENTRANCES:
+        slot_index = _BLUE_WARP_BY_BOSS_ROOM.get(d.fwd_child)
+        if slot_index is None:
+            continue
+        try:
+            entrance = world.get_entrance(_entrance_name(d.fwd_parent, d.fwd_child))
+        except KeyError:
+            continue
+        dest = entrance.connected_region
+        try:
+            boss_room = Regions(dest.name) if dest is not None else None
+        except ValueError:
+            boss_room = None
+        boss_index = _BLUE_WARP_BY_BOSS_ROOM.get(boss_room)
+        if boss_index is None:
+            continue
+        out.append({"type": ENTRANCE_TYPE_BLUE_WARP, "index": boss_index,
+                    "destination": _ONE_WAY_NO_DEST, "override": slot_index,
+                    "overrideDestination": _ONE_WAY_NO_DEST})
+    if include_ganon:
+        out.append({"type": ENTRANCE_TYPE_BLUE_WARP,
+                    "index": _GANON_BLUE_WARP_INDEX, "destination": _ONE_WAY_NO_DEST,
+                    "override": _GANON_BLUE_WARP_INDEX,
+                    "overrideDestination": _ONE_WAY_NO_DEST})
+    return out
+
+
+# --- One-way entrances (spawns, warp songs, owl drops) -----------------------
+#
+# Unlike the coupled pools, these are one-way: a single source edge gets
+# repointed to a new landing region, with no reverse. Ship models them as
+# entrances with no return (``NO_RETURN_ENTRANCE``); the override JSON sets both
+# ``destination`` and ``overrideDestination`` to ``-1`` (see ``_ONE_WAY_NO_DEST``).
+#
+# Ship draws one-way targets from the full static entrance table (every entrance
+# of a set of valid target types -- one-way, overworld, interior, grotto -- is a
+# candidate landing), consuming each target at most once across all one-way pools.
+# This first implementation restricts the target pool to the one-way landing spots
+# themselves (the 2 spawns + 6 warp songs + 2 owl drops): a strict subset of
+# Ship's target set (so every placement Ship would accept, and never one it would
+# reject), self-consistent regardless of the coupled pools, and -- conveniently --
+# none of these ten landings is in ``_FORBIDDEN_AGE_EXITS``, so a one-way placement
+# can only strand the player through the spawn/start invariants, which the
+# ``check_other_access`` validation gate already enforces. Overworld / interior /
+# grotto landings are deferred until the Overworld table is built (TODO).
+#
+# A one-way edge only ever *adds* a way to reach its landing (it never severs a
+# region's own access), so full accessibility is preserved by construction; the
+# only real hazard is delivering the player to a region as an age that strands
+# them. ``delivers`` captures which ages a source can deposit the player as (a
+# faithful port of Ship's ``EntranceUnreachableAs``: owl drops + child spawn are
+# child-only, adult spawn is adult-only, warp songs are usable as both ages), and
+# the matcher refuses any landing whose forbidden age the source can deliver.
+
+# Sentinel for the destination / overrideDestination fields of a one-way override.
+# Must be -1, not 0: Ship treats an all-zero override as "unshuffled", and 0 is a
+# real entrance index (ENTR_DEKU_TREE_ENTRANCE == 0x000).
+_ONE_WAY_NO_DEST = -1
+
+
+@dataclass(frozen=True)
+class OneWayDef:
+    """One one-way entrance: a source edge ``parent -> dest`` and its ENTR index.
+
+    ``delivers`` is the set of ages the source can deposit the player at its
+    landing as (Ship's ``EntranceUnreachableAs``). It serves as both the source's
+    cap (when this def is shuffled) and is irrelevant when it is used only as a
+    target (a landing is reached as whatever age the *source* delivers)."""
+    name: str
+    parent: Regions
+    dest: Regions
+    index: int
+    ship_type: int
+    delivers: frozenset
+
+
+_BOTH_AGES = frozenset((Ages.CHILD, Ages.ADULT))
+_CHILD_ONLY = frozenset((Ages.CHILD,))
+_ADULT_ONLY = frozenset((Ages.ADULT,))
+
+
+SPAWN_ENTRANCES: list[OneWayDef] = [
+    OneWayDef("Child Spawn", Regions.CHILD_SPAWN, Regions.KF_LINKS_HOUSE,
+              0x0BB, ENTRANCE_TYPE_SPAWN, _CHILD_ONLY),
+    OneWayDef("Adult Spawn", Regions.ADULT_SPAWN, Regions.TEMPLE_OF_TIME,
+              0x282, ENTRANCE_TYPE_SPAWN, _ADULT_ONLY),
+]
+
+WARP_SONG_ENTRANCES: list[OneWayDef] = [
+    OneWayDef("Minuet of Forest Warp", Regions.MINUET_OF_FOREST_WARP,
+              Regions.SACRED_FOREST_MEADOW, 0x600, ENTRANCE_TYPE_WARP_SONG, _BOTH_AGES),
+    OneWayDef("Bolero of Fire Warp", Regions.BOLERO_OF_FIRE_WARP,
+              Regions.DMC_CENTRAL_LOCAL, 0x4F6, ENTRANCE_TYPE_WARP_SONG, _BOTH_AGES),
+    OneWayDef("Serenade of Water Warp", Regions.SERENADE_OF_WATER_WARP,
+              Regions.LAKE_HYLIA, 0x604, ENTRANCE_TYPE_WARP_SONG, _BOTH_AGES),
+    OneWayDef("Requiem of Spirit Warp", Regions.REQUIEM_OF_SPIRIT_WARP,
+              Regions.DESERT_COLOSSUS, 0x1F1, ENTRANCE_TYPE_WARP_SONG, _BOTH_AGES),
+    OneWayDef("Nocturne of Shadow Warp", Regions.NOCTURNE_OF_SHADOW_WARP,
+              Regions.GRAVEYARD_WARP_PAD_REGION, 0x568, ENTRANCE_TYPE_WARP_SONG, _BOTH_AGES),
+    OneWayDef("Prelude of Light Warp", Regions.PRELUDE_OF_LIGHT_WARP,
+              Regions.TEMPLE_OF_TIME, 0x5F4, ENTRANCE_TYPE_WARP_SONG, _BOTH_AGES),
+]
+
+OWL_DROP_ENTRANCES: list[OneWayDef] = [
+    OneWayDef("LH Owl Flight", Regions.LH_OWL_FLIGHT, Regions.HYRULE_FIELD,
+              0x27E, ENTRANCE_TYPE_OWL_DROP, _CHILD_ONLY),
+    OneWayDef("DMT Owl Flight", Regions.DMT_OWL_FLIGHT, Regions.KAK_IMPAS_ROOFTOP,
+              0x554, ENTRANCE_TYPE_OWL_DROP, _CHILD_ONLY),
+]
+
+# Every one-way landing is a candidate target (Ship draws targets from the full
+# table regardless of which pools are shuffled). Built from all three tables so
+# e.g. a warp song can be sent to a spawn's or owl's landing even when those
+# pools are not themselves shuffled.
+_ONE_WAY_TARGET_DEFS: list[OneWayDef] = (
+    SPAWN_ENTRANCES + WARP_SONG_ENTRANCES + OWL_DROP_ENTRANCES)
+
+
+class _OneWaySource:
+    """A one-way source bound to its AP ``Entrance``, with its original landing."""
+    __slots__ = ("name", "ship_type", "index", "delivers", "entrance",
+                 "original_region")
+
+    def __init__(self, d: OneWayDef, entrance: "Entrance"):
+        self.name = d.name
+        self.ship_type = d.ship_type
+        self.index = d.index
+        self.delivers = d.delivers
+        self.entrance = entrance
+        self.original_region: "Region" = entrance.connected_region
+
+
+class _OneWayTarget:
+    """A candidate landing: a region plus the ENTR index that owns it."""
+    __slots__ = ("name", "index", "region", "forbidden")
+
+    def __init__(self, d: OneWayDef, region: "Region", forbidden: "Ages | None"):
+        self.name = d.name
+        self.index = d.index
+        self.region = region
+        self.forbidden = forbidden
+
+
+def _build_one_way_sources(world: "SohWorld",
+                           entries: list[OneWayDef]) -> list[_OneWaySource] | None:
+    sources: list[_OneWaySource] = []
+    for d in entries:
+        name = _entrance_name(d.parent, d.dest)
+        try:
+            entrance = world.get_entrance(name)
+        except KeyError:
+            logger.warning("ER: one-way source '%s' ('%s') not found; aborting "
+                           "one-way shuffle.", d.name, name)
+            return None
+        sources.append(_OneWaySource(d, entrance))
+    return sources
+
+
+def _build_one_way_targets(world: "SohWorld") -> list[_OneWayTarget]:
+    targets: list[_OneWayTarget] = []
+    for d in _ONE_WAY_TARGET_DEFS:
+        region = world.get_region(d.dest)
+        forbidden = _FORBIDDEN_BY_REGION.get(d.dest)
+        targets.append(_OneWayTarget(d, region, forbidden))
+    return targets
+
+
+def _match_one_way(world: "SohWorld", sources: list[_OneWaySource],
+                   targets: list[_OneWayTarget]) -> dict[_OneWaySource, _OneWayTarget] | None:
+    """Saturating bipartite matching of one-way sources onto unique targets.
+
+    A source may take a target only if the source can never deliver the player
+    there as the target's forbidden age. Targets outnumber sources, so Kuhn's
+    augmenting-path search (as in ``_find_matching``) easily saturates; randomness
+    comes from shuffling each source's candidate list and the source order."""
+    def compatible(src: "_OneWaySource", tgt: "_OneWayTarget") -> bool:
+        return tgt.forbidden is None or tgt.forbidden not in src.delivers
+
+    adj: dict[_OneWaySource, list[_OneWayTarget]] = {}
+    for src in sources:
+        cands = [t for t in targets if compatible(src, t)]
+        world.random.shuffle(cands)
+        adj[src] = cands
+
+    order = list(sources)
+    world.random.shuffle(order)
+    order.sort(key=lambda s: len(adj[s]))
+
+    match_target: dict[_OneWayTarget, _OneWaySource] = {}
+
+    def augment(src: "_OneWaySource", visited: set["_OneWayTarget"]) -> bool:
+        for tgt in adj[src]:
+            if tgt in visited:
+                continue
+            visited.add(tgt)
+            holder = match_target.get(tgt)
+            if holder is None or augment(holder, visited):
+                match_target[tgt] = src
+                return True
+        return False
+
+    for src in order:
+        if not augment(src, set()):
+            return None
+
+    return {src: tgt for tgt, src in match_target.items()}
+
+
+def _shuffle_one_way(world: "SohWorld",
+                     entries: list[OneWayDef]) -> list[dict[str, int]]:
+    """Shuffle the given one-way sources onto unique landings; return overrides.
+
+    All enabled one-way pools are shuffled together (one combined matching) so a
+    landing consumed by one source can't be reused by another, mirroring Ship's
+    cross-pool target consumption. Mutates the graph in place and validates with
+    the global age/time invariants enabled."""
+    sources = _build_one_way_sources(world, entries)
+    if not sources:
+        return []
+    targets = _build_one_way_targets(world)
+
+    def restore() -> None:
+        for src in sources:
+            _reconnect(src.entrance, src.original_region)
+
+    for _ in range(MAX_SHUFFLE_ATTEMPTS):
+        matching = _match_one_way(world, sources, targets)
+        if matching is None:
+            restore()
+            raise RuntimeError(
+                f"SoH ER: no age-compatible one-way entrance matching exists for "
+                f"player {world.player}.")
+        for src, tgt in matching.items():
+            _reconnect(src.entrance, tgt.region)
+        if _seed_is_valid(world, check_other_access=True):
+            logger.debug("ER: shuffled %d one-way entrances for player %d",
+                         len(sources), world.player)
+            return [{
+                "type": src.ship_type,
+                "index": src.index,
+                "destination": _ONE_WAY_NO_DEST,
+                "override": tgt.index,
+                "overrideDestination": _ONE_WAY_NO_DEST,
+            } for src, tgt in matching.items()]
+        restore()
+
+    raise RuntimeError(
+        f"SoH ER: could not find a valid one-way entrance shuffle for player "
+        f"{world.player} after {MAX_SHUFFLE_ATTEMPTS} attempts.")
+
+
 def shuffle_entrances(world: "SohWorld") -> None:
     """Run every enabled entrance pool and stash slot-data overrides on the world.
 
@@ -946,13 +1510,70 @@ def shuffle_entrances(world: "SohWorld") -> None:
         overrides += _shuffle_pool(world, "boss", BOSS_ENTRANCES, REVERSE_DEADEND,
                                    dead_end_targets=False)
 
-    # Interiors/grottos/graves are dead ends -> fast batched needs computation.
-    if opts.shuffle_interior_entrances.value and INTERIOR_ENTRANCES:
-        overrides += _shuffle_pool(world, "interior", INTERIOR_ENTRANCES,
-                                   REVERSE_COUPLE, dead_end_targets=True)
+    # Overworld entrances are coupled but NOT dead ends (every area leads onward),
+    # so -- like the "all" interior pool -- they use per-edge needs and the global
+    # age/time invariants (check_other_access); the validation gate + retry absorbs
+    # the cap-stability slack the pass-throughs introduce.
+    #
+    # ORDER MATTERS: the overworld backbone is shuffled BEFORE interiors/grottos so
+    # those (mostly dead-end) pools hang off the final overworld layout. The reverse
+    # order deadlocks: interior-"all" relocates the Temple of Time door, and if it is
+    # pinned first, few/no overworld arrangements can keep ToT item-less-reachable as
+    # both ages (Ship's sphere-zero invariant), so the overworld matcher can't
+    # converge. With overworld first, interiors validate against the fixed backbone.
+    if opts.shuffle_overworld_entrances.value and OVERWORLD_ENTRANCES:
+        overrides += _shuffle_pool(world, "overworld", OVERWORLD_ENTRANCES,
+                                   REVERSE_COUPLE, dead_end_targets=False,
+                                   check_other_access=True)
+
+    # Interiors. "Simple" shuffles the dead-end houses/shops among themselves (fast
+    # batched needs). "All" mixes in the special/linked interiors (Ship's behavior),
+    # which include pass-throughs -> per-edge needs + the global age/time invariants.
+    interior_opt = opts.shuffle_interior_entrances.value
+    if interior_opt != opts.shuffle_interior_entrances.option_off and INTERIOR_ENTRANCES:
+        if interior_opt == opts.shuffle_interior_entrances.option_all:
+            overrides += _shuffle_pool(
+                world, "interior+special",
+                INTERIOR_ENTRANCES + SPECIAL_INTERIOR_ENTRANCES,
+                REVERSE_COUPLE, dead_end_targets=False, check_other_access=True)
+        else:
+            overrides += _shuffle_pool(world, "interior", INTERIOR_ENTRANCES,
+                                       REVERSE_COUPLE, dead_end_targets=True)
 
     if opts.shuffle_grotto_entrances.value and GROTTO_ENTRANCES:
         overrides += _shuffle_pool(world, "grotto", GROTTO_ENTRANCES,
                                    REVERSE_COUPLE, dead_end_targets=True)
+
+    # Thieves' Hideout: forward-only (REVERSE_KEEP) -- the AP hideout reverse edges
+    # are a simplified maze that doesn't mirror Ship's pairs (DIVERGENCE #TH). Cells
+    # gate the carpenters -> Gerudo card -> wasteland/GTG, so they are NOT dead ends
+    # (per-edge needs). check_other_access=True mirrors Ship including thieves hideout
+    # in its checkOtherEntranceAccess set.
+    if opts.shuffle_thieves_hideout_entrances.value and THIEVES_HIDEOUT_ENTRANCES:
+        overrides += _shuffle_pool(world, "thieves hideout", THIEVES_HIDEOUT_ENTRANCES,
+                                   REVERSE_KEEP, dead_end_targets=False,
+                                   check_other_access=True)
+
+    # One-way pools (spawns, warp songs, owl drops). Shuffled together as one
+    # combined matching so a landing is consumed at most once across them. Run
+    # after the coupled pools so it never perturbs their CHILD/ADULT_SPAWN probes.
+    one_way: list[OneWayDef] = []
+    if opts.shuffle_overworld_spawns.value:
+        one_way += SPAWN_ENTRANCES
+    if opts.shuffle_warp_songs.value:
+        one_way += WARP_SONG_ENTRANCES
+    if opts.shuffle_owl_drops.value:
+        one_way += OWL_DROP_ENTRANCES
+    if one_way:
+        overrides += _shuffle_one_way(world, one_way)
+
+    # Blue warps follow the boss/dungeon placement; emit them whenever either pool
+    # is shuffled (Ship's includeBluewarps gate). Must run after the boss pool so
+    # each boss slot's forward entrance reflects the boss now behind it.
+    dungeon_shuffled = dungeon_opt != opts.shuffle_dungeon_entrances.option_off
+    if dungeon_shuffled or opts.shuffle_boss_entrances.value:
+        include_ganon = (dungeon_opt
+                         == opts.shuffle_dungeon_entrances.option_on_plus_ganon)
+        overrides += _blue_warp_overrides(world, include_ganon)
 
     world.entrance_overrides = overrides
