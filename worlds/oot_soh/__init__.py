@@ -20,6 +20,7 @@ from .DungeonRewardShuffle import pre_fill_dungeon_rewards, get_pre_fill_rewards
 from .KeyShuffle import pre_fill_own_dungeon_items, pre_fill_any_dungeon_keys, pre_fill_overworld_items, get_own_dungeon_prefill_items, get_dungeon_item_prefill_items
 from .SongShuffle import pre_fill_songs, get_prefill_songs
 from .ShopItems import fill_shop_items, generate_prices
+from .EntranceShuffle import shuffle_entrances
 from .Presets import oot_soh_options_presets
 from .UniversalTracker import setup_options_from_slot_data
 from settings import Group, Bool
@@ -124,6 +125,8 @@ class SohWorld(CachedRuleBuilderWorld):
         self.ganons_trials = list[GanonsTrials]()
         self.pre_fill_pool = list[Items]()
         self.reserved_pre_fill_locations = list[Locations]()
+        self.static_hints = dict[str, list[list[int, int]]]()
+        self.entrance_overrides = list[dict[str, int]]()
 
         apworld_manifest = orjson.loads(pkgutil.get_data(
             __name__, "archipelago.json").decode("utf-8"))
@@ -263,6 +266,12 @@ class SohWorld(CachedRuleBuilderWorld):
         # Set price rules in advance
         generate_prices(self)
 
+
+    def connect_entrances(self) -> None:
+        # Shuffle entrances now that the region graph, rules and item pool all
+        # exist, but before fill. Stores the chosen pairings on the world for
+        # fill_slot_data; a no-op when every entrance pool is off.
+        shuffle_entrances(self)
 
     def create_items(self) -> None:
         # these are for making the progressive items collect/remove work properly
@@ -463,6 +472,11 @@ class SohWorld(CachedRuleBuilderWorld):
             "shuffle_merchants": self.options.shuffle_merchants.value,
             "shuffle_frog_song_rupees": self.options.shuffle_frog_song_rupees.value,
             "shuffle_adult_trade_items": self.options.shuffle_adult_trade_items.value,
+            "shuffle_dungeon_entrances": self.options.shuffle_dungeon_entrances.value,
+            "shuffle_boss_entrances": self.options.shuffle_boss_entrances.value,
+            "shuffle_interior_entrances": self.options.shuffle_interior_entrances.value,
+            "shuffle_grotto_entrances": self.options.shuffle_grotto_entrances.value,
+            "entrances": self.entrance_overrides,
             "shuffle_boss_souls": self.options.shuffle_boss_souls.value,
             "shuffle_fountain_fairies": self.options.shuffle_fountain_fairies.value,
             "shuffle_stone_fairies": self.options.shuffle_stone_fairies.value,

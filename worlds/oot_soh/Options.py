@@ -600,6 +600,46 @@ class ShuffleAdultTradeItems(Toggle):
     display_name = "Shuffle Adult Trade Items"
 
 
+class ShuffleDungeonEntrances(Choice):
+    """
+    Shuffle the entrances to dungeons.
+    Off - Dungeon entrances are vanilla.
+    On - Dungeon entrances are shuffled among themselves.
+    On + Ganon - Also include Ganon's Castle in the shuffle.
+    """
+    display_name = "Shuffle Dungeon Entrances"
+    option_off = 0
+    option_on = 1
+    option_on_plus_ganon = 2
+    default = 0
+
+
+class ShuffleBossEntrances(Toggle):
+    """
+    Shuffle the entrances to boss rooms among themselves (child and adult bosses
+    are mixed; the randomizer guarantees every boss stays reachable as a valid
+    age). Blue warps currently stay vanilla, so a shuffled boss warps you to its
+    original overworld exit after it is defeated.
+    """
+    display_name = "Shuffle Boss Entrances"
+
+
+class ShuffleInteriorEntrances(Toggle):
+    """
+    Shuffle the "simple" interior entrances (houses, shops, etc.) among
+    themselves. Special/linked interiors (Temple of Time, Link's house, the
+    windmill, the Kakariko potion shop) are not included yet.
+    """
+    display_name = "Shuffle Interior Entrances"
+
+
+class ShuffleGrottoEntrances(Toggle):
+    """
+    Shuffle grotto and grave entrances among themselves.
+    """
+    display_name = "Shuffle Grotto Entrances"
+
+
 class ShuffleBossSouls(Choice):
     """
     Shuffles 8 boss souls (one for each blue warp dungeon). A boss will not appear until you collect its respective soul.
@@ -1610,6 +1650,10 @@ class SohOptions(PerGameCommonOptions):
     shuffle_merchants_maximum_price: ShuffleMerchantsMaximumPrice
     shuffle_frog_song_rupees: ShuffleFrogSongRupees
     shuffle_adult_trade_items: ShuffleAdultTradeItems
+    shuffle_dungeon_entrances: ShuffleDungeonEntrances
+    shuffle_boss_entrances: ShuffleBossEntrances
+    shuffle_interior_entrances: ShuffleInteriorEntrances
+    shuffle_grotto_entrances: ShuffleGrottoEntrances
     shuffle_boss_souls: ShuffleBossSouls
     shuffle_fountain_fairies: ShuffleFountainFairies
     shuffle_stone_fairies: ShuffleStoneFairies
@@ -1922,17 +1966,17 @@ soh_option_groups = [
         TriforceHuntPiecesTotal,
         TriforceHuntPiecesRequiredPercentage,
     ]),
-    # OptionGroup("Shuffle Entrances", [
-    #     # Dungeon Entrances
-    #     # Boss Entrances
-    #     # Overworld Entrances
-    #     # Interior Entrances
-    #     # Grotto Entrances
-    #     # Owl Drops
-    #     # Warp Songs
-    #     # Overworld Spawns
-    #     # Decouple Entrances
-    # ]),
+    OptionGroup("Shuffle Entrances", [
+        ShuffleDungeonEntrances,
+        ShuffleBossEntrances,
+        ShuffleInteriorEntrances,
+        ShuffleGrottoEntrances,
+        # Overworld Entrances
+        # Owl Drops
+        # Warp Songs
+        # Overworld Spawns
+        # Decouple Entrances
+    ]),
     OptionGroup("Shuffle Items", [
         ShuffleSongs,
         ShuffleTokens,
