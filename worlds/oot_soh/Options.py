@@ -617,9 +617,9 @@ class ShuffleDungeonEntrances(Choice):
 class ShuffleBossEntrances(Toggle):
     """
     Shuffle the entrances to boss rooms among themselves (child and adult bosses
-    are mixed; the randomizer guarantees every boss stays reachable as a valid
-    age). Blue warps currently stay vanilla, so a shuffled boss warps you to its
-    original overworld exit after it is defeated.
+    are mixed; the randomizer guarantees every boss stays reachable as a valid age).
+    A defeated boss's blue warp takes you to the overworld exit of whichever dungeon
+    now holds that boss room.
     """
     display_name = "Shuffle Boss Entrances"
 
@@ -688,6 +688,48 @@ class ShuffleOverworldSpawns(Toggle):
     are one-way and may be moved to a different destination.
     """
     display_name = "Shuffle Overworld Spawns"
+
+
+class MixedEntrancePools(Toggle):
+    """
+    Mix the selected shuffled entrance pools together into one combined pool, so an
+    entrance from one pool can lead into another (e.g. a dungeon entrance leading to
+    a grotto). Select which pools to mix with the "Mix ... Entrances" options below.
+    A pool is only mixed if it is both shuffled and selected here; at least two such
+    pools are required, otherwise mixing has no effect.
+
+    Note: boss-room and Thieves' Hideout entrances are not eligible for mixing in
+    this implementation.
+    """
+    display_name = "Mixed Entrance Pools"
+
+
+class MixDungeonEntrances(Toggle):
+    """
+    If Mixed Entrance Pools is on, include shuffled dungeon entrances in the mix.
+    """
+    display_name = "Mix Dungeon Entrances"
+
+
+class MixInteriorEntrances(Toggle):
+    """
+    If Mixed Entrance Pools is on, include shuffled interior entrances in the mix.
+    """
+    display_name = "Mix Interior Entrances"
+
+
+class MixGrottoEntrances(Toggle):
+    """
+    If Mixed Entrance Pools is on, include shuffled grotto/grave entrances in the mix.
+    """
+    display_name = "Mix Grotto Entrances"
+
+
+class MixOverworldEntrances(Toggle):
+    """
+    If Mixed Entrance Pools is on, include shuffled overworld entrances in the mix.
+    """
+    display_name = "Mix Overworld Entrances"
 
 
 class ShuffleBossSouls(Choice):
@@ -1709,6 +1751,11 @@ class SohOptions(PerGameCommonOptions):
     shuffle_owl_drops: ShuffleOwlDrops
     shuffle_warp_songs: ShuffleWarpSongs
     shuffle_overworld_spawns: ShuffleOverworldSpawns
+    mixed_entrance_pools: MixedEntrancePools
+    mix_dungeon_entrances: MixDungeonEntrances
+    mix_interior_entrances: MixInteriorEntrances
+    mix_grotto_entrances: MixGrottoEntrances
+    mix_overworld_entrances: MixOverworldEntrances
     shuffle_boss_souls: ShuffleBossSouls
     shuffle_fountain_fairies: ShuffleFountainFairies
     shuffle_stone_fairies: ShuffleStoneFairies
@@ -2031,6 +2078,11 @@ soh_option_groups = [
         ShuffleOwlDrops,
         ShuffleWarpSongs,
         ShuffleOverworldSpawns,
+        MixedEntrancePools,
+        MixDungeonEntrances,
+        MixInteriorEntrances,
+        MixGrottoEntrances,
+        MixOverworldEntrances,
         # Decouple Entrances
     ]),
     OptionGroup("Shuffle Items", [

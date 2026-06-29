@@ -106,28 +106,70 @@ logger = logging.getLogger("SOH_OOT.ER")
 # #5  OMITTED ENTRANCES (intentional, pending features):
 #       - GV Lower Stream -> Lake Hylia overworld one-way (ENTR 0x219): only shuffled
 #         when decoupled entrances are on; belongs with future decoupled work.
-#       - One-way TARGET pool is currently the 10 one-way landings only -- a strict
-#         subset of Ship's target set (which also includes Overworld/Interior/
-#         SpecialInterior/GrottoGrave landings). Expanding it is a follow-up now that
-#         OVERWORLD_ENTRANCES exists. See the one-way section.
-#       - Decoupled and mixed entrance pools are not implemented yet.
+#       - Ship's static glitchless "priority entrances" (Bolero/Nocturne/Requiem) are
+#         replaced by per-seed dynamic detection of load-bearing one-way landings
+#         (`_one_way_requirements`), which subsumes them. See the one-way section.
+#       - Decoupled entrance pools are not implemented yet.
+#       - GANON'S TOWER entrance shuffle is not implemented -- see #GT.
+#
+# #MIX MIXED ENTRANCE POOLS cover only the four COUPLED pools (dungeon, interior,
+#     grotto, overworld), all REVERSE_COUPLE, which combine cleanly: a combined
+#     matching permutes them together and the existing coupled reverse-repointing
+#     ``_apply`` does the right thing per pair. Ship ALSO allows mixing Boss and
+#     Thieves' Hideout, but this port excludes them: their AP reverse handling is not
+#     coupled (boss = REVERSE_DEADEND, hideout = REVERSE_KEEP; see DIVERGENCE #TH), so
+#     a cross-pool pairing of a coupled doorway with a dead-end/uncoupled interior
+#     would leave the coupled side's reverse inconsistent. Including them would need a
+#     per-edge reverse-mode architecture. One-way pools (spawn/warp/owl) are never
+#     mixed (matches Ship -- they live in a separate one-way pool). Mixing is purely
+#     AP-side generation; Ship just applies the resulting per-entrance overrides.
+#
+# #GT GANON'S TOWER ENTRANCE (Ship EntranceType::GanonTower=14, RSK_SHUFFLE_GANONS_
+#     TOWER_ENTRANCE) is NOT implemented -- it needs an AP region-graph change first.
+#     In Ship it is the loading zone GANONS_TOWER_ENTRYWAY <-> GANONS_TOWER_STAIRS_1
+#     (fwd ENTR_GANONS_TOWER_0 = 0x41B, rev ENTR_INSIDE_GANONS_CASTLE_1 = 0x534),
+#     shuffled INTO THE BOSS POOL (only when boss entrances are also shuffled). Its
+#     blue warp is ENTR_OUTSIDE_GANONS_CASTLE_1_2 = 0x23F -- which we ALREADY emit as
+#     the Ganon blue warp (_GANON_BLUE_WARP_INDEX), so that piece is covered.
+#     BLOCKER: Ship keeps the Ganon's-Trials requirement on the *approach* to the
+#     tower entryway and leaves the tower entrance (entryway->stairs) UNGATED, with a
+#     separate STAIRS_1 region. AP has no such loading-zone region and instead fuses
+#     the trials gate directly onto GANONS_TOWER_ENTRYWAY -> GANONS_TOWER_FLOOR_1
+#     (location_access/dungeons/ganons_castle.py). Shuffling that AP edge would move
+#     the trials requirement with it (our shuffle moves an edge AND its rule), gating
+#     different checks behind trials than Ship -> a logic-contract divergence (both
+#     still beatable). A faithful port must first restructure the AP graph: add an
+#     ungated tower loading-zone region (Ship's STAIRS_1) and keep the trials gate on
+#     the tower climb, then add GANON_TOWER to the boss pool (REVERSE_DEADEND) and
+#     fold the tower into the boss blue-warp two-hop (bossRoomExitPairs includes
+#     GANONS_TOWER_STAIRS_1 -> CASTLE_GROUNDS). Deferred by decision 2026-06-28.
 #
 # #6  PLACEMENT ALGORITHM DIFFERS (but the *result* is contract-compatible). Ship
 #     uses incremental assumed-fill placement with per-entrance reachability checks;
 #     we use a custom age-aware matcher (Kuhn) + a full re-validation gate with retry
-#     (``_seed_is_valid`` / ``_find_matching``). The Archipelago Generic Entrance
-#     Randomizer is NOT used (it deadlocks on this graph's age scarcity). One
-#     consequence with no Ship analogue: pool ORDER matters for our convergence --
-#     the overworld backbone must be shuffled before interiors/grottos (see
-#     ``shuffle_entrances``).
+#     (``_seed_is_valid`` / ``_find_matching``), and -- when that fast path can't find
+#     a valid layout by luck -- a guaranteed-convergent validated random walk
+#     (``_walk_shuffle``: start from valid vanilla, keep only validated swaps). The
+#     Archipelago Generic Entrance Randomizer is NOT used (it deadlocks on this graph's
+#     age scarcity). One consequence with no Ship analogue: pool ORDER matters for our
+#     convergence -- the overworld backbone must be shuffled before interiors/grottos
+#     (see ``shuffle_entrances``).
 #
 # #7  VALIDATION GATE ports Ship's ``ValidateWorld`` / ``ValidateEntrances``
 #     (entrance.cpp:796 / 3drando/fill.cpp:606). ``_age_exits_are_safe`` is Ship's
 #     child/adultForbidden hard-check. ``_world_age_invariants_hold`` (gated by
 #     ``check_other_access``) is Ship's ``checkOtherEntranceAccess`` "sphere-zero"
-#     requirement: with NO items, a valid start area is reachable, time passes as both
-#     ages, and ToT is reachable as the other age. NOTE: assumes an open Door of Time;
-#     revisit for closed/song-only DoT (where seeds force a child start).
+#     requirement: a valid start area is reachable, time passes as both ages, and ToT
+#     is reachable as the other age. The start-area check is item-less (true sphere
+#     zero); the time-pass/ToT checks use the all-items pre-fill state so that a
+#     closed/song-only Door of Time (other age gated behind Song of Time) or a closed
+#     forest (leaving Kokiri gated behind sword+shield) is not a false positive (the
+#     items satisfy those gates). FULL ENTRANCE CONNECTIVITY (every region reachable
+#     with all items) is required for ALL pools regardless of AP's ``accessibility``
+#     option: Ship's entrance generator always requires it, and AP's accessibility
+#     governs item placement, not the entrance graph. Without this, an earlier pool can
+#     strand a region under ``minimal`` and a later pool's doorway there gets an empty
+#     age-cap -> matcher infeasible (see ``_seed_is_valid``).
 # ===========================================================================
 
 
@@ -1053,50 +1095,74 @@ def _world_age_invariants_hold(world: "SohWorld") -> bool:
     """Global age/time guarantees Ship enforces once spawns, the overworld, or
     special interiors get shuffled (entrance.cpp:873-898).
 
-    Dormant for the coupled dead-end pools (they never move spawns or the
-    overworld, so these always hold); callers opt in via ``check_other_access``. The
-    "all" interior pool and the one-way pools (spawns / warp songs / owl drops) turn
-    it on. All checks use an item-less state -- the guarantees must hold with no items.
+    Dormant for the coupled dead-end pools (they never move spawns or the overworld,
+    so these always hold); callers opt in via ``check_other_access``. The "all"
+    interior pool, the overworld/mixed pools and the one-way pools turn it on.
 
-    NOTE (refine with the overworld pool): the Temple-of-Time-after-time-travel check
-    assumes the Door of Time can be opened item-less (true with the default open
-    door). With a closed Door of Time -- where the seed is forced to a child start --
-    reaching ToT as adult needs Song of Time + stones, which an item-less state lacks.
-    Ship's own search handles this via its settings; pin the exact semantics down when
-    the overworld pool lands (it stresses these invariants the hardest)."""
+    Two bases are used deliberately (DIVERGENCE #7):
+
+    * Condition 1 -- a valid starting overworld is reachable with NO items -- is the
+      true sphere-zero guard: it catches an entrance/spawn arrangement that leaves the
+      player unable to leave the start at all.
+
+    * Conditions 2-3 (both ages can pass time; the Temple of Time is reachable as the
+      *other* age) are checked against the FULL item state, not item-less. With a
+      closed/song-only Door of Time the other age is only reachable via the Song of
+      Time, and with a closed forest leaving Kokiri needs the sword + shield -- both
+      items -- so an item-less check there is a false positive (the seed is perfectly
+      winnable; Ship's own progressive search collects those along the way). Checking
+      with items still rejects an arrangement that severs time-pass or pedestal access
+      outright. For an OPEN Door of Time both ages are reachable item-less anyway, so
+      this is behaviourally identical to the original item-less check there."""
     player = world.player
-    state = _item_less_state(world)
 
     # 1) A valid starting overworld (Kokiri or Kakariko) reachable with no items.
+    bootstrap = _item_less_state(world)
     starts = (Regions.KOKIRI_FOREST, Regions.KAKARIKO_VILLAGE)
-    if not any(state._soh_can_reach_as_age(r, age, player)
+    if not any(bootstrap._soh_can_reach_as_age(r, age, player)
                for r in starts for age in (Ages.CHILD, Ages.ADULT)):
         return False
 
-    # 2) Time must be passable as BOTH ages with no items, or day/night-gated checks
-    #    could become permanently inaccessible.
-    if not (state.has(str(Events.CHILD_CAN_PASS_TIME), player)
-            and state.has(str(Events.ADULT_CAN_PASS_TIME), player)):
+    full = world.get_pre_fill_state()
+
+    # 2) Time must be passable as BOTH ages (with the items the player will collect),
+    #    or day/night-gated checks could become permanently inaccessible.
+    if not (full.has(str(Events.CHILD_CAN_PASS_TIME), player)
+            and full.has(str(Events.ADULT_CAN_PASS_TIME), player)):
         return False
 
     # 3) After going through time, the Temple of Time must remain reachable as the
     #    *other* age, so the player never loses pedestal access.
     starting_child = world.options.starting_age.value == world.options.starting_age.option_child
     other_age = Ages.ADULT if starting_child else Ages.CHILD
-    if not state._soh_can_reach_as_age(Regions.TEMPLE_OF_TIME, other_age, player):
+    if not full._soh_can_reach_as_age(Regions.TEMPLE_OF_TIME, other_age, player):
         return False
 
     return True
 
 
 def _seed_is_valid(world: "SohWorld", check_other_access: bool = False) -> bool:
-    """Validate the shuffled graph against the world's accessibility setting.
+    """Validate the shuffled graph for entrance connectivity.
 
     Always enforces the wrong-age exit guard (a soft-lock guard, independent of
     accessibility). ``check_other_access`` additionally enforces the global age/time
     invariants -- left off for the current coupled dead-end pools and turned on by the
     future pools that move spawns / the overworld / special interiors (mirroring
-    Ship's ``checkOtherEntranceAccess``)."""
+    Ship's ``checkOtherEntranceAccess``).
+
+    Full entrance connectivity is required regardless of AP's ``accessibility``
+    option. AP's accessibility (``minimal`` = only the goal need be reachable) governs
+    *item placement*, not the entrance graph: Ship's own entrance generator
+    (3drando ValidateEntrances) always requires every shuffled entrance reachable, so
+    a faithful port must too. Without this, an earlier pool can strand a region under
+    ``minimal`` (the goal stays reachable some other way), and a later pool's doorway
+    that lives in the stranded region then has an empty age-cap, making the matcher
+    infeasible or the validated walk unable to start. Probing with the all-items
+    pre-fill state, ``all(loc.can_reach)`` is the region-connectivity proxy: OoT's
+    glitchless logic reaches every location with full items (tricks only add routes),
+    so a failure here means a region is genuinely unreachable, not merely item-gated.
+    This is identical to the long-validated former ``full``/``items`` path -- it now
+    just runs for ``minimal`` too."""
     completion = world.multiworld.completion_condition.get(world.player)
     if completion is None:
         # true_no_logic (or no goal set): logic is bypassed, nothing to verify.
@@ -1108,10 +1174,62 @@ def _seed_is_valid(world: "SohWorld", check_other_access: bool = False) -> bool:
         return False
     if check_other_access and not _world_age_invariants_hold(world):
         return False
-    if world.options.accessibility == "minimal":
-        return True
-    # full / items accessibility: every location must be reachable.
-    return all(loc.can_reach(state) for loc in world.get_locations())
+    # Entrance connectivity: every location reachable with all items (see docstring).
+    if not all(loc.can_reach(state) for loc in world.get_locations()):
+        return False
+    # Pools that move the start / age access (spawns, overworld, warps) can pass every
+    # all-items check above yet leave no valid BOOTSTRAP: with all items granted up
+    # front, a shuffled spawn that strands the starting age in a tiny pocket still looks
+    # fully connected. Confirm a progressive (assumed-fill) collection order exists.
+    # Run last -- it is the most expensive check, so it only fires on layouts that have
+    # already passed everything cheaper.
+    if check_other_access and not _assumed_progressive_beatable(world):
+        return False
+    return True
+
+
+def _assumed_progressive_beatable(world: "SohWorld") -> bool:
+    """Progressive (assumed-fill) beatability: can the goal be reached by collecting
+    the item pool sphere by sphere from an EMPTY start, rather than all-at-once?
+
+    ``get_pre_fill_state`` grants every item up front, so its reachability is optimistic
+    and blind to bootstrap deadlocks -- where the items needed to expand out of the
+    starting region are themselves only reachable past that expansion. OoT's age/time
+    cycle makes these real: a shuffled spawn can strand the starting age in a pocket
+    with too few reachable locations to hold the progression that would open the rest,
+    and closed/song Door of Time means the other age is gated behind items you must
+    first collect as this age. This mirrors Ship's progressive ValidateEntrances search.
+
+    Capacity model: an item may be collected once a reachable location exists to hold it;
+    items are fungible, so only the *count* of reachable locations bounds each sphere
+    (``free = reachable - placed``). Pre-fill items (dungeon rewards, songs, keys) are
+    treated as placeable in any reachable location -- an over-estimate of their freedom
+    that keeps the check from rejecting valid layouts while still catching gross strands
+    (where the reachable pocket is simply too small). Events are collected automatically
+    by the sweep, so age unlocks (Time Travel) fall out in the correct sphere."""
+    mw = world.multiworld
+    player = world.player
+    locations = list(mw.get_locations(player))
+    pool = [it for it in world.item_pool if it.advancement]
+    pool += [it for it in (world.create_item(name) for name in world.pre_fill_pool)
+             if it.advancement]
+    state = CollectionState(mw)
+    placed = 0
+    idx = 0
+    n = len(pool)
+    while idx < n:
+        state.sweep_for_advancements(locations)
+        reachable = sum(1 for loc in locations if loc.can_reach(state))
+        free = reachable - placed
+        if free <= 0:
+            return False  # no reachable room left to bootstrap further
+        take = min(free, n - idx)
+        for j in range(idx, idx + take):
+            state.collect(pool[j], True)
+        idx += take
+        placed += take
+    state.sweep_for_advancements(locations)
+    return mw.has_beaten_game(state, player)
 
 
 def _build_slot_data(forwards: list[_Edge],
@@ -1139,6 +1257,61 @@ def _build_slot_data(forwards: list[_Edge],
             "overrideDestination": src.fwd_index,
         })
     return entrances
+
+
+def _walk_shuffle(world: "SohWorld", forwards: list[_Edge],
+                  caps: dict[_Edge, frozenset], needs: dict[_Edge, frozenset],
+                  forbidden: dict[_Edge, Ages], reverse_mode: str,
+                  check_other_access: bool) -> list[_Edge] | None:
+    """Validated random-walk shuffle: a guaranteed-convergent fallback for pools the
+    fast matching path can't satisfy by luck.
+
+    Starts from the vanilla (identity) pairing -- which is valid, since every prior
+    pool left the graph valid and this pool hasn't moved yet -- and repeatedly swaps
+    two doorways' targets, keeping a swap only if the world stays fully valid. Because
+    it never leaves a valid state, it cannot end invalid; because one swap perturbs
+    far less than a full re-roll, most swaps are accepted, so it mixes well. The
+    age-compat pre-check just skips obviously-bad swaps; ``_seed_is_valid`` is the real
+    gate, so approximate caps can't let an invalid layout through.
+
+    Returns the ``targets`` list (aligned with ``forwards``) with the graph left in
+    that state, or ``None`` if even vanilla is invalid (a prior-pool bug; let the
+    caller raise)."""
+    if len(forwards) < 2:
+        return None
+
+    def compatible(doorway: "_Edge", target: "_Edge") -> bool:
+        cap = caps[doorway]
+        return (needs[target] <= cap
+                and (target not in forbidden or forbidden[target] not in cap))
+
+    targets: dict[_Edge, _Edge] = {e: e for e in forwards}
+
+    def apply_current() -> None:
+        _apply(forwards, [targets[e] for e in forwards], reverse_mode)
+
+    apply_current()
+    if not _seed_is_valid(world, check_other_access):
+        return None
+
+    # Enough attempted swaps to thoroughly mix n edges (~n*ln n successful swaps);
+    # bounded so the largest (mixed) pool can't run away.
+    budget = min(12 * len(forwards), 1500)
+    made = 0
+    for _ in range(budget):
+        a, b = world.random.sample(forwards, 2)
+        if not (compatible(a, targets[b]) and compatible(b, targets[a])):
+            continue
+        targets[a], targets[b] = targets[b], targets[a]
+        apply_current()
+        if _seed_is_valid(world, check_other_access):
+            made += 1
+        else:
+            targets[a], targets[b] = targets[b], targets[a]  # revert
+            apply_current()
+    logger.debug("ER: random walk accepted %d swaps over %d edges", made,
+                 len(forwards))
+    return [targets[e] for e in forwards]
 
 
 def _shuffle_pool(world: "SohWorld", label: str, entries: list[EntranceDef],
@@ -1175,6 +1348,19 @@ def _shuffle_pool(world: "SohWorld", label: str, entries: list[EntranceDef],
     forbidden = {edge: age for edge in forwards
                  if (age := _forbidden_age(edge)) is not None}
 
+    # A target can never be *required* as the very age it forbids: the matcher only
+    # ever routes it through a doorway whose cap excludes that age, so the player never
+    # enters it as that age, and any interior location that needs it is unreachable by
+    # design (the same in vanilla -- e.g. HC Storms Grotto is adult-forbidden, yet its
+    # contents are child-reachable through the grotto's CASTLE_GROUNDS exit, which the
+    # severed dead-end needs-probe cannot see and so mis-attributes to ADULT). Keeping
+    # the forbidden age in `needs` makes `needs[t] <= cap` and `forbidden ∉ cap`
+    # contradictory -> a spurious "no matching exists". Clamp it; genuine unreachability
+    # of forbidden-age-only content is still caught by the full-accessibility gate.
+    for edge, age in forbidden.items():
+        if age in needs[edge]:
+            needs[edge] = needs[edge] - {age}
+
     for _ in range(MAX_SHUFFLE_ATTEMPTS):
         targets = _find_matching(world, forwards, caps, needs, forbidden)
         if targets is None:
@@ -1189,9 +1375,27 @@ def _shuffle_pool(world: "SohWorld", label: str, entries: list[EntranceDef],
             return _build_slot_data(forwards, targets)
         _restore_forwards(forwards, reverse_mode)
 
+    # Fast path exhausted. A fresh random bijection rewires every edge at once, so
+    # one constraint violation anywhere fails the whole attempt -- yield collapses
+    # for tightly-constrained layouts (e.g. a particular dungeon shuffle leaving the
+    # overworld little room to keep the item-less Temple-of-Time/time-pass backbone
+    # reachable as both ages). Fall back to a validated random walk: start from the
+    # already-valid vanilla layout and apply only swaps that keep the world valid, so
+    # it can never end invalid. A single swap is a small perturbation that stays valid
+    # far more often than a full re-roll, so this mixes well and is guaranteed to
+    # converge (worst case it returns vanilla). Rescues the unlucky tail instead of
+    # hard-failing; the fast path still handles the common case (and its variety).
+    targets = _walk_shuffle(world, forwards, caps, needs, forbidden,
+                            reverse_mode, check_other_access)
+    if targets is not None:
+        logger.debug("ER: shuffled %d %s entrances for player %d via random walk",
+                     len(forwards), label, world.player)
+        return _build_slot_data(forwards, targets)
+
+    _restore_forwards(forwards, reverse_mode)
     raise RuntimeError(
         f"SoH ER: could not find a valid {label} entrance shuffle for player "
-        f"{world.player} after {MAX_SHUFFLE_ATTEMPTS} attempts.")
+        f"{world.player} after {MAX_SHUFFLE_ATTEMPTS} attempts + random walk.")
 
 
 # --- Blue warps --------------------------------------------------------------
@@ -1269,25 +1473,41 @@ def _blue_warp_overrides(world: "SohWorld",
 # entrances with no return (``NO_RETURN_ENTRANCE``); the override JSON sets both
 # ``destination`` and ``overrideDestination`` to ``-1`` (see ``_ONE_WAY_NO_DEST``).
 #
-# Ship draws one-way targets from the full static entrance table (every entrance
-# of a set of valid target types -- one-way, overworld, interior, grotto -- is a
-# candidate landing), consuming each target at most once across all one-way pools.
-# This first implementation restricts the target pool to the one-way landing spots
-# themselves (the 2 spawns + 6 warp songs + 2 owl drops): a strict subset of
-# Ship's target set (so every placement Ship would accept, and never one it would
-# reject), self-consistent regardless of the coupled pools, and -- conveniently --
-# none of these ten landings is in ``_FORBIDDEN_AGE_EXITS``, so a one-way placement
-# can only strand the player through the spawn/start invariants, which the
-# ``check_other_access`` validation gate already enforces. Overworld / interior /
-# grotto landings are deferred until the Overworld table is built (TODO).
+# Ship draws one-way targets from the full static entrance table (entrance.cpp
+# BuildOneWayTargets): every *directed* entrance of a set of valid target types is
+# a candidate landing, consumed at most once across all one-way pools. We mirror
+# that -- ``_ONE_WAY_TARGET_SPECS`` enumerates both directions of every overworld /
+# interior / special-interior / grotto pair plus the one-way landings themselves,
+# regardless of which pools are actually shuffled (Ship builds the target set from
+# the static table, not the shuffled pools). A one-way override always lands the
+# player at the *original* (vanilla) region behind the target's index -- Ship's
+# ApplyEntranceOverrides connects via ``GetOriginalConnectedRegionKey`` -- so the
+# coupled pools' own shuffling never changes where a one-way deposits you, which is
+# why building targets from vanilla landings stays correct even when those pools
+# are shuffled too.
 #
-# A one-way edge only ever *adds* a way to reach its landing (it never severs a
-# region's own access), so full accessibility is preserved by construction; the
-# only real hazard is delivering the player to a region as an age that strands
-# them. ``delivers`` captures which ages a source can deposit the player as (a
-# faithful port of Ship's ``EntranceUnreachableAs``: owl drops + child spawn are
-# child-only, adult spawn is adult-only, warp songs are usable as both ages), and
-# the matcher refuses any landing whose forbidden age the source can deliver.
+# The valid target *types* differ by source (``_ONE_WAY_TARGET_TYPES_BY_SOURCE``):
+# owl drops are physically overworld flights, so they may only land at overworld-
+# style targets (warp / owl / overworld) and never inside an interior or grotto;
+# spawns and warp songs may also land inside interiors and grottos. Ship also
+# excludes the Prelude-of-Light -> Temple-of-Time landing from owl targets
+# specifically (``_OWL_EXCLUDED_TARGET_INDICES``). EntranceType::Extra has no rows
+# in Ship's table, so it contributes nothing and is omitted.
+#
+# Ship's static glitchless "priority entrances" (Bolero/Nocturne/Requiem) force a
+# one-way *into* a few hard-to-reach regions up front so they never strand. We do the
+# same job per seed and more generally: ``_one_way_requirements`` detects which one-way
+# landings are actually load-bearing for THIS seed's (already-shuffled) graph and
+# ``_place_priorities`` force-covers each before the rest is filled. See DIVERGENCE #5.
+#
+# A one-way edge moves a single source edge to a landing; it can strand the player only
+# by (a) delivering them to a region as an age that has no way out, or (b) vacating a
+# landing that was the region's sole access. ``delivers`` captures which ages a source
+# can deposit the player as (a faithful port of Ship's ``EntranceUnreachableAs``: owl
+# drops + child spawn are child-only, adult spawn is adult-only, warp songs are usable
+# as both ages); ``_one_way_compatible`` refuses any landing whose forbidden age the
+# source can deliver, the requirements machinery handles (b), and a final full
+# validation guards the assembled result.
 
 # Sentinel for the destination / overrideDestination fields of a one-way override.
 # Must be -1, not 0: Ship treats an all-zero override as "unshuffled", and 0 is a
@@ -1345,12 +1565,45 @@ OWL_DROP_ENTRANCES: list[OneWayDef] = [
               0x554, ENTRANCE_TYPE_OWL_DROP, _CHILD_ONLY),
 ]
 
-# Every one-way landing is a candidate target (Ship draws targets from the full
-# table regardless of which pools are shuffled). Built from all three tables so
-# e.g. a warp song can be sent to a spawn's or owl's landing even when those
-# pools are not themselves shuffled.
-_ONE_WAY_TARGET_DEFS: list[OneWayDef] = (
-    SPAWN_ENTRANCES + WARP_SONG_ENTRANCES + OWL_DROP_ENTRANCES)
+# Which target entrance types each one-way SOURCE type may be sent to (Ship's
+# BuildOneWayTargets validTargetTypes). Owl drops never land inside interiors or
+# grottos; spawns and warp songs may.
+_OWL_TARGET_TYPES = frozenset((
+    ENTRANCE_TYPE_WARP_SONG, ENTRANCE_TYPE_OWL_DROP, ENTRANCE_TYPE_OVERWORLD))
+_SPAWN_WARP_TARGET_TYPES = frozenset((
+    ENTRANCE_TYPE_SPAWN, ENTRANCE_TYPE_WARP_SONG, ENTRANCE_TYPE_OWL_DROP,
+    ENTRANCE_TYPE_OVERWORLD, ENTRANCE_TYPE_INTERIOR,
+    ENTRANCE_TYPE_SPECIAL_INTERIOR, ENTRANCE_TYPE_GROTTO_GRAVE))
+_ONE_WAY_TARGET_TYPES_BY_SOURCE: dict[int, frozenset] = {
+    ENTRANCE_TYPE_OWL_DROP: _OWL_TARGET_TYPES,
+    ENTRANCE_TYPE_SPAWN: _SPAWN_WARP_TARGET_TYPES,
+    ENTRANCE_TYPE_WARP_SONG: _SPAWN_WARP_TARGET_TYPES,
+}
+
+# Targets excluded from owl drops specifically (Ship's BuildOneWayTargets exclude
+# pair for OwlDrop). 0x5F4 is the Prelude of Light -> Temple of Time warp landing.
+_OWL_EXCLUDED_TARGET_INDICES = frozenset((0x5F4,))
+
+
+def _all_one_way_target_specs() -> list[tuple[str, int, Regions, int]]:
+    """Every candidate one-way landing as ``(name, index, region, pool_type)``.
+
+    The one-way landings contribute a single directed edge each; the coupled
+    overworld / interior / special-interior / grotto pairs contribute *both*
+    directions (Ship's ``GetShuffleableEntrances`` returns both, and each becomes a
+    target). ``region`` is the vanilla landing region behind ``index``."""
+    specs: list[tuple[str, int, Regions, int]] = []
+    for d in (*SPAWN_ENTRANCES, *WARP_SONG_ENTRANCES, *OWL_DROP_ENTRANCES):
+        specs.append((d.name, d.index, d.dest, d.ship_type))
+    for table in (OVERWORLD_ENTRANCES, INTERIOR_ENTRANCES,
+                  SPECIAL_INTERIOR_ENTRANCES, GROTTO_ENTRANCES):
+        for e in table:
+            specs.append((f"{e.name} (fwd)", e.fwd_index, e.fwd_child, e.ship_type))
+            specs.append((f"{e.name} (rev)", e.rev_index, e.rev_child, e.ship_type))
+    return specs
+
+
+_ONE_WAY_TARGET_SPECS: list[tuple[str, int, Regions, int]] = _all_one_way_target_specs()
 
 
 class _OneWaySource:
@@ -1368,13 +1621,16 @@ class _OneWaySource:
 
 
 class _OneWayTarget:
-    """A candidate landing: a region plus the ENTR index that owns it."""
-    __slots__ = ("name", "index", "region", "forbidden")
+    """A candidate landing: a region, the ENTR index that owns it, and the entrance
+    type of the directed edge it was built from (for per-source type filtering)."""
+    __slots__ = ("name", "index", "region", "pool_type", "forbidden")
 
-    def __init__(self, d: OneWayDef, region: "Region", forbidden: "Ages | None"):
-        self.name = d.name
-        self.index = d.index
+    def __init__(self, name: str, index: int, region: "Region",
+                 pool_type: int, forbidden: "Ages | None"):
+        self.name = name
+        self.index = index
         self.region = region
+        self.pool_type = pool_type
         self.forbidden = forbidden
 
 
@@ -1395,81 +1651,265 @@ def _build_one_way_sources(world: "SohWorld",
 
 def _build_one_way_targets(world: "SohWorld") -> list[_OneWayTarget]:
     targets: list[_OneWayTarget] = []
-    for d in _ONE_WAY_TARGET_DEFS:
-        region = world.get_region(d.dest)
-        forbidden = _FORBIDDEN_BY_REGION.get(d.dest)
-        targets.append(_OneWayTarget(d, region, forbidden))
+    for name, index, region_name, pool_type in _ONE_WAY_TARGET_SPECS:
+        try:
+            region = world.get_region(region_name)
+        except KeyError:
+            # Landing region not present in this world's graph; skip it rather than
+            # crash, so a graph trim can't break the whole one-way shuffle.
+            logger.warning("ER: one-way target region '%s' (index 0x%X) not found; "
+                           "skipping.", region_name, index)
+            continue
+        forbidden = _FORBIDDEN_BY_REGION.get(region_name)
+        targets.append(_OneWayTarget(name, index, region, pool_type, forbidden))
     return targets
 
 
-def _match_one_way(world: "SohWorld", sources: list[_OneWaySource],
-                   targets: list[_OneWayTarget]) -> dict[_OneWaySource, _OneWayTarget] | None:
-    """Saturating bipartite matching of one-way sources onto unique targets.
-
-    A source may take a target only if the source can never deliver the player
-    there as the target's forbidden age. Targets outnumber sources, so Kuhn's
-    augmenting-path search (as in ``_find_matching``) easily saturates; randomness
-    comes from shuffling each source's candidate list and the source order."""
-    def compatible(src: "_OneWaySource", tgt: "_OneWayTarget") -> bool:
-        return tgt.forbidden is None or tgt.forbidden not in src.delivers
-
-    adj: dict[_OneWaySource, list[_OneWayTarget]] = {}
-    for src in sources:
-        cands = [t for t in targets if compatible(src, t)]
-        world.random.shuffle(cands)
-        adj[src] = cands
-
-    order = list(sources)
-    world.random.shuffle(order)
-    order.sort(key=lambda s: len(adj[s]))
-
-    match_target: dict[_OneWayTarget, _OneWaySource] = {}
-
-    def augment(src: "_OneWaySource", visited: set["_OneWayTarget"]) -> bool:
-        for tgt in adj[src]:
-            if tgt in visited:
-                continue
-            visited.add(tgt)
-            holder = match_target.get(tgt)
-            if holder is None or augment(holder, visited):
-                match_target[tgt] = src
-                return True
+def _one_way_compatible(src: "_OneWaySource", tgt: "_OneWayTarget") -> bool:
+    """Whether one-way source ``src`` may be sent to landing ``tgt``: the target's
+    entrance type must be valid for the source, the target must not be on the
+    source's exclusion list, and the source must never deliver the player there as
+    the target's forbidden age."""
+    if tgt.pool_type not in _ONE_WAY_TARGET_TYPES_BY_SOURCE[src.ship_type]:
         return False
+    if (src.ship_type == ENTRANCE_TYPE_OWL_DROP
+            and tgt.index in _OWL_EXCLUDED_TARGET_INDICES):
+        return False
+    return tgt.forbidden is None or tgt.forbidden not in src.delivers
 
-    for src in order:
-        if not augment(src, set()):
+
+@dataclass(frozen=True)
+class _OneWayRequirement:
+    """A landing region that must receive a one-way edge delivering the given ages,
+    or it (and everything downstream) would be unreachable after the shuffle."""
+    region: Regions
+    ages: frozenset
+
+
+def _one_way_requirements(world: "SohWorld",
+                          sources: list[_OneWaySource]) -> list[_OneWayRequirement]:
+    """Detect the load-bearing one-way landings for this seed.
+
+    Ship shuffles every entrance in one integrated assumed-fill, so a coupled pool
+    never silently leans on a vanilla one-way edge. This port shuffles pools
+    *sequentially* -- the coupled pools are validated with the one-way edges still at
+    vanilla, then the one-way pool runs last -- so a shuffled overworld/dungeon
+    layout can come to rely on a vanilla warp. (Desert Colossus, DMC and the
+    Graveyard warp pad have no non-warp access at all in this apworld's glitchless
+    logic; a shuffled overworld can route still more regions behind a warp.)
+
+    Rather than port Ship's static Bolero/Nocturne/Requiem priority table, we detect
+    the dependency directly and per seed: a landing that is reachable now (one-ways at
+    vanilla) but becomes unreachable, as an age it currently supports, once the
+    shuffled access-adding sources are detached, must be re-covered by the shuffle.
+    This subsumes Ship's three static priorities and also catches whatever extra
+    regions the coupled layout happened to route behind a warp. See DIVERGENCE #5.
+
+    The detection is a *cascade-aware fixpoint*, not a one-shot detach-all-and-list:
+    detaching every mover at once strands the whole warp-network cluster, so listing
+    each stranded region independently over-counts wildly (e.g. flags all 8 landings
+    as both-age requirements when only 6 both-age sources -- the warp songs -- exist,
+    making placement impossible). But covering one upstream landing restores the others
+    downstream of it (DMC, once a warp lands there, re-opens everything reachable from
+    DMC), so most stranded regions are not *independently* required. We therefore repeat
+    a max-cover step: among the regions still missing an age, simulate covering each
+    (a virtual root/spawn edge supplying exactly the lost ages) and keep the one that
+    restores the most others; commit it and recompute, until nothing is left missing.
+    The committed set is the minimal-ish set of landings that genuinely need a direct
+    source, and is bounded well under the source count.
+
+    Spawns are excluded from the analysis: they are the *start* edges (root reaches
+    the world through them), so detaching them would make everything unreachable, and
+    they only relocate the start -- whose validity is enforced by the age/time
+    invariants, not by landing coverage. Spawns are still eligible to *satisfy* a
+    requirement during placement."""
+    player = world.player
+    movers = [s for s in sources if s.ship_type != ENTRANCE_TYPE_SPAWN]
+    dests = {Regions(s.original_region.name) for s in movers}
+    if not dests:
+        return []
+
+    both = frozenset((Ages.CHILD, Ages.ADULT))
+    # A region that supplies exactly the given lost ages, to simulate coverage so the
+    # cascade through the overworld is captured (root supplies both ages; the single-age
+    # spawns supply one). Probing with only the lost ages avoids over-restoring.
+    cover_source = {
+        both: world.get_region(Regions.ROOT),
+        frozenset((Ages.CHILD,)): world.get_region(Regions.CHILD_SPAWN),
+        frozenset((Ages.ADULT,)): world.get_region(Regions.ADULT_SPAWN),
+    }
+
+    def reach_all() -> "dict[Regions, frozenset]":
+        st = world.get_pre_fill_state()
+        return {reg: frozenset(a for a in (Ages.CHILD, Ages.ADULT)
+                               if st._soh_can_reach_as_age(reg, a, player))
+                for reg in dests}
+
+    def add_cover(reg: Regions, ages: frozenset) -> "Entrance":
+        src = cover_source[ages]
+        region = world.get_region(reg)
+        return world.create_entrance(
+            src, region, True_(),
+            name=f"{_PROBE_PREFIX}cover {src.name} -> {region.name}")
+
+    def remove_cover(temp: "Entrance") -> None:
+        if temp.parent_region is not None and temp in temp.parent_region.exits:
+            temp.parent_region.exits.remove(temp)
+        if temp.connected_region is not None and temp in temp.connected_region.entrances:
+            temp.connected_region.entrances.remove(temp)
+
+    before = reach_all()
+    for s in movers:                        # detach (self-loop adds no access)
+        _reconnect(s.entrance, s.entrance.parent_region)
+
+    # Smallest cover-age-sets first: delivering a single age can be enough even when
+    # both were lost, because the cascade restores the rest (e.g. dropping CHILD onto a
+    # landing that gates the child route to the Temple of Time re-enables time travel, so
+    # ADULT comes back globally). A requirement should therefore demand only the age(s)
+    # that must be delivered DIRECTLY -- a single age a real owl/spawn can supply -- not
+    # the raw lost set, which would force a both-age warp where none is needed (or exists).
+    cover_choices = (frozenset((Ages.CHILD,)), frozenset((Ages.ADULT,)), both)
+
+    def minimal_cover(reg: Regions):
+        """Smallest deliverable cover that fully restores ``reg`` (cascade included),
+        with the reachability it yields. Falls back to a both-age cover."""
+        for ages in cover_choices:
+            temp = add_cover(reg, ages)
+            trial = reach_all()
+            remove_cover(temp)
+            if not (before[reg] - trial[reg]):
+                return ages, trial
+        return both, None
+
+    reqs: list[_OneWayRequirement] = []
+    committed: list["Entrance"] = []
+    try:
+        while True:
+            now = reach_all()
+            missing = {reg: lost for reg in dests
+                       if (lost := before[reg] - now[reg])}
+            if not missing:
+                break
+            # Max-cover: for each still-missing region compute its minimal deliverable
+            # cover, then keep the one that (re)satisfies the most missing regions,
+            # breaking ties toward the smaller cover. Stable order for determinism.
+            best = None  # (satisfied, -cover_size, name, reg, ages)
+            for cand in sorted(missing, key=lambda r: r.name):
+                ages, trial = minimal_cover(cand)
+                satisfied = (sum(1 for reg in missing if not (before[reg] - trial[reg]))
+                             if trial is not None else 0)
+                key = (satisfied, -len(ages), cand.name)
+                if best is None or key > best[0]:
+                    best = (key, cand, ages)
+            _, best_reg, best_ages = best
+            reqs.append(_OneWayRequirement(best_reg, best_ages))
+            committed.append(add_cover(best_reg, best_ages))
+    finally:
+        for temp in committed:
+            remove_cover(temp)
+        for s in movers:                    # restore to vanilla
+            _reconnect(s.entrance, s.original_region)
+    return reqs
+
+
+def _place_priorities(world: "SohWorld", sources: list[_OneWaySource],
+                      targets: list[_OneWayTarget],
+                      requirements: list[_OneWayRequirement],
+                      ) -> "dict[_OneWaySource, _OneWayTarget] | None":
+    """Force a source that delivers the required ages into each load-bearing landing
+    (our analogue of Ship's ``PlaceOneWayPriorityEntrance``). Returns the forced
+    source->target map, or ``None`` if a requirement can't be satisfied with the
+    available sources (the caller re-rolls)."""
+    forced: dict[_OneWaySource, _OneWayTarget] = {}
+    used_indices: set[int] = set()
+    # Prefer warp songs to satisfy a requirement, then owl drops, then spawns last:
+    # a warp gives safe both-age access, an owl is pure access (a flight), but a spawn
+    # *relocates the start* to that region -- forcing e.g. the child spawn onto DMC
+    # Central would make the player start there and fail the start invariants, which
+    # would then reject every other placement. Hardest (both-age) requirements first.
+    _src_pref = {ENTRANCE_TYPE_WARP_SONG: 0, ENTRANCE_TYPE_OWL_DROP: 1,
+                 ENTRANCE_TYPE_SPAWN: 2}
+    for req in sorted(requirements, key=lambda r: -len(r.ages)):
+        cand_sources = [s for s in sources
+                        if s not in forced and req.ages <= s.delivers]
+        world.random.shuffle(cand_sources)
+        cand_sources.sort(key=lambda s: _src_pref[s.ship_type])
+        placed = False
+        for src in cand_sources:
+            cand_targets = [t for t in targets
+                            if t.index not in used_indices
+                            and t.region.name == req.region.value
+                            and _one_way_compatible(src, t)]
+            if cand_targets:
+                tgt = world.random.choice(cand_targets)
+                forced[src] = tgt
+                used_indices.add(tgt.index)
+                placed = True
+                break
+        if not placed:
             return None
-
-    return {src: tgt for tgt, src in match_target.items()}
+    return forced
 
 
 def _shuffle_one_way(world: "SohWorld",
                      entries: list[OneWayDef]) -> list[dict[str, int]]:
     """Shuffle the given one-way sources onto unique landings; return overrides.
 
-    All enabled one-way pools are shuffled together (one combined matching) so a
-    landing consumed by one source can't be reused by another, mirroring Ship's
-    cross-pool target consumption. Mutates the graph in place and validates with
-    the global age/time invariants enabled."""
+    All enabled one-way pools are shuffled together (one landing is consumed at most
+    once across them, mirroring Ship's cross-pool target consumption). Each attempt
+    forces the load-bearing landings first (see ``_place_priorities``), then places
+    the remaining sources greedily with a per-placement reachability check -- like
+    Ship's assumed-reachability fill, this prunes a bad branch (e.g. a spawn dropped
+    somewhere the start invariants fail) the moment it is taken, instead of rolling a
+    whole matching and discovering the failure only at the end. A final full
+    validation (global age/time invariants on) guards the assembled result."""
     sources = _build_one_way_sources(world, entries)
     if not sources:
         return []
     targets = _build_one_way_targets(world)
+    requirements = _one_way_requirements(world, sources)
 
     def restore() -> None:
         for src in sources:
             _reconnect(src.entrance, src.original_region)
 
     for _ in range(MAX_SHUFFLE_ATTEMPTS):
-        matching = _match_one_way(world, sources, targets)
-        if matching is None:
+        forced = _place_priorities(world, sources, targets, requirements)
+        if forced is None:
             restore()
             raise RuntimeError(
-                f"SoH ER: no age-compatible one-way entrance matching exists for "
-                f"player {world.player}.")
-        for src, tgt in matching.items():
+                f"SoH ER: cannot satisfy a required one-way landing for player "
+                f"{world.player} (no eligible source).")
+
+        placement = dict(forced)
+        used_indices = {t.index for t in forced.values()}
+        for src, tgt in forced.items():
             _reconnect(src.entrance, tgt.region)
-        if _seed_is_valid(world, check_other_access=True):
+
+        # Greedily place the rest: for each source, take the first random candidate
+        # landing that keeps the world valid (other unplaced sources sit at vanilla,
+        # so the graph stays complete and the check is real at every step).
+        rest = [s for s in sources if s not in forced]
+        world.random.shuffle(rest)
+        stuck = False
+        for src in rest:
+            cands = [t for t in targets if t.index not in used_indices
+                     and _one_way_compatible(src, t)]
+            world.random.shuffle(cands)
+            chosen = None
+            for tgt in cands:
+                _reconnect(src.entrance, tgt.region)
+                if _seed_is_valid(world, check_other_access=True):
+                    chosen = tgt
+                    break
+            if chosen is None:
+                _reconnect(src.entrance, src.original_region)
+                stuck = True
+                break
+            placement[src] = chosen
+            used_indices.add(chosen.index)
+
+        if not stuck and _seed_is_valid(world, check_other_access=True):
             logger.debug("ER: shuffled %d one-way entrances for player %d",
                          len(sources), world.player)
             return [{
@@ -1478,7 +1918,7 @@ def _shuffle_one_way(world: "SohWorld",
                 "destination": _ONE_WAY_NO_DEST,
                 "override": tgt.index,
                 "overrideDestination": _ONE_WAY_NO_DEST,
-            } for src, tgt in matching.items()]
+            } for src, tgt in placement.items()]
         restore()
 
     raise RuntimeError(
@@ -1497,58 +1937,101 @@ def shuffle_entrances(world: "SohWorld") -> None:
     overrides: list[dict[str, int]] = []
     opts = world.options
 
+    # --- Resolve the coupled pools eligible for mixing (dungeon, overworld,
+    # interior, grotto). Boss (REVERSE_DEADEND) and Thieves' Hideout (REVERSE_KEEP)
+    # are never mixed -- their AP reverse handling isn't coupled (DIVERGENCE #MIX).
     dungeon_opt = opts.shuffle_dungeon_entrances.value
-    if dungeon_opt != opts.shuffle_dungeon_entrances.option_off:
-        table = list(DUNGEON_ENTRANCES)
-        if dungeon_opt == opts.shuffle_dungeon_entrances.option_on_plus_ganon:
-            table.append(GANON_ENTRANCE)
-        # Dungeons/bosses gate other regions, so needs must be computed per-edge.
-        overrides += _shuffle_pool(world, "dungeon", table, REVERSE_COUPLE,
+    dungeon_on = dungeon_opt != opts.shuffle_dungeon_entrances.option_off
+    dungeon_table = list(DUNGEON_ENTRANCES) if dungeon_on else []
+    if dungeon_on and dungeon_opt == opts.shuffle_dungeon_entrances.option_on_plus_ganon:
+        dungeon_table.append(GANON_ENTRANCE)
+
+    interior_opt = opts.shuffle_interior_entrances.value
+    interior_on = (interior_opt != opts.shuffle_interior_entrances.option_off
+                   and bool(INTERIOR_ENTRANCES))
+    interior_all = interior_opt == opts.shuffle_interior_entrances.option_all
+    interior_table = list(INTERIOR_ENTRANCES) if interior_on else []
+    if interior_on and interior_all:
+        interior_table += SPECIAL_INTERIOR_ENTRANCES
+
+    overworld_on = bool(opts.shuffle_overworld_entrances.value) and bool(OVERWORLD_ENTRANCES)
+    grotto_on = bool(opts.shuffle_grotto_entrances.value) and bool(GROTTO_ENTRANCES)
+
+    # A pool joins the mix only if it is shuffled AND its mix flag is on. Ship turns
+    # mixing off entirely when fewer than two pools are selected.
+    mixed: set[str] = set()
+    if opts.mixed_entrance_pools.value:
+        if dungeon_on and opts.mix_dungeon_entrances.value:
+            mixed.add("dungeon")
+        if overworld_on and opts.mix_overworld_entrances.value:
+            mixed.add("overworld")
+        if interior_on and opts.mix_interior_entrances.value:
+            mixed.add("interior")
+        if grotto_on and opts.mix_grotto_entrances.value:
+            mixed.add("grotto")
+        if len(mixed) < 2:
+            mixed.clear()
+
+    # Pool order is chosen so the overworld backbone is placed before interior doors
+    # (DIVERGENCE-free convergence rule: interior-"all" relocates the Temple of Time
+    # door, and pinning it before the overworld layout deadlocks the matcher -- see
+    # the overworld notes). Whether a pool is mixed or separate, overworld/the mix is
+    # resolved before the separate interior pool; boss/thieves/one-way come last.
+
+    # 1) Dungeon (separate). Dungeons gate other regions -> per-edge needs.
+    if dungeon_on and "dungeon" not in mixed:
+        overrides += _shuffle_pool(world, "dungeon", dungeon_table, REVERSE_COUPLE,
                                    dead_end_targets=False)
 
-    if opts.shuffle_boss_entrances.value:
-        overrides += _shuffle_pool(world, "boss", BOSS_ENTRANCES, REVERSE_DEADEND,
-                                   dead_end_targets=False)
-
-    # Overworld entrances are coupled but NOT dead ends (every area leads onward),
-    # so -- like the "all" interior pool -- they use per-edge needs and the global
-    # age/time invariants (check_other_access); the validation gate + retry absorbs
-    # the cap-stability slack the pass-throughs introduce.
-    #
-    # ORDER MATTERS: the overworld backbone is shuffled BEFORE interiors/grottos so
-    # those (mostly dead-end) pools hang off the final overworld layout. The reverse
-    # order deadlocks: interior-"all" relocates the Temple of Time door, and if it is
-    # pinned first, few/no overworld arrangements can keep ToT item-less-reachable as
-    # both ages (Ship's sphere-zero invariant), so the overworld matcher can't
-    # converge. With overworld first, interiors validate against the fixed backbone.
-    if opts.shuffle_overworld_entrances.value and OVERWORLD_ENTRANCES:
+    # 2) Overworld (separate) -- the backbone, before interiors/grottos.
+    if overworld_on and "overworld" not in mixed:
         overrides += _shuffle_pool(world, "overworld", OVERWORLD_ENTRANCES,
                                    REVERSE_COUPLE, dead_end_targets=False,
                                    check_other_access=True)
 
-    # Interiors. "Simple" shuffles the dead-end houses/shops among themselves (fast
-    # batched needs). "All" mixes in the special/linked interiors (Ship's behavior),
-    # which include pass-throughs -> per-edge needs + the global age/time invariants.
-    interior_opt = opts.shuffle_interior_entrances.value
-    if interior_opt != opts.shuffle_interior_entrances.option_off and INTERIOR_ENTRANCES:
-        if interior_opt == opts.shuffle_interior_entrances.option_all:
-            overrides += _shuffle_pool(
-                world, "interior+special",
-                INTERIOR_ENTRANCES + SPECIAL_INTERIOR_ENTRANCES,
-                REVERSE_COUPLE, dead_end_targets=False, check_other_access=True)
+    # 3) Mixed pool: the selected coupled pools shuffled together as one. All are
+    # REVERSE_COUPLE; the combined pool uses per-edge needs and the global age/time
+    # invariants (superset of the members' requirements).
+    if mixed:
+        combined: list[EntranceDef] = []
+        if "dungeon" in mixed:
+            combined += dungeon_table
+        if "overworld" in mixed:
+            combined += list(OVERWORLD_ENTRANCES)
+        if "interior" in mixed:
+            combined += interior_table
+        if "grotto" in mixed:
+            combined += list(GROTTO_ENTRANCES)
+        overrides += _shuffle_pool(world, "mixed", combined, REVERSE_COUPLE,
+                                   dead_end_targets=False, check_other_access=True)
+
+    # 4) Interior (separate). "Simple" = dead-end houses/shops (fast batched needs);
+    # "All" mixes in the special/linked interiors (pass-throughs -> per-edge needs +
+    # invariants).
+    if interior_on and "interior" not in mixed:
+        if interior_all:
+            overrides += _shuffle_pool(world, "interior+special", interior_table,
+                                       REVERSE_COUPLE, dead_end_targets=False,
+                                       check_other_access=True)
         else:
-            overrides += _shuffle_pool(world, "interior", INTERIOR_ENTRANCES,
+            overrides += _shuffle_pool(world, "interior", interior_table,
                                        REVERSE_COUPLE, dead_end_targets=True)
 
-    if opts.shuffle_grotto_entrances.value and GROTTO_ENTRANCES:
+    # 5) Grotto (separate).
+    if grotto_on and "grotto" not in mixed:
         overrides += _shuffle_pool(world, "grotto", GROTTO_ENTRANCES,
                                    REVERSE_COUPLE, dead_end_targets=True)
 
-    # Thieves' Hideout: forward-only (REVERSE_KEEP) -- the AP hideout reverse edges
-    # are a simplified maze that doesn't mirror Ship's pairs (DIVERGENCE #TH). Cells
-    # gate the carpenters -> Gerudo card -> wasteland/GTG, so they are NOT dead ends
-    # (per-edge needs). check_other_access=True mirrors Ship including thieves hideout
-    # in its checkOtherEntranceAccess set.
+    # 6) Boss (never mixed). Runs after dungeons so boss caps reflect the final
+    # dungeon placement (whether dungeons were shuffled separately or in the mix).
+    if opts.shuffle_boss_entrances.value:
+        overrides += _shuffle_pool(world, "boss", BOSS_ENTRANCES, REVERSE_DEADEND,
+                                   dead_end_targets=False)
+
+    # 7) Thieves' Hideout (never mixed): forward-only (REVERSE_KEEP) -- the AP hideout
+    # reverse edges are a simplified maze that doesn't mirror Ship's pairs
+    # (DIVERGENCE #TH). Cells gate the carpenters -> Gerudo card -> wasteland/GTG, so
+    # they are NOT dead ends. check_other_access=True mirrors Ship.
     if opts.shuffle_thieves_hideout_entrances.value and THIEVES_HIDEOUT_ENTRANCES:
         overrides += _shuffle_pool(world, "thieves hideout", THIEVES_HIDEOUT_ENTRANCES,
                                    REVERSE_KEEP, dead_end_targets=False,
