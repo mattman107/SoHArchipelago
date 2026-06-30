@@ -34,6 +34,7 @@ from typing import TYPE_CHECKING
 from .Enums import Regions, Ages, Events
 from rule_builder.rules import True_
 from BaseClasses import CollectionState
+from Fill import fill_restrictive
 
 if TYPE_CHECKING:
     from . import SohWorld
@@ -170,6 +171,25 @@ logger = logging.getLogger("SOH_OOT.ER")
 #     governs item placement, not the entrance graph. Without this, an earlier pool can
 #     strand a region under ``minimal`` and a later pool's doorway there gets an empty
 #     age-cap -> matcher infeasible (see ``_seed_is_valid``).
+#
+# #8  ITEM-FILLABILITY GATE. The per-pool checks are all all-items (optimistic): they
+#     grant every item at once, so they miss a *progressive* fill deadlock -- a layout
+#     reachable only when you already hold everything (a pre-filled item whose RESTRICTED
+#     home location, e.g. a dungeon reward / song / small key, is stranded; a shuffled
+#     spawn stranding the start age under closed/song Door of Time). Such layouts pass
+#     every per-pool check yet make real fill raise. Ship never hits this because it
+#     assumed-fills items and entrances together; our pools run before fill. So
+#     ``shuffle_entrances`` snapshots the vanilla graph, runs all pools, then trial-runs
+#     the real pre_fill + an assumed fill (``_trial_fill_accessible``); on failure it
+#     restores the graph and re-rolls the whole shuffle. Only the check_other_access
+#     pools can trigger this, so plain dead-end shuffles skip the gate. The trial is
+#     fully undone, so the pipeline's own later pre_fill is unaffected. The gate accepts
+#     via the multiworld's own ``fulfills_accessibility``, so it honours each seed's
+#     accessibility (under ``minimal`` only the goal must be reachable). A per-pool
+#     progressive *heuristic* was tried and removed: a bootstrap deadlock is a property
+#     of the whole layout, so a single pool can't fix one a prior pool created, and the
+#     capacity estimate produced false negatives -> spurious hard fails. This accurate
+#     global trial supersedes it.
 # ===========================================================================
 
 
@@ -208,6 +228,15 @@ def _grotto_exit(offset: int) -> int:
 # age-compatibility constraints already guarantee full reachability, so the final
 # validation is a safety net and this is essentially never exhausted.
 MAX_SHUFFLE_ATTEMPTS = 50
+
+
+class _OneWayInfeasible(RuntimeError):
+    """A one-way (spawn/warp/owl) layout can't be satisfied for the *current* coupled
+    layout -- a load-bearing landing has no deliverable cover, or no source is left to
+    cover a required landing. Raised by the one-way pool and caught by ``shuffle_entrances``
+    as a signal to re-roll the WHOLE shuffle (a fresh coupled layout typically lifts the
+    dependency), rather than hard-failing generation."""
+
 
 # How a pool's reverse (inside -> outside) edges are handled in the AP graph:
 #   "couple"  - reconnect them so they mirror the forward shuffle (true two-way).
@@ -759,7 +788,7 @@ def _restore_forwards(forwards: list[_Edge], reverse_mode: str) -> None:
 def _compute_caps(world: "SohWorld",
                   forwards: list[_Edge]) -> dict[_Edge, frozenset]:
     """For each doorway, the set of ages that can reach its (current) interior."""
-    state = world.get_pre_fill_state()
+    state = _er_pre_fill_state(world)
     caps: dict[_Edge, frozenset] = {}
     for fwd in forwards:
         region_enum = Regions(fwd.fwd_original_region.name)
@@ -846,13 +875,47 @@ def _probe_entrance_name(src_region: "Region", interior: "Region") -> str:
     return f"{_PROBE_PREFIX}{src_region.name} -> {interior.name}"
 
 
-def _reachable_location_names(world: "SohWorld") -> set[str]:
-    state = world.get_pre_fill_state()
-    return {loc.name for loc in world.get_locations() if loc.can_reach(state)}
+def _er_pre_fill_state(world: "SohWorld") -> "CollectionState":
+    """``world.get_pre_fill_state()`` for the current graph, reusing a cached base.
+
+    The collected-item half of ``get_pre_fill_state`` (collect every pool item, ~700)
+    is identical no matter how the entrance graph is wired -- only the sweep depends on
+    topology. Entrance shuffling probes reachability hundreds of times (per-edge needs,
+    every ``_seed_is_valid``/one-way/cap call), so re-collecting the pool each time is
+    ER's single dominant cost. We build an UNSWEPT all-items base once per
+    ``shuffle_entrances`` (item_pool/pre_fill_pool are stable throughout -- the trial fill
+    mutates them but restores before any further reachability call) and copy+sweep it.
+    Verified to give reachability identical to a fresh ``get_pre_fill_state`` even under a
+    rewired probe graph: the base is unswept, so it carries no topology-specific (stale)
+    rule cache, and the per-copy sweep re-derives reachability for whatever graph is live.
+    Falls back to a fresh build if no cache is active (e.g. called outside shuffling)."""
+    base = getattr(world, "_er_base_state", None)
+    if base is None:
+        return world.get_pre_fill_state()
+    state = base.copy()
+    state.sweep_for_advancements(world._er_locations)
+    return state
 
 
-def _probe_interior(world: "SohWorld", fwd: "_Edge",
-                    source: Regions) -> set[str]:
+def _er_begin_cache(world: "SohWorld") -> None:
+    """Build the cached all-items base + location list for the shuffle (see
+    :func:`_er_pre_fill_state`). Idempotent within one shuffle."""
+    state = CollectionState(world.multiworld)
+    for item in world.item_pool:
+        state.collect(item, True)
+    for name in world.pre_fill_pool:
+        state.collect(world.create_item(name), True)
+    world._er_base_state = state
+    world._er_locations = list(world.multiworld.get_locations(world.player))
+
+
+def _er_end_cache(world: "SohWorld") -> None:
+    """Drop the cached base so a later genuine ``get_pre_fill_state`` (real fill) is fresh."""
+    world.__dict__.pop("_er_base_state", None)
+    world.__dict__.pop("_er_locations", None)
+
+
+def _probe_interior(world: "SohWorld", fwd: "_Edge", source: Regions) -> set[str]:
     """Reachable locations when ``fwd``'s interior is entered only via ``source``.
 
     Temporarily disconnects the doorway and wires ``source -> interior`` (with a
@@ -870,7 +933,8 @@ def _probe_interior(world: "SohWorld", fwd: "_Edge",
     temp = world.create_entrance(src_region, interior, True_(),
                                  name=_probe_entrance_name(src_region, interior))
     try:
-        return _reachable_location_names(world)
+        state = _er_pre_fill_state(world)
+        return {loc.name for loc in world.get_locations() if loc.can_reach(state)}
     finally:
         if temp in src_region.exits:
             src_region.exits.remove(temp)
@@ -942,7 +1006,7 @@ def _compute_needs(world: "SohWorld",
                                        name=_probe_entrance_name(src_region, interior))
                  for interior in interiors]
         try:
-            state = world.get_pre_fill_state()
+            state = _er_pre_fill_state(world)
             return {name for name in owner if loc_by_name[name].can_reach(state)}
         finally:
             for interior, temp in zip(interiors, temps):
@@ -1123,7 +1187,7 @@ def _world_age_invariants_hold(world: "SohWorld") -> bool:
                for r in starts for age in (Ages.CHILD, Ages.ADULT)):
         return False
 
-    full = world.get_pre_fill_state()
+    full = _er_pre_fill_state(world)
 
     # 2) Time must be passable as BOTH ages (with the items the player will collect),
     #    or day/night-gated checks could become permanently inaccessible.
@@ -1167,7 +1231,7 @@ def _seed_is_valid(world: "SohWorld", check_other_access: bool = False) -> bool:
     if completion is None:
         # true_no_logic (or no goal set): logic is bypassed, nothing to verify.
         return True
-    state = world.get_pre_fill_state()
+    state = _er_pre_fill_state(world)
     if not completion(state):
         return False
     if not _age_exits_are_safe(world, state):
@@ -1177,59 +1241,15 @@ def _seed_is_valid(world: "SohWorld", check_other_access: bool = False) -> bool:
     # Entrance connectivity: every location reachable with all items (see docstring).
     if not all(loc.can_reach(state) for loc in world.get_locations()):
         return False
-    # Pools that move the start / age access (spawns, overworld, warps) can pass every
-    # all-items check above yet leave no valid BOOTSTRAP: with all items granted up
-    # front, a shuffled spawn that strands the starting age in a tiny pocket still looks
-    # fully connected. Confirm a progressive (assumed-fill) collection order exists.
-    # Run last -- it is the most expensive check, so it only fires on layouts that have
-    # already passed everything cheaper.
-    if check_other_access and not _assumed_progressive_beatable(world):
-        return False
+    # NOTE: progressive (assumed-fill) BOOTSTRAP soundness -- that an item collection
+    # order exists out of the start under closed/song Door of Time -- is NOT checked
+    # here. It is a property of the whole layout, not of any single pool, so a per-pool
+    # heuristic both rejected valid layouts (a cumulative deadlock a later pool cannot
+    # fix -> hard fail) and was redundant with the accurate global gate. The real
+    # `world.pre_fill()` + assumed fill in `_trial_fill_accessible` (run once per
+    # candidate layout in `shuffle_entrances`, with a global re-roll) is the sound,
+    # non-heuristic bootstrap check.
     return True
-
-
-def _assumed_progressive_beatable(world: "SohWorld") -> bool:
-    """Progressive (assumed-fill) beatability: can the goal be reached by collecting
-    the item pool sphere by sphere from an EMPTY start, rather than all-at-once?
-
-    ``get_pre_fill_state`` grants every item up front, so its reachability is optimistic
-    and blind to bootstrap deadlocks -- where the items needed to expand out of the
-    starting region are themselves only reachable past that expansion. OoT's age/time
-    cycle makes these real: a shuffled spawn can strand the starting age in a pocket
-    with too few reachable locations to hold the progression that would open the rest,
-    and closed/song Door of Time means the other age is gated behind items you must
-    first collect as this age. This mirrors Ship's progressive ValidateEntrances search.
-
-    Capacity model: an item may be collected once a reachable location exists to hold it;
-    items are fungible, so only the *count* of reachable locations bounds each sphere
-    (``free = reachable - placed``). Pre-fill items (dungeon rewards, songs, keys) are
-    treated as placeable in any reachable location -- an over-estimate of their freedom
-    that keeps the check from rejecting valid layouts while still catching gross strands
-    (where the reachable pocket is simply too small). Events are collected automatically
-    by the sweep, so age unlocks (Time Travel) fall out in the correct sphere."""
-    mw = world.multiworld
-    player = world.player
-    locations = list(mw.get_locations(player))
-    pool = [it for it in world.item_pool if it.advancement]
-    pool += [it for it in (world.create_item(name) for name in world.pre_fill_pool)
-             if it.advancement]
-    state = CollectionState(mw)
-    placed = 0
-    idx = 0
-    n = len(pool)
-    while idx < n:
-        state.sweep_for_advancements(locations)
-        reachable = sum(1 for loc in locations if loc.can_reach(state))
-        free = reachable - placed
-        if free <= 0:
-            return False  # no reachable room left to bootstrap further
-        take = min(free, n - idx)
-        for j in range(idx, idx + take):
-            state.collect(pool[j], True)
-        idx += take
-        placed += take
-    state.sweep_for_advancements(locations)
-    return mw.has_beaten_game(state, player)
 
 
 def _build_slot_data(forwards: list[_Edge],
@@ -1740,7 +1760,7 @@ def _one_way_requirements(world: "SohWorld",
     }
 
     def reach_all() -> "dict[Regions, frozenset]":
-        st = world.get_pre_fill_state()
+        st = _er_pre_fill_state(world)
         return {reg: frozenset(a for a in (Ages.CHILD, Ages.ADULT)
                                if st._soh_can_reach_as_age(reg, a, player))
                 for reg in dests}
@@ -1770,16 +1790,31 @@ def _one_way_requirements(world: "SohWorld",
     # the raw lost set, which would force a both-age warp where none is needed (or exists).
     cover_choices = (frozenset((Ages.CHILD,)), frozenset((Ages.ADULT,)), both)
 
+    # A cover is only useful if some actual source can deliver it: owls/single spawns
+    # supply one age, warp songs both. Requiring (or scoring) an age-set no source can
+    # deliver -- e.g. a both-age cover with no warp enabled -- makes the matcher hard-fail
+    # on a landing that a *deliverable* cover elsewhere would have fixed via cascade (a
+    # landing reachable as both ages only because a single load-bearing owl also gated the
+    # child->Temple-of-Time time-travel chain: cover the gateway as CHILD and ADULT returns
+    # everywhere, including that landing, by the normal age route).
+    deliver_caps = [s.delivers for s in sources]
+
+    def deliverable(ages: frozenset) -> bool:
+        return any(ages <= cap for cap in deliver_caps)
+
     def minimal_cover(reg: Regions):
-        """Smallest deliverable cover that fully restores ``reg`` (cascade included),
-        with the reachability it yields. Falls back to a both-age cover."""
+        """Smallest DELIVERABLE cover that fully restores ``reg`` (cascade included), with
+        the reachability it yields, or ``(None, None)`` if no deliverable cover restores it
+        (it must instead be fixed by covering another region whose cascade reaches it)."""
         for ages in cover_choices:
+            if not deliverable(ages):
+                continue
             temp = add_cover(reg, ages)
             trial = reach_all()
             remove_cover(temp)
             if not (before[reg] - trial[reg]):
                 return ages, trial
-        return both, None
+        return None, None
 
     reqs: list[_OneWayRequirement] = []
     committed: list["Entrance"] = []
@@ -1792,15 +1827,25 @@ def _one_way_requirements(world: "SohWorld",
                 break
             # Max-cover: for each still-missing region compute its minimal deliverable
             # cover, then keep the one that (re)satisfies the most missing regions,
-            # breaking ties toward the smaller cover. Stable order for determinism.
+            # breaking ties toward the smaller cover. Stable order for determinism. A
+            # region with no deliverable cover is skipped here -- covering another region
+            # (committed below) may restore it by cascade on a later pass.
             best = None  # (satisfied, -cover_size, name, reg, ages)
             for cand in sorted(missing, key=lambda r: r.name):
                 ages, trial = minimal_cover(cand)
-                satisfied = (sum(1 for reg in missing if not (before[reg] - trial[reg]))
-                             if trial is not None else 0)
+                if ages is None:
+                    continue
+                satisfied = sum(1 for reg in missing if not (before[reg] - trial[reg]))
                 key = (satisfied, -len(ages), cand.name)
                 if best is None or key > best[0]:
                     best = (key, cand, ages)
+            if best is None:
+                # Regions still missing but none has a deliverable cover and no cascade
+                # reaches them: this coupled (overworld/dungeon) layout can't be made
+                # consistent with the available one-way sources. Re-roll the whole shuffle.
+                raise _OneWayInfeasible(
+                    f"one-way landings {[r.name for r in missing]} have no deliverable "
+                    f"cover for player {world.player}")
             _, best_reg, best_ages = best
             reqs.append(_OneWayRequirement(best_reg, best_ages))
             committed.append(add_cover(best_reg, best_ages))
@@ -1877,7 +1922,7 @@ def _shuffle_one_way(world: "SohWorld",
         forced = _place_priorities(world, sources, targets, requirements)
         if forced is None:
             restore()
-            raise RuntimeError(
+            raise _OneWayInfeasible(
                 f"SoH ER: cannot satisfy a required one-way landing for player "
                 f"{world.player} (no eligible source).")
 
@@ -1926,14 +1971,197 @@ def _shuffle_one_way(world: "SohWorld",
         f"{world.player} after {MAX_SHUFFLE_ATTEMPTS} attempts.")
 
 
-def shuffle_entrances(world: "SohWorld") -> None:
-    """Run every enabled entrance pool and stash slot-data overrides on the world.
+# Global re-roll budget for the item-fillability gate (see shuffle_entrances). A whole
+# re-shuffle is cheap relative to a failed Generate, and fillable layouts dominate, so a
+# small budget suffices; exceeding it raises rather than emitting an unfillable layout.
+MAX_FILL_REROLLS = 12
 
-    Call this from ``set_rules`` (after the region graph, rules and item pool
+# A single trial fill is RNG-flaky: pre_fill and the assumed fill both draw randomly, so a
+# layout that is only *occasionally* fillable can pass one trial by luck and then fail the
+# real (single-draw) fill -- the exact greedy-fill gap that let unfillable layouts ship.
+# Requiring N independent trial passes (short-circuited on the first failure) makes the gate
+# accept only ROBUSTLY-fillable layouts: a layout fillable with probability p passes only
+# p**N of the time, so fragile layouts are re-rolled away while a solidly-fillable one (p~1)
+# still passes cheaply. Higher N -> lower residual fail rate, at ~N trial fills per shipped
+# layout. (Re-rolled candidates usually fail the FIRST trial, so they stay cheap.)
+TRIAL_FILL_CONFIRMATIONS = 2
+
+
+def _snapshot_graph(world: "SohWorld") -> list[tuple["Entrance", "Region | None"]]:
+    """Record every entrance's vanilla connection so the whole shuffle can be undone.
+
+    Taken before any pool runs (so every entrance is still in its parent's ``exits``);
+    pools repoint ``connected_region``, move entrances between ``entrances`` lists and
+    ``_disconnect`` boss reverses out of ``exits`` entirely -- :func:`_restore_graph`
+    reverses all three."""
+    return [(ent, ent.connected_region)
+            for region in world.multiworld.get_regions(world.player)
+            for ent in region.exits]
+
+
+def _restore_graph(world: "SohWorld",
+                   snapshot: list[tuple["Entrance", "Region | None"]]) -> None:
+    """Reset the entrance graph to the vanilla connections captured by
+    :func:`_snapshot_graph`, so a fresh re-shuffle starts from a clean slate."""
+    for ent, conn in snapshot:
+        cur = ent.connected_region
+        if cur is not None and ent in cur.entrances:
+            cur.entrances.remove(ent)
+        ent.connected_region = conn
+        if conn is not None and ent not in conn.entrances:
+            conn.entrances.append(ent)
+        if ent not in ent.parent_region.exits:   # boss reverse was _disconnect'd
+            ent.parent_region.exits.append(ent)
+
+
+def _trial_fill_accessible(world: "SohWorld") -> bool:
+    """Whether this player's items can actually be filled into the shuffled graph: a
+    throwaway run of the real pre_fill + an assumed fill of the rest, then fully undone.
+
+    The all-items checks in :func:`_seed_is_valid` are optimistic -- they grant every
+    item at once, so they cannot see a *progressive* fill deadlock: a layout reachable
+    only when you already hold everything, e.g. a pre-filled item (a dungeon reward, a
+    song, a small key) whose RESTRICTED home location is stranded, or a shuffled spawn
+    that strands the starting age. Such layouts pass every cheap check yet make real fill
+    raise (``Could not access required locations`` / ``No more spots to place items``).
+    Ship avoids this by integrating entrance and item assumed-fill; our pools run before
+    fill, so we predict it by actually filling once and re-rolling the whole shuffle on
+    failure.
+
+    Runs ``world.pre_fill`` (placing rewards/songs/keys/shop items with their real
+    restrictions -- the cheaper variants of this check, which skip them or place them
+    anywhere, both give wrong answers) then assumed-fills the remaining progression. It
+    runs during ``connect_entrances``, BEFORE the pipeline's own ``pre_fill`` step, so
+    this is pre_fill's first call; everything it mutates is snapshotted and restored, so
+    the pipeline's later real pre_fill is unaffected (verified: trial-then-real is clean).
+    Single-player because ER runs per player before the others have connected."""
+    mw = world.multiworld
+    player = world.player
+    # Snapshot all fill-relevant state, then restore it in `finally`. We capture
+    # `locked` as well as `item`: `world.pre_fill()` locks the locations it fills
+    # (fill_restrictive(lock=True)), and if we only restored `item` those locations
+    # would stay `locked` -- excluded from the next trial's candidate locations and,
+    # worse, left locked-but-empty for the pipeline's real pre_fill/fill, which then
+    # overflows. Locked state must be rewound exactly like item placement.
+    saved_items = {loc: (loc.item, loc.locked) for loc in mw.get_locations(player)}
+    saved_item_pool = list(world.item_pool)
+    # `world.pre_fill()` -> fill_shop_items -> run_prefill can strand shop items it
+    # cannot place (an unreachable shop slot under this layout) and dump them back via
+    # add_items_to_item_pool_list, which appends to BOTH world.item_pool AND
+    # mw.itempool. Restoring only world.item_pool would leave those stray shop items
+    # (event items, code None) in the real fill's mw.itempool -> overflow and a shop
+    # item placed at a non-shop location (write_multidata asserts code/address agree).
+    saved_mw_itempool = list(mw.itempool)
+    saved_pre_fill_pool = list(world.pre_fill_pool)
+    saved_preplaced = list(world.preplaced_items)
+    saved_reserved = list(world.reserved_pre_fill_locations)
+    saved_completion = mw.completion_condition.get(player)
+    try:
+        world.pre_fill()
+        locations = [loc for loc in mw.get_unfilled_locations(player) if not loc.locked]
+        items = [it for it in world.item_pool if it.advancement]
+        world.random.shuffle(locations)
+        world.random.shuffle(items)
+        fill_restrictive(mw, CollectionState(mw), locations, items,
+                         single_player_placement=True, swap=True, allow_partial=True,
+                         name="SOH_ER_trial")
+        if items:
+            return False  # overflow: some progression could not be placed
+        # Accept iff the real fill's own gate would: beatable AND every location the
+        # world's accessibility option requires is reachable. Using the multiworld's
+        # `fulfills_accessibility` (rather than a hand-rolled "all advancement
+        # reachable") keeps the trial faithful to each accessibility setting -- under
+        # `minimal` only the goal must be reachable, so demanding every advancement
+        # location would spuriously reject perfectly fillable minimal layouts. It
+        # raises FillError under `__debug__` when unsatisfiable, caught below as False.
+        return mw.fulfills_accessibility(CollectionState(mw))
+    except Exception:
+        return False
+    finally:
+        for loc, (item, locked) in saved_items.items():
+            if loc.item is not item:
+                if loc.item is not None:
+                    loc.item.location = None
+                loc.item = item
+                if item is not None:
+                    item.location = loc
+            loc.locked = locked
+        world.item_pool[:] = saved_item_pool
+        mw.itempool[:] = saved_mw_itempool
+        world.pre_fill_pool[:] = saved_pre_fill_pool
+        world.preplaced_items[:] = saved_preplaced
+        world.reserved_pre_fill_locations[:] = saved_reserved
+        mw.completion_condition[player] = saved_completion
+
+
+def shuffle_entrances(world: "SohWorld") -> None:
+    """Run every enabled entrance pool, re-rolling until the layout is item-fillable,
+    and stash slot-data overrides on the world.
+
+    Call this from ``connect_entrances`` (after the region graph, rules and item pool
     exist, before fill). When all pools are off this is a no-op and
     ``world.entrance_overrides`` stays empty.
-    """
+
+    Pools that move the start / age access / pass-throughs (overworld, spawns, warps,
+    owls, special interiors, the mixed pool, thieves) can produce a layout that passes
+    every per-pool check yet has no valid item placement (see ``_trial_fill_accessible``).
+    Those failures can originate in any pool, so a per-pool retry can't fix them; instead
+    we snapshot the vanilla graph, run all pools, trial-fill once, and on failure restore
+    and re-roll the whole shuffle (a fresh RNG draw). The cheaper dead-end-only pools
+    (dungeon/boss/simple-interior/grotto) never hit this, so they skip the gate and run
+    exactly once, unchanged."""
     world.entrance_overrides = []
+    opts = world.options
+    interior_all = (opts.shuffle_interior_entrances.value
+                    == opts.shuffle_interior_entrances.option_all)
+    # Only the pools that set check_other_access can produce a non-item-fillable layout;
+    # gate the (re-roll + trial-fill) on them so plain dead-end shuffles are untouched.
+    fill_gate = (bool(opts.shuffle_overworld_entrances.value) or interior_all
+                 or bool(opts.shuffle_overworld_spawns.value)
+                 or bool(opts.shuffle_warp_songs.value)
+                 or bool(opts.shuffle_owl_drops.value)
+                 or bool(opts.shuffle_thieves_hideout_entrances.value)
+                 or bool(opts.mixed_entrance_pools.value))
+
+    # Cache the all-items reachability base for the duration of the shuffle; every
+    # per-pool reachability probe / validation copies+sweeps it instead of re-collecting
+    # the whole item pool (see _er_pre_fill_state). Cleared in `finally` so the pipeline's
+    # own later pre_fill/get_pre_fill_state are unaffected.
+    _er_begin_cache(world)
+    try:
+        snapshot = _snapshot_graph(world) if fill_gate else None
+        for attempt in range(MAX_FILL_REROLLS if fill_gate else 1):
+            if attempt:
+                _restore_graph(world, snapshot)
+                logger.debug("ER: layout not item-fillable, re-rolling (attempt %d) for "
+                             "player %d", attempt + 1, world.player)
+            try:
+                overrides = _run_entrance_pools(world)
+            except _OneWayInfeasible as exc:
+                # The coupled layout left a one-way landing uncoverable; a fresh whole-shuffle
+                # re-roll almost always lifts the dependency. (fill_gate is always on when any
+                # one-way pool runs, so we always have a snapshot to re-roll from.)
+                if not fill_gate:
+                    raise
+                logger.debug("ER: %s; re-rolling (attempt %d) for player %d",
+                             exc, attempt + 1, world.player)
+                continue
+            if (not fill_gate or not overrides
+                    or all(_trial_fill_accessible(world)
+                           for _ in range(TRIAL_FILL_CONFIRMATIONS))):
+                world.entrance_overrides = overrides
+                return
+        raise RuntimeError(
+            f"SoH ER: could not find an item-fillable entrance layout for player "
+            f"{world.player} after {MAX_FILL_REROLLS} re-rolls.")
+    finally:
+        _er_end_cache(world)
+
+
+def _run_entrance_pools(world: "SohWorld") -> list[dict[str, int]]:
+    """Run every enabled entrance pool once on the current graph and return the
+    accumulated slot-data overrides (see :func:`shuffle_entrances` for the gate/re-roll
+    wrapper that calls this)."""
     overrides: list[dict[str, int]] = []
     opts = world.options
 
@@ -2059,4 +2287,4 @@ def shuffle_entrances(world: "SohWorld") -> None:
                          == opts.shuffle_dungeon_entrances.option_on_plus_ganon)
         overrides += _blue_warp_overrides(world, include_ganon)
 
-    world.entrance_overrides = overrides
+    return overrides
