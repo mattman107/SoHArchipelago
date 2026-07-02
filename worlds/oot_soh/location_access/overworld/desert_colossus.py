@@ -9,8 +9,6 @@ class EventLocations(StrEnum):
     DESERT_COLOSSUS_FAIRY_POND_OASIS = "Desert Colossus Fairy Pond Oasis"
     DESERT_COLOSSUS_BUG_ROCK = "Desert Colossus Bug Rock"
     DESERT_COLOSSUS_BEAN_PATCH = "Desert Colossus Bean Patch"
-    DESERT_COLOSSUS_DAY_NIGHT_CYCLE_CHILD = "Desert Colossus Day Night Cycle Child"
-    DESERT_COLOSSUS_DAY_NIGHT_CYCLE_ADULT = "Desert Colossus Day Night Cycle Adult"
 
 
 class LocalEvents(StrEnum):
@@ -27,10 +25,6 @@ def set_region_rules(world: "SohWorld") -> None:
          Events.CAN_ACCESS_BUGS, lambda bundle: True_()),
         (EventLocations.DESERT_COLOSSUS_BEAN_PATCH, LocalEvents.DESERT_COLOSSUS_BEAN_PLANTED,
          lambda bundle: is_child(bundle) & can_use(Items.MAGIC_BEAN, bundle)),
-        (EventLocations.DESERT_COLOSSUS_DAY_NIGHT_CYCLE_CHILD,
-         Events.CHILD_CAN_PASS_TIME, lambda bundle: is_child(bundle)),
-        (EventLocations.DESERT_COLOSSUS_DAY_NIGHT_CYCLE_ADULT,
-         Events.ADULT_CAN_PASS_TIME, lambda bundle: is_adult(bundle)),
     ])
     # Locations
     add_locations(Regions.DESERT_COLOSSUS, world, [

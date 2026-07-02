@@ -1,7 +1,7 @@
 from enum import StrEnum, IntFlag, auto
 from typing import NamedTuple
 from BaseClasses import CollectionState, Location
-from .Enums import Locations, Ages, DungeonLocations
+from .Enums import Locations, Ages, DungeonLocations, TimeOfDay, AGE_TIME_COMBOS
 
 
 
@@ -9,13 +9,22 @@ class SohLocation(Location):
     game = "Ship of Harkinian"
 
     def can_reach(self, state: CollectionState) -> bool:
-        can_reach = False
-        # check if we can reach this as either age
+        # Check reachability across the four (age, time) contexts, ORing the
+        # results — Ship's LocationAccess::ConditionsMet (location_access.cpp:44).
+        # super().can_reach short-circuits on the parent region not being
+        # reachable in the pinned context, so a location with no time gate costs
+        # ~1 rule evaluation. Short-circuit on the first success.
         stored_age = state._soh_age[self.player]  # type: ignore
-        for age in [Ages.CHILD, Ages.ADULT]:
+        stored_time = state._soh_time[self.player]  # type: ignore
+        can_reach = False
+        for age, time in AGE_TIME_COMBOS:
             state._soh_age[self.player] = age  # type: ignore
-            can_reach |= super().can_reach(state)
+            state._soh_time[self.player] = time  # type: ignore
+            if super().can_reach(state):
+                can_reach = True
+                break
         state._soh_age[self.player] = stored_age  # type: ignore
+        state._soh_time[self.player] = stored_time  # type: ignore
         return can_reach
 
 

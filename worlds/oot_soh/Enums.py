@@ -1,4 +1,4 @@
-from enum import StrEnum, IntEnum, auto, Enum
+from enum import StrEnum, IntEnum, IntFlag, auto, Enum
 # allows defining orders with fewer functions; with this decorator only __eq__ and __lt__ is needed, and since enums implement __eq__ we can just implement __lt__
 from functools import total_ordering
 
@@ -3544,8 +3544,6 @@ class Events(StrEnum):
     CAN_BORROW_SPOOKY_MASK = "Can Borrow Spooky Mask"
     CAN_BORROW_BUNNY_HOOD = "Can Borrow Bunny Hood"
     CAN_BORROW_MASK_OF_TRUTH = "Can Borrow Mask of Truth"
-    CHILD_CAN_PASS_TIME = "Child Can Pass Time"
-    ADULT_CAN_PASS_TIME = "Adult Can Pass Time"
     SOLD_KEATON_MASK = "Sold Keaton Mask"
     SOLD_SKULL_MASK = "Sold Skull Mask"
     SOLD_SPOOKY_MASK = "Sold Spooky Mask"
@@ -3956,3 +3954,27 @@ class HintKeys(StrEnum):
     KAK_50_SKULLS_HINT = "50 Skulls Hint"
     KAK_100_SKULLS_HINT = "100 Skulls Hint"
     MASK_SHOP_HINT = "Mask Shop Hint"
+
+
+class TimeOfDay(IntFlag):
+    """Time-of-day flags for the forward-propagated day/night reachability model.
+
+    Mirrors Ship's per-region childDay/childNight/adultDay/adultNight bools
+    (location_access.h). Defined as an IntFlag so DAY/NIGHT compose with ``&``/``|``
+    and ``ALL`` is a distinct value (3), unlike a plain IntEnum where DAY|NIGHT
+    would collide with NIGHT."""
+    NONE = 0
+    DAY = 1
+    NIGHT = 2
+    ALL = DAY | NIGHT
+
+
+# The four (age, time) contexts the forward search propagates and that
+# SohLocation.can_reach ORs over, mirroring Ship's ConditionsMet
+# (location_access.cpp:44-58).
+AGE_TIME_COMBOS: tuple[tuple["Ages", "TimeOfDay"], ...] = (
+    (Ages.CHILD, TimeOfDay.DAY),
+    (Ages.CHILD, TimeOfDay.NIGHT),
+    (Ages.ADULT, TimeOfDay.DAY),
+    (Ages.ADULT, TimeOfDay.NIGHT),
+)

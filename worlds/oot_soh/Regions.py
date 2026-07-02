@@ -89,19 +89,44 @@ class SohRegion(Region):
 
     def __init__(self, name: str, player: int, multiworld: MultiWorld, hint: str | None = None):
         super().__init__(name, player, multiworld, hint)
+        # Whether time passes in this region (Ship's Region::timePass, derived
+        # from GetTimePassFromScene). Set in create_regions_and_locations.
+        self.provides_time = TimeOfDay.NONE
 
     def can_reach(self, state) -> bool:
         if state._soh_stale[self.player]:
             stored_age = state._soh_age[self.player]
+            stored_time = state._soh_time[self.player]
             state._soh_update_age_reachable_regions(self.player)
             state._soh_age[self.player] = stored_age
+            state._soh_time[self.player] = stored_time
 
-        if state._soh_age[self.player] == Ages.CHILD:
-            return self in state._soh_child_reachable_regions[self.player]
-        elif state._soh_age[self.player] == Ages.ADULT:
-            return self in state._soh_adult_reachable_regions[self.player]
+        age = state._soh_age[self.player]
+        time = state._soh_time[self.player]
+
+        if age == Ages.CHILD:
+            day, night = state._soh_childday_regions[self.player], state._soh_childnight_regions[self.player]
+        elif age == Ages.ADULT:
+            day, night = state._soh_adultday_regions[self.player], state._soh_adultnight_regions[self.player]
         else:
-            return self in state._soh_child_reachable_regions[self.player] or self in state._soh_adult_reachable_regions[self.player]
+            # Age not pinned: reachable as either age.
+            if time == TimeOfDay.DAY:
+                return (self in state._soh_childday_regions[self.player]
+                        or self in state._soh_adultday_regions[self.player])
+            elif time == TimeOfDay.NIGHT:
+                return (self in state._soh_childnight_regions[self.player]
+                        or self in state._soh_adultnight_regions[self.player])
+            return (self in state._soh_childday_regions[self.player]
+                    or self in state._soh_childnight_regions[self.player]
+                    or self in state._soh_adultday_regions[self.player]
+                    or self in state._soh_adultnight_regions[self.player])
+
+        if time == TimeOfDay.DAY:
+            return self in day
+        elif time == TimeOfDay.NIGHT:
+            return self in night
+        # Time not pinned: reachable at any time for this age (day OR night).
+        return self in day or self in night
 
 
 def create_regions_and_locations(world: "SohWorld") -> None:
@@ -118,6 +143,36 @@ def create_regions_and_locations(world: "SohWorld") -> None:
         region = SohRegion(region_name, world.player, world.multiworld)
         world.multiworld.regions.append(region)
         region.add_exits(region_data_table[region_name].connecting_regions)
+
+    # Mark regions where time passes. These are exactly the AP regions whose
+    # Ship scene is one of the seven GetTimePassFromScene-true scenes
+    # (location_access.cpp:283: Hyrule Field, Zora's River, Lake Hylia, Gerudo
+    # Valley, Desert Colossus, Hyrule Castle, Death Mountain Trail), minus the
+    # regions Ship explicitly marks TIME_DOESNT_PASS (LH From Shortcut, LH From
+    # Water Temple). Ganon's Castle Grounds is NOT included: its scene
+    # (Outside Ganon's Castle) does not pass time in Ship; the night gate on the
+    # entrance to Castle Grounds handles the forced-night Ganon fight instead.
+    for region_name in (
+        # Hyrule Field
+        Regions.HYRULE_FIELD,
+        # Zora's River
+        Regions.ZR_FRONT, Regions.ZORA_RIVER, Regions.ZR_FROM_SHORTCUT,
+        Regions.ZR_BEHIND_WATERFALL,
+        # Lake Hylia
+        Regions.LAKE_HYLIA, Regions.LH_FISHING_ISLAND, Regions.LH_OWL_FLIGHT,
+        # Gerudo Valley
+        Regions.GERUDO_VALLEY, Regions.GV_UPPER_STREAM, Regions.GV_LOWER_STREAM,
+        Regions.GV_GROTTO_LEDGE, Regions.GV_CRATE_LEDGE, Regions.GV_FORTRESS_SIDE,
+        # Desert Colossus
+        Regions.DESERT_COLOSSUS, Regions.DESERT_COLOSSUS_OASIS,
+        Regions.DESERT_COLOSSUS_OUTSIDE_TEMPLE,
+        # Hyrule Castle
+        Regions.HYRULE_CASTLE_GROUNDS,
+        # Death Mountain Trail
+        Regions.DEATH_MOUNTAIN_TRAIL, Regions.DEATH_MOUNTAIN_SUMMIT,
+        Regions.DMT_OWL_FLIGHT,
+    ):
+        world.get_region(str(region_name)).provides_time = TimeOfDay.ALL
 
     # Create locations
 

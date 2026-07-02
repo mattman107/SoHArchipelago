@@ -497,6 +497,100 @@ class IsChild(Rule, game="Ship of Harkinian"):
         def __str__(self) -> str:
             return f"Can reach {self.parent_region} as Child Link"
 
+@dataclasses.dataclass
+class AtDay(Rule, game="Ship of Harkinian"):
+    parent_region: Regions
+
+    def _instantiate(self, world: "SohWorld") -> Rule.Resolved: # type: ignore
+        return self.Resolved(parent_region = self.parent_region, player = world.player, caching_enabled=getattr(world, "rule_caching_enabled", False))
+
+    class Resolved(Rule.Resolved):
+        parent_region: Regions
+        force_recalculate = True
+        def _evaluate(self, state: CollectionState) -> bool:
+            # Inside the forward search / location loop the time is pinned, so
+            # this is the O(1) context read Ship's CheckConditionAtAgeTime does.
+            time = state._soh_time[self.player] # type: ignore
+            if time != TimeOfDay.NONE:
+                return time == TimeOfDay.DAY
+            # No time context pinned (rule evaluated outside the location loop):
+            # fall back to a real "reachable at day" query, honouring any age.
+            return state._soh_reach_at_time(self.parent_region, TimeOfDay.DAY, self.player) # type: ignore
+
+        def item_dependencies(self) -> dict[str, set[int]]:
+            return {}
+
+        def region_dependencies(self) -> dict[str, set[int]]:
+            return {self.parent_region.value: {id(self)}}
+
+        @override
+        def explain_json(self, state: CollectionState | None = None) -> list[JSONMessagePart]:
+            verb = "Can not " if state and not self(state) else "Can "
+            messages: list[JSONMessagePart] = [{"type": "text", "text": verb}]
+            if state:
+                color = "green" if self(state) else "salmon"
+                messages.append({"type": "text", "text": "reach "})
+                messages.append({"type": "color", "color": "cyan", "text": f"{self.parent_region} "})
+                messages.append({"type": "color", "color": color, "text": "at day"})
+            return messages
+
+        @override
+        def explain_str(self, state: CollectionState | None = None) -> str:
+            if state is None:
+                return str(self)
+            prefix = "Can" if self(state) else "Can not"
+            return f"{prefix} reach {self.parent_region} at day"
+
+        @override
+        def __str__(self) -> str:
+            return f"Can reach {self.parent_region} at day"
+
+
+@dataclasses.dataclass
+class AtNight(Rule, game="Ship of Harkinian"):
+    parent_region: Regions
+
+    def _instantiate(self, world: "SohWorld") -> Rule.Resolved: # type: ignore
+        return self.Resolved(parent_region = self.parent_region, player = world.player, caching_enabled=getattr(world, "rule_caching_enabled", False))
+
+    class Resolved(Rule.Resolved):
+        parent_region: Regions
+        force_recalculate = True
+        def _evaluate(self, state: CollectionState) -> bool:
+            time = state._soh_time[self.player] # type: ignore
+            if time != TimeOfDay.NONE:
+                return time == TimeOfDay.NIGHT
+            return state._soh_reach_at_time(self.parent_region, TimeOfDay.NIGHT, self.player) # type: ignore
+
+        def item_dependencies(self) -> dict[str, set[int]]:
+            return {}
+
+        def region_dependencies(self) -> dict[str, set[int]]:
+            return {self.parent_region.value: {id(self)}}
+
+        @override
+        def explain_json(self, state: CollectionState | None = None) -> list[JSONMessagePart]:
+            verb = "Can not " if state and not self(state) else "Can "
+            messages: list[JSONMessagePart] = [{"type": "text", "text": verb}]
+            if state:
+                color = "green" if self(state) else "salmon"
+                messages.append({"type": "text", "text": "reach "})
+                messages.append({"type": "color", "color": "cyan", "text": f"{self.parent_region} "})
+                messages.append({"type": "color", "color": color, "text": "at night"})
+            return messages
+
+        @override
+        def explain_str(self, state: CollectionState | None = None) -> str:
+            if state is None:
+                return str(self)
+            prefix = "Can" if self(state) else "Can not"
+            return f"{prefix} reach {self.parent_region} at night"
+
+        @override
+        def __str__(self) -> str:
+            return f"Can reach {self.parent_region} at night"
+
+
 #Build the rules
 def is_child(bundle: tuple[Regions, "SohWorld"]):
     return IsChild(bundle[0])
@@ -505,14 +599,15 @@ def is_adult(bundle: tuple[Regions, "SohWorld"]):
     return IsAdult(bundle[0])
 
 def at_day(bundle: tuple[Regions, "SohWorld"]) -> Rule:
-    return ((is_child(bundle) & has_item(Events.CHILD_CAN_PASS_TIME, bundle))
-            | (is_adult(bundle) & has_item(Events.ADULT_CAN_PASS_TIME, bundle)))
+    # Pure time predicate, faithful to Ship: at_day/at_night are the pinned-time
+    # booleans, NOT OR'd with Sun's Song (Sun's Song is applied only in the
+    # specific location conditions that need it, e.g. can_get_nighttime_gs).
+    return AtDay(bundle[0])
     # TODO: Implement starting time of day if that ever gets added
 
 
 def at_night(bundle: tuple[Regions, "SohWorld"]) -> Rule:
-    return ((is_child(bundle) & has_item(Events.CHILD_CAN_PASS_TIME, bundle))
-            | (is_adult(bundle) & has_item(Events.ADULT_CAN_PASS_TIME, bundle)))
+    return AtNight(bundle[0])
     # TODO: Implement starting time of day if that ever gets added
 
 def starting_age(bundle: tuple[Regions, "SohWorld"]) -> Rule:

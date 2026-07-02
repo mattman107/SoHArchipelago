@@ -31,7 +31,7 @@ All pools use a custom age-aware matcher + a full-accessibility validation gate
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from .Enums import Regions, Ages, Events
+from .Enums import Regions, Ages, TimeOfDay
 from rule_builder.rules import True_
 from BaseClasses import CollectionState
 from Fill import fill_restrictive
@@ -1148,11 +1148,27 @@ def _item_less_state(world: "SohWorld") -> "CollectionState":
 
     Mirrors the "no items" basis Ship uses for its start-of-seed guarantees: the
     invariants below must hold with nothing in the inventory, so the player is never
-    stranded at the very start. Sweeping picks up item-independent events such as the
-    CHILD/ADULT_CAN_PASS_TIME flags."""
+    stranded at the very start. Sweeping picks up item-independent events."""
     state = CollectionState(world.multiworld)
     state.sweep_for_advancements(list(world.multiworld.get_locations(world.player)))
     return state
+
+
+def _has_time_pass_access(state: "CollectionState", world: "SohWorld", age: Ages) -> bool:
+    """Ship's ``HasTimePassAccess`` (location_access.cpp:1128): some time-passing
+    region is reachable as ``age``. Because reaching any ``provides_time`` region
+    as an age grants both day and night everywhere reachable as that age, this is
+    the guarantee that day/night-gated checks can never be permanently lost."""
+    player = world.player
+    for region in world.multiworld.get_regions(player):
+        if getattr(region, "provides_time", TimeOfDay.NONE):
+            stored_age = state._soh_age[player]  # type: ignore
+            state._soh_age[player] = age  # type: ignore
+            reachable = region.can_reach(state)
+            state._soh_age[player] = stored_age  # type: ignore
+            if reachable:
+                return True
+    return False
 
 
 def _world_age_invariants_hold(world: "SohWorld") -> bool:
@@ -1190,9 +1206,11 @@ def _world_age_invariants_hold(world: "SohWorld") -> bool:
     full = _er_pre_fill_state(world)
 
     # 2) Time must be passable as BOTH ages (with the items the player will collect),
-    #    or day/night-gated checks could become permanently inaccessible.
-    if not (full.has(str(Events.CHILD_CAN_PASS_TIME), player)
-            and full.has(str(Events.ADULT_CAN_PASS_TIME), player)):
+    #    or day/night-gated checks could become permanently inaccessible. A
+    #    time-passing region must be reachable as each age (Ship's HasTimePassAccess,
+    #    location_access.cpp:1128).
+    if not (_has_time_pass_access(full, world, Ages.CHILD)
+            and _has_time_pass_access(full, world, Ages.ADULT)):
         return False
 
     # 3) After going through time, the Temple of Time must remain reachable as the
@@ -1384,10 +1402,23 @@ def _shuffle_pool(world: "SohWorld", label: str, entries: list[EntranceDef],
     for _ in range(MAX_SHUFFLE_ATTEMPTS):
         targets = _find_matching(world, forwards, caps, needs, forbidden)
         if targets is None:
+            # No perfect bijection under the caps/needs model. That model is SOUND
+            # (never accepts an invalid layout) but not COMPLETE: it can reject a
+            # layout that is actually valid, because `needs` is probed by force-
+            # injecting each interior from a spawn -- so a location reachable only as
+            # child through that injection marks the interior CHILD-needed even when
+            # its vanilla doorway is adult-only and the game reaches that content as
+            # adult (e.g. Kak Bazaar / Shooting Gallery / Granny's, DMC Great Fairy).
+            # Such interiors make `needs > own cap`, so even the identity (vanilla)
+            # pairing fails the model; when enough of them coincide the bipartite
+            # matching has no solution at all (a Hall deficit) and returns None. Since
+            # infeasibility is a property of caps/needs (retrying only reshuffles the
+            # candidate order, never the feasibility), don't retry and don't hard-fail
+            # -- fall through to the validated random walk below, which starts from the
+            # genuinely-valid vanilla layout and gates on _seed_is_valid rather than the
+            # approximate model.
             _restore_forwards(forwards, reverse_mode)
-            raise RuntimeError(
-                f"SoH ER: no age-compatible {label} entrance matching exists "
-                f"for player {world.player}.")
+            break
         _apply(forwards, targets, reverse_mode)
         if _seed_is_valid(world, check_other_access):
             logger.debug("ER: shuffled %d %s entrances for player %d",
@@ -1395,7 +1426,7 @@ def _shuffle_pool(world: "SohWorld", label: str, entries: list[EntranceDef],
             return _build_slot_data(forwards, targets)
         _restore_forwards(forwards, reverse_mode)
 
-    # Fast path exhausted. A fresh random bijection rewires every edge at once, so
+    # Fast path exhausted (or infeasible under the model -- see the break above). A fresh random bijection rewires every edge at once, so
     # one constraint violation anywhere fails the whole attempt -- yield collapses
     # for tightly-constrained layouts (e.g. a particular dungeon shuffle leaving the
     # overworld little room to keep the item-less Temple-of-Time/time-pass backbone
