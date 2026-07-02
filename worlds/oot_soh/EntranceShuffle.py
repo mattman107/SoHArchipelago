@@ -5,9 +5,6 @@ shufflable entrances in the AP region graph (guaranteeing the seed stays
 beatable) and emits the resulting pairs into slot data in the format Ship's
 ``EntranceShuffler::ParseJson`` already understands.
 
-See ``ER_AP_00_SHARED_CONTRACT.md`` for the slot-data contract and
-``ER_AP_01_ARCHIPELAGO_apworld.md`` for the apworld build plan.
-
 Coupled (two-way) pools:
   * dungeon entrances (+ optionally Ganon's Castle)
   * boss-room entrances (child + adult bosses, age-aware)
@@ -70,11 +67,6 @@ logger = logging.getLogger("SOH_OOT.ER")
 #     because (a) an all-zero override is treated as "unshuffled" and skipped, and
 #     (b) 0 is a real index (ENTR_DEKU_TREE_ENTRANCE == 0x000). Two-way pools emit
 #     the real reverse indices.
-#
-# #3  `type` VALUES come from Ship's ``enum class EntranceType`` (entrance.h), NOT
-#     the values in the older ``ER_AP_00_SHARED_CONTRACT.md`` (which lists Dungeon=0
-#     -- wrong). We send the true enum values for the tracker/hints. If upstream
-#     renumbers EntranceType, update the ENTRANCE_TYPE_* constants below.
 #
 # #4  AP REGION-GRAPH COLLAPSES / RENAMES some Ship transition regions, so our
 #     entrance endpoints differ from Ship's ``RR_*`` even though the ``ENTR_*`` index
