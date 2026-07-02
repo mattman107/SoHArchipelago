@@ -1891,8 +1891,23 @@ class SohOptions(PerGameCommonOptions):
             self.starting_age.value = StartingAge.option_child
             return
         
-        # If closed forest is on, force child spawn. Will need additional logic when entrance shuffle is added in future.
-        if self.closed_forest == ClosedForest.option_on:
+        # If closed forest is on, force child spawn -- but ONLY when there is no
+        # sphere-0 entrance shuffle that lets the player avoid being trapped in Kokiri
+        # Forest as child. Mirrors Ship's Context::FinalizeSettings (settings.cpp): the
+        # age is forced to child only if Closed Forest is on AND overworld spawns,
+        # overworld entrances, interior entrances and grotto entrances are all off (Ship
+        # also ANDs in DecoupledEntrances; SOH has no decouple option, so that term is
+        # constant-off and drops out). With any of those shuffles on, adult start stays
+        # beatable (adult spawns at the Temple of Time, outside the forest, and can cross
+        # the LW bridge), so the requested age is kept. Forcing child unconditionally
+        # made those combos UNFILLABLE -- e.g. closed forest + shuffled interiors moves
+        # the Deku-Shield shop out of the forest, so child can never complete the Deku
+        # Tree to escape, stranding the fill (FillError: no more spots).
+        if (self.closed_forest == ClosedForest.option_on
+                and self.shuffle_overworld_spawns.value == ShuffleOverworldSpawns.option_false
+                and self.shuffle_overworld_entrances.value == ShuffleOverworldEntrances.option_false
+                and self.shuffle_interior_entrances.value == ShuffleInteriorEntrances.option_off
+                and self.shuffle_grotto_entrances.value == ShuffleGrottoEntrances.option_false):
             self.starting_age.value = StartingAge.option_child
             return
         
