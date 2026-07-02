@@ -68,23 +68,23 @@ class SohAgeLogic(LogicMixin):
                 return self._soh_adultday_regions[player], self._soh_adultday_blocked[player]
             return self._soh_adultnight_regions[player], self._soh_adultnight_blocked[player]
 
-    def _soh_apply_time_pass(self, age: Ages, region, root, player: int) -> bool:
+    def _soh_apply_time_pass(self, age: Ages, region, root, work) -> None:
         """Ship's ``Region::ApplyTimePass`` (location_access.cpp:431).
 
         ``region`` was just reached as ``age`` and passes time, so both day and
         night become available for that age on the region itself and on ROOT
         (time-pass amplification: ROOT then propagates the time everywhere
-        reachable as that age). Returns whether any flag was newly set, so the
-        caller can keep iterating to a fixpoint."""
-        expanded = False
+        reachable as that age). Every exit this newly unblocks is pushed onto the
+        owning (age, time) context's worklist in ``work`` so the caller's BFS
+        drains the amplification cascade to a fixpoint."""
         for time in (TimeOfDay.DAY, TimeOfDay.NIGHT):
-            reachable, blocked = self._soh_context_sets(age, time, player)
+            reachable, blocked, queue = work[(age, time)]
             for r in (region, root):
                 if r not in reachable:
                     reachable.add(r)
-                    blocked.update(r.exits)
-                    expanded = True
-        return expanded
+                    for exit in r.exits:
+                        blocked.add(exit)
+                        queue.append(exit)
 
     def _soh_update_age_reachable_regions(self, player):
         self._soh_stale[player] = False
@@ -102,37 +102,65 @@ class SohAgeLogic(LogicMixin):
                 reachable.add(root)
                 blocked.update(root.exits)
 
-        # Forward breadth-first search over the four contexts, run to a fixpoint.
-        # ApplyTimePass can expand a context's flags (and ROOT's) after a region
-        # was first reached, which can re-open another context; loop until no
-        # context changes (Ship re-processes regions until nothing propagates).
-        changed = True
-        while changed:
-            changed = False
-            for age, time in AGE_TIME_COMBOS:
+        # Per-context worklist BFS. Each (age, time) context keeps its own queue,
+        # seeded once from its persisted blocked frontier.
+        #
+        # This replaces an outer ``while changed`` fixpoint that re-ran all four
+        # contexts -- and re-scanned each context's entire blocked frontier
+        # (``deque(blocked)``) -- on every region addition anywhere. That
+        # fixpoint was only ever needed to propagate ``ApplyTimePass``
+        # amplification: NO edge rule does a live cross-region reachability query
+        # during a rebuild. While age/time are pinned here, IsAdult/IsChild and
+        # AtDay/AtNight short-circuit to O(1) pinned-context reads, and every
+        # other rule is a pure item/event lookup -- so an edge that fails in a
+        # given (age, time) context can never start passing in that same context
+        # mid-rebuild. The only within-rebuild change is which regions/contexts
+        # open. Draining a per-context queue (refilled only when a newly-reached
+        # region's exits or time-pass amplification open that context) therefore
+        # reaches the identical fixpoint while evaluating each edge only when
+        # (re)opened instead of once per pass. The hot loop carries the
+        # (reachable, blocked) refs directly and pins age/time once per drain --
+        # no per-item context lookup -- and the outer loop normally runs once,
+        # then confirms every queue is empty (amplification only couples an age's
+        # own day<->night, never CHILD<->ADULT, so it converges fast).
+        work = {}
+        for age, time in AGE_TIME_COMBOS:
+            reachable, blocked = self._soh_context_sets(age, time, player)
+            work[(age, time)] = (reachable, blocked, deque(blocked))
+
+        active = True
+        while active:
+            active = False
+            for (age, time), (reachable, blocked, queue) in work.items():
+                if not queue:
+                    continue
+                active = True
                 self._soh_age[player] = age
                 self._soh_time[player] = time
-                reachable, blocked = self._soh_context_sets(age, time, player)
-                queue = deque(blocked)
                 while queue:
                     connection = queue.popleft()
+                    if connection not in blocked:
+                        continue  # already resolved via another path
                     new_region = connection.connected_region
                     if new_region is None:
                         continue
                     if new_region in reachable:
                         blocked.discard(connection)
-                    elif connection.can_reach(self):
+                        continue
+                    if connection.can_reach(self):
                         reachable.add(new_region)
                         blocked.discard(connection)
-                        blocked.update(new_region.exits)
-                        queue.extend(new_region.exits)
+                        for exit in new_region.exits:
+                            blocked.add(exit)
+                            queue.append(exit)
                         self.path[new_region] = (new_region.name, self.path.get(
                             connection, None))  # type: ignore
-                        changed = True
-                        # Time-pass amplification (location_access.cpp:431).
+                        # Time-pass amplification (location_access.cpp:431):
+                        # reaching a provides_time region opens both day and night
+                        # for this age (on the region and ROOT); enqueue whatever
+                        # exits that unblocks into the owning context queues.
                         if new_region.provides_time:
-                            if self._soh_apply_time_pass(age, new_region, root, player):
-                                changed = True
+                            self._soh_apply_time_pass(age, new_region, root, work)
 
         self._soh_age[player] = Ages.null
         self._soh_time[player] = TimeOfDay.NONE
