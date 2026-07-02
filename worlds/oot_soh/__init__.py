@@ -177,7 +177,19 @@ class SohWorld(CachedRuleBuilderWorld):
             self.pre_fill_pool += key_shuffle
         self.pre_fill_pool += get_dungeon_item_prefill_items(self, False)
         self.pre_fill_pool += get_dungeon_item_prefill_items(self, True)
-        self.pre_fill_pool += ShopItems.get_vanilla_shop_pool(self)
+        # Only add shop purchasables to the pre-fill pool when the shops are actually
+        # shuffled (fill_shop_items will place them, drawing from this pool). With
+        # shuffle_shops off, no_shop_shuffle has already placed them as LOCKED items at
+        # their fixed slots, so adding them here too would make get_pre_fill_state collect
+        # them a second time -- directly, unconditionally -- rather than via the
+        # reachability sweep. That over-reports access: e.g. Buy Deku Shield would be
+        # granted even when its shop sits behind an adult/day-gated entrance, which makes
+        # the Mido gate (and thus Deku Tree) look child-reachable and lets the dungeon-
+        # reward pre-fill strand a spiritual stone there (an unwinnable circular seed).
+        # Left out, the locked shop items are still swept in by get_pre_fill_state iff
+        # their shop is genuinely reachable, which is the correct, non-optimistic basis.
+        if self.options.shuffle_shops:
+            self.pre_fill_pool += ShopItems.get_vanilla_shop_pool(self)
 
         if self.options.ganons_trials == "set_number" and self.options.ganons_trials_count.value > 0:
             self.ganons_trials = [str(trial) for trial in GanonsTrials]

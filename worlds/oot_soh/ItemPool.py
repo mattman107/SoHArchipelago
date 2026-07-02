@@ -623,7 +623,19 @@ def create_filler_item_pool(world: "SohWorld") -> None:
 
 def get_open_location_count(world: "SohWorld") -> int:
     open_location_count = len(world.multiworld.get_unfilled_locations(
-        world.player)) - len(world.item_pool) - len(world.pre_fill_pool) + len(get_vanilla_shop_pool(world))
+        world.player)) - len(world.item_pool) - len(world.pre_fill_pool)
+
+    # The shop purchasables in pre_fill_pool (subtracted just above) are placed at
+    # slots that reserve_vanilla_shop_locations has already HARD-locked, so those slots
+    # were never in get_unfilled_locations to begin with -- subtracting the shop items
+    # therefore double-counts them and under-generates filler (yielding more locations
+    # than items -> "Unable to fill all locations"). Add the shop-pool size back to
+    # cancel that. This is gated on shuffle_shops to mirror generate_early, which only
+    # adds get_vanilla_shop_pool to pre_fill_pool when shops are shuffled; with shops off
+    # the items aren't in the pool, so no compensation is needed (and adding it would
+    # over-generate filler).
+    if world.options.shuffle_shops:
+        open_location_count += len(get_vanilla_shop_pool(world))
 
     return open_location_count
 
