@@ -1445,14 +1445,15 @@ def _shuffle_pool(world: "SohWorld", label: str, entries: list[EntranceDef],
 #
 # A dungeon boss's blue warp ejects the player from the boss room to an overworld
 # spot. Blue warps are not shuffled themselves; they are *derived* from the boss
-# (and dungeon) placement, so a shuffled boss drops you at the overworld of the
-# dungeon slot it now occupies instead of its vanilla home. We port Ship's
-# resolution (entrance.cpp:1525-1607): the blue warp adopts the blue-warp target
-# of whichever dungeon slot now holds that boss. Reading each boss slot's forward
-# entrance after the shuffle yields the boss room now behind it; the slot keeps
-# its own blue-warp index. (Ship does not chain through dungeon-entrance
-# relocation here, so with bosses unshuffled this collapses to identity overrides,
-# which we still emit to mirror Ship's CreateEntranceOverrides.)
+# AND dungeon-entrance placement, so defeating a boss drops you at the overworld of
+# whichever dungeon-entrance slot the boss's dungeon now occupies -- not its vanilla
+# home. We port Ship's resolution (entrance.cpp:1525-1607, non-decoupled), which
+# chains through both shuffles: from the boss room, follow the boss shuffle to the
+# dungeon slot it sits in, then follow the dungeon-entrance shuffle to where that
+# dungeon's entrance now is, and eject at that slot's blue-warp/overworld exit. See
+# ``_resolve_blue_warp_slot`` for the (single-hop) chase and ``_blue_warp_overrides``
+# / ``_rewire_blue_warp_logic`` for the game-side and logic-graph applications, which
+# share the chase so the emitted overrides and the region graph agree.
 
 # Blue-warp ENTR indices keyed by the boss room they eject from (entrance.cpp
 # BlueWarp table + entrance_table.h).
@@ -1470,22 +1471,106 @@ _BLUE_WARP_BY_BOSS_ROOM: dict[Regions, int] = {
 # shuffle (our dungeon "on + Ganon"); Ship's resolution leaves it identity.
 _GANON_BLUE_WARP_INDEX = 0x23F
 
+# The overworld region each boss room's blue warp ejects to in vanilla. These are
+# the static ``BOSS_ROOM -> overworld`` edges authored in the dungeon
+# location_access files (gated on that dungeon's completion event). Under a boss
+# shuffle the destination must follow the *slot*, not the boss room, so this map
+# both identifies each blue-warp edge (by its vanilla name) and supplies the
+# per-slot destination -- see ``_rewire_blue_warp_logic``.
+_BLUE_WARP_DEST_BY_BOSS_ROOM: dict[Regions, Regions] = {
+    Regions.DEKU_TREE_BOSS_ROOM: Regions.KF_OUTSIDE_DEKU_TREE,
+    Regions.DODONGOS_CAVERN_BOSS_ROOM: Regions.DEATH_MOUNTAIN_TRAIL,
+    Regions.JABU_JABUS_BELLY_BOSS_ROOM: Regions.ZORAS_FOUNTAIN,
+    Regions.FOREST_TEMPLE_BOSS_ROOM: Regions.SACRED_FOREST_MEADOW,
+    Regions.FIRE_TEMPLE_BOSS_ROOM: Regions.DMC_CENTRAL_LOCAL,
+    Regions.WATER_TEMPLE_BOSS_ROOM: Regions.LAKE_HYLIA,
+    Regions.SPIRIT_TEMPLE_BOSS_ROOM: Regions.DESERT_COLOSSUS,
+    Regions.SHADOW_TEMPLE_BOSS_ROOM: Regions.GRAVEYARD_WARP_PAD_REGION,
+}
 
-def _blue_warp_overrides(world: "SohWorld",
+# Ship's blue-warp derivation chains through the *dungeon-entrance* shuffle as well
+# as the boss shuffle (entrance.cpp:1591-1607, gated on non-decoupled): the blue
+# warp ejects to the overworld exit of whichever dungeon-entrance *slot* the boss's
+# dungeon now occupies. To resolve that we need, per boss slot, that slot's dungeon
+# overworld entryway (whose relocation we follow)...
+_BOSS_ROOM_TO_DUNGEON_ENTRYWAY: dict[Regions, Regions] = {
+    Regions.DEKU_TREE_BOSS_ROOM: Regions.DEKU_TREE_ENTRYWAY,
+    Regions.DODONGOS_CAVERN_BOSS_ROOM: Regions.DODONGOS_CAVERN_ENTRYWAY,
+    Regions.JABU_JABUS_BELLY_BOSS_ROOM: Regions.JABU_JABUS_BELLY_ENTRYWAY,
+    Regions.FOREST_TEMPLE_BOSS_ROOM: Regions.FOREST_TEMPLE_ENTRYWAY,
+    Regions.FIRE_TEMPLE_BOSS_ROOM: Regions.FIRE_TEMPLE_ENTRYWAY,
+    Regions.WATER_TEMPLE_BOSS_ROOM: Regions.WATER_TEMPLE_ENTRYWAY,
+    Regions.SPIRIT_TEMPLE_BOSS_ROOM: Regions.SPIRIT_TEMPLE_ENTRYWAY,
+    Regions.SHADOW_TEMPLE_BOSS_ROOM: Regions.SHADOW_TEMPLE_ENTRYWAY,
+}
+# ...and, per dungeon-entrance slot (keyed by its vanilla entryway), where that
+# slot's blue warp lands: (overworld region for the logic graph, ENTR index for the
+# game override). Boss dungeons eject to their boss room's blue-warp pad (Ship's
+# ``dungeonExits``); the non-boss dungeons and Ganon's Castle have no blue-warp pad,
+# so they eject to their dungeon entrance's overworld side (the plain reverse), using
+# that reverse's ENTR. Every index verified against Ship's entrance_table.h.
+_DUNGEON_SLOT_BLUE_WARP: dict[Regions, tuple[Regions, int]] = {
+    Regions.DEKU_TREE_ENTRYWAY: (Regions.KF_OUTSIDE_DEKU_TREE, 0x457),
+    Regions.DODONGOS_CAVERN_ENTRYWAY: (Regions.DEATH_MOUNTAIN_TRAIL, 0x47A),
+    Regions.JABU_JABUS_BELLY_ENTRYWAY: (Regions.ZORAS_FOUNTAIN, 0x10E),
+    Regions.FOREST_TEMPLE_ENTRYWAY: (Regions.SACRED_FOREST_MEADOW, 0x608),
+    Regions.FIRE_TEMPLE_ENTRYWAY: (Regions.DMC_CENTRAL_LOCAL, 0x564),
+    Regions.WATER_TEMPLE_ENTRYWAY: (Regions.LAKE_HYLIA, 0x60C),
+    Regions.SPIRIT_TEMPLE_ENTRYWAY: (Regions.DESERT_COLOSSUS, 0x610),
+    Regions.SHADOW_TEMPLE_ENTRYWAY: (Regions.GRAVEYARD_WARP_PAD_REGION, 0x580),
+    Regions.BOTTOM_OF_THE_WELL_ENTRYWAY: (Regions.KAK_WELL, 0x2A6),
+    Regions.ICE_CAVERN_ENTRYWAY: (Regions.ZF_LEDGE, 0x3D4),
+    Regions.GERUDO_TRAINING_GROUND_ENTRYWAY: (Regions.GF_EXITING_GTG, 0x3A8),
+    Regions.GANONS_CASTLE_ENTRYWAY: (Regions.CASTLE_GROUNDS_FROM_GANONS_CASTLE,
+                                     _GANON_BLUE_WARP_INDEX),
+}
+
+
+def _resolve_blue_warp_slot(world: "SohWorld", dungeon_table: list[EntranceDef],
+                            boss_slot_room: Regions) -> "Regions | None":
+    """Ship's blue-warp chain (entrance.cpp:1591-1607), one dungeon hop.
+
+    ``boss_slot_room`` is a boss *slot's* vanilla boss room -- i.e. it names the
+    dungeon whose boss door you exit from. That dungeon's own *entrance* may have
+    been relocated by the dungeon-entrance shuffle, and the blue warp ejects to the
+    overworld of whichever dungeon-entrance slot that dungeon now occupies. Return
+    that slot's vanilla entryway (a key into ``_DUNGEON_SLOT_BLUE_WARP``).
+
+    Found by scanning the dungeon pool for the entrance whose forward edge now leads
+    into this dungeon's entryway. Falls back to the dungeon's own entryway when the
+    dungeon pool is off / unshuffled (identity -> the plain boss hop), so this is
+    correct whether or not dungeon entrances are shuffled."""
+    entryway = _BOSS_ROOM_TO_DUNGEON_ENTRYWAY.get(boss_slot_room)
+    if entryway is None:
+        return None
+    for e in dungeon_table:
+        try:
+            ent = world.get_entrance(_entrance_name(e.fwd_parent, e.fwd_child))
+        except KeyError:
+            continue
+        conn = ent.connected_region
+        if conn is not None and conn.name == str(entryway):
+            return e.fwd_child
+    return entryway
+
+
+def _blue_warp_overrides(world: "SohWorld", dungeon_table: list[EntranceDef],
                          include_ganon: bool) -> list[dict[str, int]]:
-    """Derive BlueWarp (type 4) override elements from the current boss placement.
+    """Derive BlueWarp (type 4) override elements from the current placement.
 
-    Call after the boss/dungeon pools have been applied. For each dungeon boss
-    slot, its forward entrance now points at whatever boss room was placed behind
-    it; that boss room's blue warp must send the player to this slot's overworld,
-    so we emit ``index = blue_warp(boss_room_now_here)``,
-    ``override = blue_warp(this_slot)``. One-way, so the destination fields are
-    ``-1`` (see ``_ONE_WAY_NO_DEST``)."""
+    Call after the boss/dungeon pools have been applied. For each dungeon boss slot,
+    its forward entrance now points at whatever boss room was placed behind it; that
+    boss room's blue warp must send the player to the overworld of the slot's dungeon
+    -- following both the boss shuffle (which boss is here) and the dungeon-entrance
+    shuffle (where the slot's dungeon now sits, via ``_resolve_blue_warp_slot``). So
+    we emit ``index = blue_warp(boss_room_now_here)``, ``override = blue_warp(resolved
+    slot)``. One-way, so the destination fields are ``-1`` (see ``_ONE_WAY_NO_DEST``)."""
     out: list[dict[str, int]] = []
     for d in BOSS_ENTRANCES:
-        slot_index = _BLUE_WARP_BY_BOSS_ROOM.get(d.fwd_child)
-        if slot_index is None:
+        slot = _resolve_blue_warp_slot(world, dungeon_table, d.fwd_child)
+        if slot is None:
             continue
+        override_index = _DUNGEON_SLOT_BLUE_WARP[slot][1]
         try:
             entrance = world.get_entrance(_entrance_name(d.fwd_parent, d.fwd_child))
         except KeyError:
@@ -1499,7 +1584,7 @@ def _blue_warp_overrides(world: "SohWorld",
         if boss_index is None:
             continue
         out.append({"type": ENTRANCE_TYPE_BLUE_WARP, "index": boss_index,
-                    "destination": _ONE_WAY_NO_DEST, "override": slot_index,
+                    "destination": _ONE_WAY_NO_DEST, "override": override_index,
                     "overrideDestination": _ONE_WAY_NO_DEST})
     if include_ganon:
         out.append({"type": ENTRANCE_TYPE_BLUE_WARP,
@@ -1507,6 +1592,48 @@ def _blue_warp_overrides(world: "SohWorld",
                     "override": _GANON_BLUE_WARP_INDEX,
                     "overrideDestination": _ONE_WAY_NO_DEST})
     return out
+
+
+def _rewire_blue_warp_logic(world: "SohWorld",
+                            dungeon_table: list[EntranceDef]) -> None:
+    """Repoint each boss room's blue-warp *logic* edge to follow the placement.
+
+    ``_blue_warp_overrides`` fixes the game side; this fixes the region graph. The
+    ``BOSS_ROOM -> overworld`` edges are authored statically per boss room, so under
+    an entrance shuffle logic would still credit a relocated room with its *vanilla*
+    overworld exit -- e.g. Bongo Bongo placed behind Jabu Jabu could "reach" the
+    Graveyard warp pad, when defeating it actually ejects you outside Jabu. Mirror of
+    the override loop and share its chain (``_resolve_blue_warp_slot``), so logic and
+    the emitted overrides agree even when the boss's dungeon has itself been moved by
+    the dungeon-entrance shuffle.
+
+    Call after the boss/dungeon pools have been applied; gated the same as the
+    overrides (dungeon or boss shuffle on). Re-roll-safe: each edge is looked up by
+    its (stable) vanilla name and repointed from wherever it currently sits, and
+    ``_restore_graph`` resets it between attempts. The completion-event gate on the
+    edge is left untouched -- you trigger the warp by beating whichever boss is there."""
+    for d in BOSS_ENTRANCES:
+        slot = _resolve_blue_warp_slot(world, dungeon_table, d.fwd_child)
+        if slot is None:
+            continue
+        slot_dest = _DUNGEON_SLOT_BLUE_WARP[slot][0]
+        try:
+            entrance = world.get_entrance(_entrance_name(d.fwd_parent, d.fwd_child))
+        except KeyError:
+            continue
+        dest = entrance.connected_region
+        try:
+            boss_room = Regions(dest.name) if dest is not None else None
+        except ValueError:
+            boss_room = None
+        room_vanilla_dest = _BLUE_WARP_DEST_BY_BOSS_ROOM.get(boss_room)
+        if room_vanilla_dest is None:
+            continue
+        try:
+            blue_warp = world.get_entrance(_entrance_name(boss_room, room_vanilla_dest))
+        except KeyError:
+            continue
+        _reconnect(blue_warp, world.get_region(str(slot_dest)))
 
 
 # --- One-way entrances (spawns, warp songs, owl drops) -----------------------
@@ -2304,10 +2431,15 @@ def _run_entrance_pools(world: "SohWorld") -> list[dict[str, int]]:
     # Blue warps follow the boss/dungeon placement; emit them whenever either pool
     # is shuffled (Ship's includeBluewarps gate). Must run after the boss pool so
     # each boss slot's forward entrance reflects the boss now behind it.
+    # Blue warps are derived (never shuffled themselves): whenever dungeons or bosses
+    # move, a boss's blue warp ejects to the overworld of the dungeon-entrance slot
+    # its dungeon now occupies (Ship's includeBluewarps gate + resolution chain). The
+    # game-side overrides and the logic-graph rewiring share that chain so they agree.
     dungeon_shuffled = dungeon_opt != opts.shuffle_dungeon_entrances.option_off
     if dungeon_shuffled or opts.shuffle_boss_entrances.value:
         include_ganon = (dungeon_opt
                          == opts.shuffle_dungeon_entrances.option_on_plus_ganon)
-        overrides += _blue_warp_overrides(world, include_ganon)
+        overrides += _blue_warp_overrides(world, dungeon_table, include_ganon)
+        _rewire_blue_warp_logic(world, dungeon_table)
 
     return overrides
