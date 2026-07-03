@@ -2244,6 +2244,148 @@ def _trial_fill_accessible(world: "SohWorld") -> bool:
         mw.completion_condition[player] = saved_completion
 
 
+# --- Universal Tracker: replay a stored layout onto the graph ----------------
+#
+# When Universal Tracker re-generates a seed to rebuild the logic graph
+# (``world.using_ut``), the entrance layout is already decided and recorded in slot
+# data (``world.passthrough["entrances"]``, the very list ``fill_slot_data`` emits).
+# Re-running the shuffle would be slow (re-rolls + trial fills) AND wrong -- a fresh
+# RNG draw picks a different layout than the seed. Instead we replay each stored
+# override as the same graph edit the live shuffle made, read back from slot data.
+# The element's ship_type tells us how the live shuffle treated that edge's reverse:
+#   * one-way (owl/spawn/warp) -> repoint the single source edge to the landing
+#   * boss (child/adult)       -> reconnect the forward, disconnect the real reverse
+#   * blue warp                -> repoint the boss room's static logic edge
+#   * everything else (coupled + thieves forward) -> reconnect index -> override's child
+
+_UT_BOSS_TYPES = frozenset((ENTRANCE_TYPE_CHILD_BOSS, ENTRANCE_TYPE_ADULT_BOSS))
+_UT_ONE_WAY_TYPES = frozenset((
+    ENTRANCE_TYPE_OWL_DROP, ENTRANCE_TYPE_SPAWN, ENTRANCE_TYPE_WARP_SONG))
+
+
+def _build_ut_direction_map() -> "dict[int, tuple[Regions, Regions, bool]]":
+    """ENTR index -> ``(parent, child, is_reverse)`` for every coupled/boss/thieves
+    edge direction that maps to a real AP entrance.
+
+    Forward indices always resolve; a reverse index resolves only when its def names
+    a reverse AP edge. So the thieves-hideout reverses (``rev_parent``/``rev_child``
+    left None) and the adult/Jabu boss reverses are simply absent here and get skipped
+    by the loader -- which is exactly what the live shuffle does with them
+    (REVERSE_KEEP leaves them alone; those boss reverses are ``False_()``/absent)."""
+    out: "dict[int, tuple[Regions, Regions, bool]]" = {}
+    coupled: list[EntranceDef] = [
+        *DUNGEON_ENTRANCES, GANON_ENTRANCE, *BOSS_ENTRANCES, *INTERIOR_ENTRANCES,
+        *SPECIAL_INTERIOR_ENTRANCES, *GROTTO_ENTRANCES, *OVERWORLD_ENTRANCES,
+        *THIEVES_HIDEOUT_ENTRANCES,
+    ]
+    for d in coupled:
+        out[d.fwd_index] = (d.fwd_parent, d.fwd_child, False)
+        if d.rev_parent is not None and d.rev_child is not None:
+            out[d.rev_index] = (d.rev_parent, d.rev_child, True)
+    return out
+
+
+_UT_DIRECTION_MAP = _build_ut_direction_map()
+
+# One-way SOURCE ENTR index -> its vanilla ``(parent, dest)`` (to locate the AP edge).
+_UT_ONE_WAY_SOURCE_MAP: "dict[int, tuple[Regions, Regions]]" = {
+    d.index: (d.parent, d.dest)
+    for d in (*SPAWN_ENTRANCES, *WARP_SONG_ENTRANCES, *OWL_DROP_ENTRANCES)
+}
+# One-way TARGET ENTR index -> its vanilla landing region (Ship lands you at the
+# target index's original connected region, so this stays correct even when the
+# target's own pool is shuffled -- mirrors ``_ONE_WAY_TARGET_SPECS``).
+_UT_ONE_WAY_LANDING_MAP: "dict[int, Regions]" = {
+    index: region for _name, index, region, _pool in _ONE_WAY_TARGET_SPECS
+}
+# Blue-warp reverse lookups: which boss room a blue-warp ENTR ejects from, and where
+# a given override blue-warp ENTR lands (for the logic-graph edge). Ganon's blue warp
+# (0x23F) has no boss room, so it never appears in the first map (identity, skipped).
+_UT_BOSS_ROOM_BY_BLUE_WARP: "dict[int, Regions]" = {
+    index: room for room, index in _BLUE_WARP_BY_BOSS_ROOM.items()
+}
+_UT_BLUE_WARP_DEST_BY_OVERRIDE: "dict[int, Regions]" = {
+    index: dest for dest, index in _DUNGEON_SLOT_BLUE_WARP.values()
+}
+
+
+def _ut_load_blue_warp(world: "SohWorld", index: int, override: int) -> None:
+    """Replay one blue-warp *logic* edge from a stored override (the game side is moot
+    under UT). Mirror of :func:`_rewire_blue_warp_logic`: repoint the boss room's static
+    ``BOSS_ROOM -> overworld`` edge to where the override's slot lands. Ganon's blue
+    warp has no boss room (identity) and is skipped."""
+    boss_room = _UT_BOSS_ROOM_BY_BLUE_WARP.get(index)
+    if boss_room is None:
+        return
+    vanilla_dest = _BLUE_WARP_DEST_BY_BOSS_ROOM.get(boss_room)
+    slot_dest = _UT_BLUE_WARP_DEST_BY_OVERRIDE.get(override)
+    if vanilla_dest is None or slot_dest is None:
+        return
+    try:
+        blue_warp = world.get_entrance(_entrance_name(boss_room, vanilla_dest))
+    except KeyError:
+        return
+    _reconnect(blue_warp, world.get_region(str(slot_dest)))
+
+
+def _load_entrances_from_slot_data(world: "SohWorld") -> None:
+    """Rebuild the entrance graph from the layout recorded in slot data, for UT.
+
+    Replays each stored override element as the same graph edit the live shuffle made,
+    keyed off the element's ship_type (see the module note above this function). Fast
+    and deterministic -- no re-roll, no trial fill -- so the tracker's graph matches the
+    seed exactly without paying the shuffle cost. Indices with no AP entrance to move
+    (thieves reverses, absent boss reverses, unrecognised entries from a newer seed) are
+    skipped, leaving those edges vanilla, just as the live shuffle leaves them."""
+    elements = (getattr(world, "passthrough", None) or {}).get("entrances") or []
+    applied = 0
+    for el in elements:
+        stype = el.get("type")
+        index = el.get("index")
+        override = el.get("override")
+        if index is None or override is None:
+            continue
+
+        if stype == ENTRANCE_TYPE_BLUE_WARP:
+            _ut_load_blue_warp(world, index, override)
+            continue
+
+        if stype in _UT_ONE_WAY_TYPES:
+            src = _UT_ONE_WAY_SOURCE_MAP.get(index)
+            landing = _UT_ONE_WAY_LANDING_MAP.get(override)
+            if src is None or landing is None:
+                continue
+            try:
+                ent = world.get_entrance(_entrance_name(src[0], src[1]))
+            except KeyError:
+                continue
+            _reconnect(ent, world.get_region(str(landing)))
+            applied += 1
+            continue
+
+        info = _UT_DIRECTION_MAP.get(index)
+        if info is None:
+            continue  # thieves reverse / absent boss reverse -> left vanilla
+        parent, child, is_reverse = info
+        try:
+            ent = world.get_entrance(_entrance_name(parent, child))
+        except KeyError:
+            continue
+        if stype in _UT_BOSS_TYPES and is_reverse:
+            _disconnect(ent)  # REVERSE_DEADEND: boss room is a forward-only dead end
+            applied += 1
+            continue
+        tgt = _UT_DIRECTION_MAP.get(override)
+        if tgt is None:
+            continue
+        _reconnect(ent, world.get_region(str(tgt[1])))
+        applied += 1
+
+    world.entrance_overrides = list(elements)
+    logger.debug("ER (UT): applied %d of %d stored entrance overrides for player %d",
+                 applied, len(elements), world.player)
+
+
 def shuffle_entrances(world: "SohWorld") -> None:
     """Run every enabled entrance pool, re-rolling until the layout is item-fillable,
     and stash slot-data overrides on the world.
@@ -2259,8 +2401,16 @@ def shuffle_entrances(world: "SohWorld") -> None:
     we snapshot the vanilla graph, run all pools, trial-fill once, and on failure restore
     and re-roll the whole shuffle (a fresh RNG draw). The cheaper dead-end-only pools
     (dungeon/boss/simple-interior/grotto) never hit this, so they skip the gate and run
-    exactly once, unchanged."""
+    exactly once, unchanged.
+
+    Under Universal Tracker (``world.using_ut``) the layout is already fixed and stored
+    in slot data, so we replay it directly (:func:`_load_entrances_from_slot_data`)
+    instead of re-shuffling: a fresh shuffle would be slow (re-rolls + trial fills) and,
+    worse, would draw a *different* layout than the seed. See that function."""
     world.entrance_overrides = []
+    if getattr(world, "using_ut", False):
+        _load_entrances_from_slot_data(world)
+        return
     opts = world.options
     interior_all = (opts.shuffle_interior_entrances.value
                     == opts.shuffle_interior_entrances.option_all)
