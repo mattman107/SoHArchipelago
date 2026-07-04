@@ -96,27 +96,20 @@ logger = logging.getLogger("SOH_OOT.ER")
 #     graph would need its reverse edges rewired to match Ship's pairs (a region-graph
 #     change that would fight the AP port's intentional simplification -- not done).
 #
-# #5  OMITTED ENTRANCES (intentional, pending features):
-#       - Ship's static glitchless "priority entrances" (Bolero/Nocturne/Requiem) are
-#         replaced by per-seed dynamic detection of load-bearing one-way landings
-#         (`_one_way_requirements`), which subsumes them. See the one-way section.
-#       - GANON'S TOWER entrance shuffle is not implemented -- see #GT.
+# #5  PRIORITY ENTRANCES DIFFER. Ship uses a static glitchless "priority entrances"
+#     list (Bolero/Nocturne/Requiem); this port instead does per-seed dynamic detection
+#     of load-bearing one-way landings (`_one_way_requirements`), which subsumes that
+#     list. Re-verify if upstream changes how priority entrances are chosen. See the
+#     one-way section.
 #
-# #DEC DECOUPLED ENTRANCES (RSK_DECOUPLED_ENTRANCES, `decouple_entrances` option): the
-#     forward and reverse of each two-way entrance are shuffled independently. Ported:
-#     the coupled-four pools (dungeon/interior/grotto shuffle their reverse as a separate
-#     `<Type>Reverse` pool = two independent passes via `_shuffle_decoupled`; overworld
-#     folds both directions + the GV Lower Stream -> Lake Hylia one-way (ENTR 0x219, now
-#     included only when decoupled) into ONE pool; the mixed pool folds all directions in
-#     together). Each direction emits its own override with destination/overrideDestination
-#     = -1 (`_build_slot_data(decoupled=True)`). The wrong-age forbidden check is skipped
-#     (Ship entrance.cpp:822; `_age_exits_are_safe` returns True). Blue warps do NOT chain
-#     through the dungeon shuffle (`_resolve_blue_warp_slot` returns identity) -- each boss
-#     ejects to its own vanilla pad. DIVERGENCE: BOSS and THIEVES reverses are NOT shuffled
-#     independently under decoupled (their AP reverses are forward-only dead-ends / a
-#     non-mirrored maze -- see #TH; Ship's BossReverse/ThievesHideoutReverse have no AP
-#     counterpart), so those reverses stay vanilla; their forward doors still emit decoupled
-#     (-1-dest) overrides.
+# #DEC DECOUPLED ENTRANCES (`decouple_entrances`): under decoupled, BOSS and THIEVES
+#     reverses are NOT shuffled independently the way Ship shuffles its BossReverse /
+#     ThievesHideoutReverse pools. AP's boss reverses are forward-only dead-ends and its
+#     hideout reverses are a non-mirrored maze (see #TH), so those pools have no AP
+#     counterpart to shuffle -- the reverses stay vanilla while the forward doors still
+#     emit decoupled (-1-dest) overrides. Removing this needs the per-edge reverse-mode
+#     architecture noted in #MIX/#TH. (The rest of decoupled is a faithful port -- see
+#     `_shuffle_decoupled` / `_build_slot_data(decoupled=True)`.)
 #
 # #MIX MIXED ENTRANCE POOLS cover only the four COUPLED pools (dungeon, interior,
 #     grotto, overworld), all REVERSE_COUPLE, which combine cleanly: a combined
@@ -129,26 +122,6 @@ logger = logging.getLogger("SOH_OOT.ER")
 #     per-edge reverse-mode architecture. One-way pools (spawn/warp/owl) are never
 #     mixed (matches Ship -- they live in a separate one-way pool). Mixing is purely
 #     AP-side generation; Ship just applies the resulting per-entrance overrides.
-#
-# #GT GANON'S TOWER ENTRANCE (Ship EntranceType::GanonTower=14, RSK_SHUFFLE_GANONS_
-#     TOWER_ENTRANCE) is NOT implemented -- it needs an AP region-graph change first.
-#     In Ship it is the loading zone GANONS_TOWER_ENTRYWAY <-> GANONS_TOWER_STAIRS_1
-#     (fwd ENTR_GANONS_TOWER_0 = 0x41B, rev ENTR_INSIDE_GANONS_CASTLE_1 = 0x534),
-#     shuffled INTO THE BOSS POOL (only when boss entrances are also shuffled). Its
-#     blue warp is ENTR_OUTSIDE_GANONS_CASTLE_1_2 = 0x23F -- which we ALREADY emit as
-#     the Ganon blue warp (_GANON_BLUE_WARP_INDEX), so that piece is covered.
-#     BLOCKER: Ship keeps the Ganon's-Trials requirement on the *approach* to the
-#     tower entryway and leaves the tower entrance (entryway->stairs) UNGATED, with a
-#     separate STAIRS_1 region. AP has no such loading-zone region and instead fuses
-#     the trials gate directly onto GANONS_TOWER_ENTRYWAY -> GANONS_TOWER_FLOOR_1
-#     (location_access/dungeons/ganons_castle.py). Shuffling that AP edge would move
-#     the trials requirement with it (our shuffle moves an edge AND its rule), gating
-#     different checks behind trials than Ship -> a logic-contract divergence (both
-#     still beatable). A faithful port must first restructure the AP graph: add an
-#     ungated tower loading-zone region (Ship's STAIRS_1) and keep the trials gate on
-#     the tower climb, then add GANON_TOWER to the boss pool (REVERSE_DEADEND) and
-#     fold the tower into the boss blue-warp two-hop (bossRoomExitPairs includes
-#     GANONS_TOWER_STAIRS_1 -> CASTLE_GROUNDS). Deferred by decision 2026-06-28.
 #
 # #6  PLACEMENT ALGORITHM DIFFERS (but the *result* is contract-compatible). Ship
 #     uses incremental assumed-fill placement with per-entrance reachability checks;
@@ -210,6 +183,7 @@ ENTRANCE_TYPE_DUNGEON = 5
 ENTRANCE_TYPE_GANON_DUNGEON = 6
 ENTRANCE_TYPE_CHILD_BOSS = 10
 ENTRANCE_TYPE_ADULT_BOSS = 12
+ENTRANCE_TYPE_GANON_TOWER = 14
 ENTRANCE_TYPE_INTERIOR = 15
 ENTRANCE_TYPE_SPECIAL_INTERIOR = 17
 ENTRANCE_TYPE_THIEVES_HIDEOUT = 18
@@ -353,6 +327,22 @@ GANON_ENTRANCE = EntranceDef(
     Regions.GANONS_CASTLE_LEDGE, Regions.GANONS_CASTLE_ENTRYWAY,
     0x467, 0x23D, ENTRANCE_TYPE_GANON_DUNGEON,
     Regions.GANONS_CASTLE_ENTRYWAY, Regions.CASTLE_GROUNDS_FROM_GANONS_CASTLE)
+
+# Ganon's Tower entrance (Ship EntranceType::GanonTower, ENTR_GANONS_TOWER_0 / rev
+# ENTR_INSIDE_GANONS_CASTLE_1). The forward edge is the ungated loading zone
+# GANONS_TOWER_ENTRYWAY -> GANONS_TOWER_FLOOR_1 (AP's FLOOR_1 == Ship's STAIRS_1);
+# the Ganon's-Trials gate lives on the *approach* (GANONS_CASTLE_LOBBY ->
+# GANONS_TOWER_ENTRYWAY), so shuffling this edge does not move the trials
+# requirement -- matching Ship (ganons_castle.cpp: LOBBY->ENTRYWAY gated,
+# ENTRYWAY->STAIRS_1 true). Treated as a boss (REVERSE_DEADEND): FLOOR_1 climbs to
+# Ganon and ends the game, so it is a forward-only dead end and its reverse
+# (FLOOR_1 -> ENTRYWAY) is disconnected once shuffled. Only shuffled when boss
+# entrances are shuffled AND ShuffleGanonsTower is on (Ship entrance.cpp:1248/1260).
+GANON_TOWER_ENTRANCE = EntranceDef(
+    "Ganons Tower",
+    Regions.GANONS_TOWER_ENTRYWAY, Regions.GANONS_TOWER_FLOOR_1,
+    0x41B, 0x534, ENTRANCE_TYPE_GANON_TOWER,
+    Regions.GANONS_TOWER_FLOOR_1, Regions.GANONS_TOWER_ENTRYWAY)
 
 
 # Boss-room entrances. Forward edge is "*_BOSS_ENTRYWAY" -> "*_BOSS_ROOM"
@@ -1570,9 +1560,13 @@ _BLUE_WARP_BY_BOSS_ROOM: dict[Regions, int] = {
     Regions.WATER_TEMPLE_BOSS_ROOM: 0x60C,
     Regions.SPIRIT_TEMPLE_BOSS_ROOM: 0x610,
     Regions.SHADOW_TEMPLE_BOSS_ROOM: 0x580,
+    # Ganon's Tower, when it joins the boss pool (ShuffleGanonsTower). FLOOR_1 is
+    # AP's analog of Ship's STAIRS_1; its "blue warp" ejects to Castle Grounds.
+    Regions.GANONS_TOWER_FLOOR_1: 0x23F,
 }
-# Ganon's Tower blue warp (Castle Grounds). Tied to the Ganon's-tower entrance
-# shuffle (our dungeon "on + Ganon"); Ship's resolution leaves it identity.
+# Ganon's Tower blue warp (Castle Grounds). Emitted as identity for the dungeon
+# "on + Ganon" shuffle when the tower entrance itself is NOT shuffled; when the
+# tower joins the boss pool it is resolved through the boss-slot loop instead.
 _GANON_BLUE_WARP_INDEX = 0x23F
 
 # The overworld region each boss room's blue warp ejects to in vanilla. These are
@@ -1590,6 +1584,10 @@ _BLUE_WARP_DEST_BY_BOSS_ROOM: dict[Regions, Regions] = {
     Regions.WATER_TEMPLE_BOSS_ROOM: Regions.LAKE_HYLIA,
     Regions.SPIRIT_TEMPLE_BOSS_ROOM: Regions.DESERT_COLOSSUS,
     Regions.SHADOW_TEMPLE_BOSS_ROOM: Regions.GRAVEYARD_WARP_PAD_REGION,
+    # Tower: no such static edge exists in AP (FLOOR_1 climbs to Ganon and the game
+    # ends -- no blue-warp-out edge), so _rewire_blue_warp_logic finds nothing to
+    # repoint for the tower slot. Present for symmetry with the override loop.
+    Regions.GANONS_TOWER_FLOOR_1: Regions.CASTLE_GROUNDS_FROM_GANONS_CASTLE,
 }
 
 # Ship's blue-warp derivation chains through the *dungeon-entrance* shuffle as well
@@ -1606,6 +1604,9 @@ _BOSS_ROOM_TO_DUNGEON_ENTRYWAY: dict[Regions, Regions] = {
     Regions.WATER_TEMPLE_BOSS_ROOM: Regions.WATER_TEMPLE_ENTRYWAY,
     Regions.SPIRIT_TEMPLE_BOSS_ROOM: Regions.SPIRIT_TEMPLE_ENTRYWAY,
     Regions.SHADOW_TEMPLE_BOSS_ROOM: Regions.SHADOW_TEMPLE_ENTRYWAY,
+    # Tower: its "dungeon" is Ganon's Castle, so its blue warp chains through the
+    # Ganon's Castle entrance shuffle (dungeon "on + Ganon"); identity otherwise.
+    Regions.GANONS_TOWER_FLOOR_1: Regions.GANONS_CASTLE_ENTRYWAY,
 }
 # ...and, per dungeon-entrance slot (keyed by its vanilla entryway), where that
 # slot's blue warp lands: (overworld region for the logic graph, ENTR index for the
@@ -1665,7 +1666,9 @@ def _resolve_blue_warp_slot(world: "SohWorld", dungeon_table: list[EntranceDef],
 
 
 def _blue_warp_overrides(world: "SohWorld", dungeon_table: list[EntranceDef],
-                         include_ganon: bool) -> list[dict[str, int]]:
+                         include_ganon: bool,
+                         extra_slots: "list[EntranceDef] | None" = None
+                         ) -> list[dict[str, int]]:
     """Derive BlueWarp (type 4) override elements from the current placement.
 
     Call after the boss/dungeon pools have been applied. For each dungeon boss slot,
@@ -1674,9 +1677,15 @@ def _blue_warp_overrides(world: "SohWorld", dungeon_table: list[EntranceDef],
     -- following both the boss shuffle (which boss is here) and the dungeon-entrance
     shuffle (where the slot's dungeon now sits, via ``_resolve_blue_warp_slot``). So
     we emit ``index = blue_warp(boss_room_now_here)``, ``override = blue_warp(resolved
-    slot)``. One-way, so the destination fields are ``-1`` (see ``_ONE_WAY_NO_DEST``)."""
+    slot)``. One-way, so the destination fields are ``-1`` (see ``_ONE_WAY_NO_DEST``).
+
+    ``extra_slots`` adds boss-like slots beyond the eight dungeon bosses -- namely
+    Ganon's Tower when it joins the boss pool. Its FLOOR_1 is treated as a boss room
+    (blue warp ``0x23F``, dungeon Ganon's Castle), so whichever slot now holds the
+    tower climb emits ``0x23F`` and whatever boss now sits behind the tower entryway
+    ejects to Castle Grounds -- exactly one element per boss room across all slots."""
     out: list[dict[str, int]] = []
-    for d in BOSS_ENTRANCES:
+    for d in list(BOSS_ENTRANCES) + list(extra_slots or []):
         slot = _resolve_blue_warp_slot(world, dungeon_table, d.fwd_child)
         if slot is None:
             continue
@@ -1696,7 +1705,10 @@ def _blue_warp_overrides(world: "SohWorld", dungeon_table: list[EntranceDef],
         out.append({"type": ENTRANCE_TYPE_BLUE_WARP, "index": boss_index,
                     "destination": _ONE_WAY_NO_DEST, "override": override_index,
                     "overrideDestination": _ONE_WAY_NO_DEST})
-    if include_ganon:
+    # The tower slot (in ``extra_slots``) already emits index 0x23F through the loop
+    # above, so only emit the standalone Ganon identity warp when the tower is NOT in
+    # the pool -- otherwise 0x23F would be emitted twice.
+    if include_ganon and not extra_slots:
         out.append({"type": ENTRANCE_TYPE_BLUE_WARP,
                     "index": _GANON_BLUE_WARP_INDEX, "destination": _ONE_WAY_NO_DEST,
                     "override": _GANON_BLUE_WARP_INDEX,
@@ -1705,7 +1717,8 @@ def _blue_warp_overrides(world: "SohWorld", dungeon_table: list[EntranceDef],
 
 
 def _rewire_blue_warp_logic(world: "SohWorld",
-                            dungeon_table: list[EntranceDef]) -> None:
+                            dungeon_table: list[EntranceDef],
+                            extra_slots: "list[EntranceDef] | None" = None) -> None:
     """Repoint each boss room's blue-warp *logic* edge to follow the placement.
 
     ``_blue_warp_overrides`` fixes the game side; this fixes the region graph. The
@@ -1721,8 +1734,13 @@ def _rewire_blue_warp_logic(world: "SohWorld",
     overrides (dungeon or boss shuffle on). Re-roll-safe: each edge is looked up by
     its (stable) vanilla name and repointed from wherever it currently sits, and
     ``_restore_graph`` resets it between attempts. The completion-event gate on the
-    edge is left untouched -- you trigger the warp by beating whichever boss is there."""
-    for d in BOSS_ENTRANCES:
+    edge is left untouched -- you trigger the warp by beating whichever boss is there.
+
+    ``extra_slots`` mirrors ``_blue_warp_overrides``: the tower slot, when shuffled.
+    The tower's own FLOOR_1 has no blue-warp-out edge in AP (beating Ganon ends the
+    game), so a slot holding FLOOR_1 finds nothing to repoint; but a real boss room
+    behind the tower entryway is repointed to Castle Grounds like any other slot."""
+    for d in list(BOSS_ENTRANCES) + list(extra_slots or []):
         slot = _resolve_blue_warp_slot(world, dungeon_table, d.fwd_child)
         if slot is None:
             continue
@@ -2368,7 +2386,8 @@ def _trial_fill_accessible(world: "SohWorld") -> bool:
 #   * blue warp                -> repoint the boss room's static logic edge
 #   * everything else (coupled + thieves forward) -> reconnect index -> override's child
 
-_UT_BOSS_TYPES = frozenset((ENTRANCE_TYPE_CHILD_BOSS, ENTRANCE_TYPE_ADULT_BOSS))
+_UT_BOSS_TYPES = frozenset((ENTRANCE_TYPE_CHILD_BOSS, ENTRANCE_TYPE_ADULT_BOSS,
+                            ENTRANCE_TYPE_GANON_TOWER))
 _UT_ONE_WAY_TYPES = frozenset((
     ENTRANCE_TYPE_OWL_DROP, ENTRANCE_TYPE_SPAWN, ENTRANCE_TYPE_WARP_SONG))
 
@@ -2384,9 +2403,9 @@ def _build_ut_direction_map() -> "dict[int, tuple[Regions, Regions, bool]]":
     (REVERSE_KEEP leaves them alone; those boss reverses are ``False_()``/absent)."""
     out: "dict[int, tuple[Regions, Regions, bool]]" = {}
     coupled: list[EntranceDef] = [
-        *DUNGEON_ENTRANCES, GANON_ENTRANCE, *BOSS_ENTRANCES, *INTERIOR_ENTRANCES,
-        *SPECIAL_INTERIOR_ENTRANCES, *GROTTO_ENTRANCES, *OVERWORLD_ENTRANCES,
-        *THIEVES_HIDEOUT_ENTRANCES,
+        *DUNGEON_ENTRANCES, GANON_ENTRANCE, GANON_TOWER_ENTRANCE, *BOSS_ENTRANCES,
+        *INTERIOR_ENTRANCES, *SPECIAL_INTERIOR_ENTRANCES, *GROTTO_ENTRANCES,
+        *OVERWORLD_ENTRANCES, *THIEVES_HIDEOUT_ENTRANCES,
     ]
     for d in coupled:
         out[d.fwd_index] = (d.fwd_parent, d.fwd_child, False)
@@ -2431,9 +2450,9 @@ def _build_entrance_label_map() -> "dict[str, str]":
     the rename pass runs). First writer wins (forward before reverse), so it is deterministic."""
     labels: "dict[str, str]" = {}
     coupled: list[EntranceDef] = [
-        *DUNGEON_ENTRANCES, GANON_ENTRANCE, *BOSS_ENTRANCES, *INTERIOR_ENTRANCES,
-        *SPECIAL_INTERIOR_ENTRANCES, *GROTTO_ENTRANCES, *OVERWORLD_ENTRANCES,
-        *THIEVES_HIDEOUT_ENTRANCES,
+        *DUNGEON_ENTRANCES, GANON_ENTRANCE, GANON_TOWER_ENTRANCE, *BOSS_ENTRANCES,
+        *INTERIOR_ENTRANCES, *SPECIAL_INTERIOR_ENTRANCES, *GROTTO_ENTRANCES,
+        *OVERWORLD_ENTRANCES, *THIEVES_HIDEOUT_ENTRANCES,
     ]
     for d in coupled:
         labels.setdefault(_entrance_name(d.fwd_parent, d.fwd_child), d.name)
@@ -2803,13 +2822,26 @@ def _run_entrance_pools(world: "SohWorld") -> list[dict[str, int]]:
     # independently; AP's boss reverses are forward-only dead-ends (DIVERGENCE: absent /
     # False_ / disconnected), so there is nothing to shuffle -- the boss door reverse
     # stays vanilla under decoupled. Boss forward still permutes as normal.
+    #
+    # Ganon's Tower (ShuffleGanonsTower) joins the boss pool when boss shuffle is on
+    # (Ship entrance.cpp:1248/1260): the FULL pool takes it directly; AGE RESTRICTED
+    # puts it with the ADULT bosses (reaching the tower entryway is adult-only). Same
+    # REVERSE_DEADEND machinery -- FLOOR_1 climbs to Ganon and is a forward-only dead
+    # end. Its blue warp is resolved through ``extra_slots`` below.
     boss_opt = opts.shuffle_boss_entrances
+    boss_on = boss_opt.value != boss_opt.option_off
+    tower_shuffled = boss_on and bool(opts.shuffle_ganons_tower.value)
     if boss_opt.value == boss_opt.option_full:
-        overrides += _shuffle_pool(world, "boss", BOSS_ENTRANCES, REVERSE_DEADEND,
+        boss_pool = list(BOSS_ENTRANCES)
+        if tower_shuffled:
+            boss_pool.append(GANON_TOWER_ENTRANCE)
+        overrides += _shuffle_pool(world, "boss", boss_pool, REVERSE_DEADEND,
                                    dead_end_targets=False, decoupled=decoupled)
     elif boss_opt.value == boss_opt.option_age_restricted:
         child_bosses = [d for d in BOSS_ENTRANCES if d.ship_type == ENTRANCE_TYPE_CHILD_BOSS]
         adult_bosses = [d for d in BOSS_ENTRANCES if d.ship_type == ENTRANCE_TYPE_ADULT_BOSS]
+        if tower_shuffled:
+            adult_bosses.append(GANON_TOWER_ENTRANCE)
         overrides += _shuffle_pool(world, "child boss", child_bosses, REVERSE_DEADEND,
                                    dead_end_targets=False, decoupled=decoupled)
         overrides += _shuffle_pool(world, "adult boss", adult_bosses, REVERSE_DEADEND,
@@ -2852,7 +2884,11 @@ def _run_entrance_pools(world: "SohWorld") -> list[dict[str, int]]:
     if dungeon_shuffled or opts.shuffle_boss_entrances.value:
         include_ganon = (dungeon_opt
                          == opts.shuffle_dungeon_entrances.option_on_plus_ganon)
-        overrides += _blue_warp_overrides(world, dungeon_table, include_ganon)
-        _rewire_blue_warp_logic(world, dungeon_table)
+        # The tower joins the blue-warp resolution as a boss-like slot when shuffled,
+        # so its FLOOR_1 climb and any boss now behind the tower entryway get correct
+        # ejection targets (and the identity Ganon warp is suppressed -- see above).
+        extra = [GANON_TOWER_ENTRANCE] if tower_shuffled else []
+        overrides += _blue_warp_overrides(world, dungeon_table, include_ganon, extra)
+        _rewire_blue_warp_logic(world, dungeon_table, extra)
 
     return overrides

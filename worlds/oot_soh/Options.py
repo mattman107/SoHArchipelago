@@ -632,6 +632,16 @@ class ShuffleBossEntrances(Choice):
     default = 0
 
 
+class ShuffleGanonsTower(Toggle):
+    """
+    Include the entrance to Ganon's Tower (the climb up to Ganondorf) in the boss
+    entrance shuffle. Only takes effect when Shuffle Boss Entrances is on; under Age
+    Restricted it joins the adult boss pool. The tower's blue warp still ejects to
+    Ganon's Castle grounds (following the boss/dungeon placement).
+    """
+    display_name = "Shuffle Ganon's Tower Entrance"
+
+
 class ShuffleInteriorEntrances(Choice):
     """
     Shuffle the entrances to interiors (houses, shops, etc.).
@@ -1764,6 +1774,7 @@ class SohOptions(PerGameCommonOptions):
     shuffle_adult_trade_items: ShuffleAdultTradeItems
     shuffle_dungeon_entrances: ShuffleDungeonEntrances
     shuffle_boss_entrances: ShuffleBossEntrances
+    shuffle_ganons_tower: ShuffleGanonsTower
     shuffle_interior_entrances: ShuffleInteriorEntrances
     shuffle_grotto_entrances: ShuffleGrottoEntrances
     shuffle_thieves_hideout_entrances: ShuffleThievesHideoutEntrances
@@ -2108,6 +2119,7 @@ soh_option_groups = [
     OptionGroup("Shuffle Entrances", [
         ShuffleDungeonEntrances,
         ShuffleBossEntrances,
+        ShuffleGanonsTower,
         ShuffleInteriorEntrances,
         ShuffleGrottoEntrances,
         ShuffleThievesHideoutEntrances,

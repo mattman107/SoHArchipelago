@@ -480,6 +480,7 @@ class SohWorld(CachedRuleBuilderWorld):
             "shuffle_adult_trade_items": self.options.shuffle_adult_trade_items.value,
             "shuffle_dungeon_entrances": self.options.shuffle_dungeon_entrances.value,
             "shuffle_boss_entrances": self.options.shuffle_boss_entrances.value,
+            "shuffle_ganons_tower": self.options.shuffle_ganons_tower.value,
             "shuffle_interior_entrances": self.options.shuffle_interior_entrances.value,
             "shuffle_grotto_entrances": self.options.shuffle_grotto_entrances.value,
             "shuffle_thieves_hideout_entrances": self.options.shuffle_thieves_hideout_entrances.value,

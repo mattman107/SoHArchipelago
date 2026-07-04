@@ -56,7 +56,7 @@ def set_region_rules(world: "SohWorld") -> None:
         (Regions.GANONS_CASTLE_SHADOW_TRIAL, lambda bundle: OptionFilter(MedallionLockedTrials, False) | has_item(Items.SHADOW_MEDALLION, bundle)),
         (Regions.GANONS_CASTLE_SPIRIT_TRIAL, lambda bundle: OptionFilter(MedallionLockedTrials, False) | has_item(Items.SPIRIT_MEDALLION, bundle)),
         (Regions.GANONS_CASTLE_LIGHT_TRIAL, lambda bundle: can_use(Items.GOLDEN_GAUNTLETS, bundle) & (OptionFilter(MedallionLockedTrials, False) | has_item(Items.LIGHT_MEDALLION, bundle))),
-        (Regions.GANONS_TOWER_ENTRYWAY, lambda bundle: True_()),
+        (Regions.GANONS_TOWER_ENTRYWAY, lambda bundle: OptionFilter(GanonsTrials, GanonsTrials.option_skip) | HasAll(*[(str(trial_mapping[trial])) for trial in world.ganons_trials])),
         (Regions.GANONS_CASTLE_DEKU_SCRUBS, lambda bundle: can_do_trick(Tricks.LENS_GANON, bundle) |
          can_use(Items.LENS_OF_TRUTH, bundle)),
     ])
@@ -291,8 +291,7 @@ def set_region_rules(world: "SohWorld") -> None:
     # Connections
     connect_regions(Regions.GANONS_TOWER_ENTRYWAY, world, [
         (Regions.GANONS_CASTLE_LOBBY, lambda bundle: True_()),
-        (Regions.GANONS_TOWER_FLOOR_1, lambda bundle: OptionFilter(GanonsTrials, GanonsTrials.option_skip)
-                        | HasAll(*[(str(trial_mapping[trial])) for trial in world.ganons_trials]))
+        (Regions.GANONS_TOWER_FLOOR_1, lambda bundle: True_())
     ])
 
     # Ganon's Tower Floor 1
