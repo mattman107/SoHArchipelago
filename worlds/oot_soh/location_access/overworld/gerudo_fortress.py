@@ -138,7 +138,7 @@ def set_region_rules(world: "SohWorld") -> None:
     # GF Top of Lower Vines
     # Connections
     connect_regions(Regions.GF_TOP_OF_LOWER_VINES, world, [
-        (Regions.THIEVES_HIDEOUT_KITCHEN_TOP, lambda bundle: True_()),
+        (Regions.THIEVES_HIDEOUT_KITCHEN_BY_CORRIDOR, lambda bundle: True_()),
         (Regions.THIEVES_HIDEOUT_DOUBLE_CELL, lambda bundle: True_()),
         (Regions.GF_ABOVE_GTG, lambda bundle: True_()),
         (Regions.GF_BOTTOM_OF_LOWER_VINES, lambda bundle: True_()),
@@ -149,7 +149,7 @@ def set_region_rules(world: "SohWorld") -> None:
     # GF Near GS
     # Connections
     connect_regions(Regions.GF_NEAR_GS, world, [
-        (Regions.THIEVES_HIDEOUT_KITCHEN_TOP, lambda bundle: True_()),
+        (Regions.THIEVES_HIDEOUT_KITCHEN_OPPOSITE_CORRIDOR, lambda bundle: True_()),
         (Regions.GF_BOTTOM_OF_LOWER_VINES, lambda bundle: True_()),
         (Regions.GF_TOP_OF_LOWER_VINES, lambda bundle: True_()),
         (Regions.GF_SLOPED_ROOF, lambda bundle: is_adult(

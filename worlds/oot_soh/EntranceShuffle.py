@@ -80,21 +80,17 @@ logger = logging.getLogger("SOH_OOT.ER")
 #         AP uses asymmetric DMC_*_LOCAL (forward) / DMC_*_NEARBY (reverse). See the
 #         per-row notes in OVERWORLD_ENTRANCES and the ``_ow`` docstring.
 #
-# #TH THIEVES' HIDEOUT is modeled differently in AP (the AP graph itself notes a
-#     "deviation from ship logic due to the union of locations"). All 13 FORWARD
-#     doorways (fortress -> cell) match Ship 1:1, but the AP REVERSE edges are a
-#     simplified connected maze that does NOT mirror Ship's 13 entrance pairs (e.g.
-#     AP's Double Cell is entered from Above-GTG/Top-of-Vines yet exits to Outskirts/
-#     Near-Grotto; Ship's Steep-Slope reverses are absent entirely). Ship also unifies
-#     two kitchen corridor regions into AP's single THIEVES_HIDEOUT_KITCHEN_TOP. So we
-#     shuffle FORWARD-ONLY (REVERSE_KEEP): permute the 13 forward doors, leave AP's
-#     reverse maze untouched, and still emit the faithful coupled fwd/rev overrides
-#     (ENTR_THIEVES_HIDEOUT_* / ENTR_GERUDOS_FORTRESS_*) for Ship. Correct because the
-#     Gerudo Fortress is one connected area: any forward permutation keeps every cell
-#     reachable + exitable, and Ship's coupled reverses only ever return you the way
-#     you came. To make this a TRUE coupled shuffle, the AP location_access hideout
-#     graph would need its reverse edges rewired to match Ship's pairs (a region-graph
-#     change that would fight the AP port's intentional simplification -- not done).
+# #TH THIEVES' HIDEOUT: the AP hideout graph now mirrors Ship's 13 entrance pairs 1:1.
+#     All 13 FORWARD doorways (fortress -> cell) match Ship, and the REVERSE edges were
+#     rewired to match too: Double Cell exits to Above-GTG/Top-of-Vines (+ a free
+#     Outskirts escape, as in Ship), Steep Slope exits to Near-Grotto/Bottom-of-Vines,
+#     and the formerly-unified KITCHEN_TOP is split into KITCHEN_BY_CORRIDOR (exits to
+#     Top-of-Lower-Vines) and KITCHEN_OPPOSITE_CORRIDOR (exits to Near-GS), matching
+#     Ship's two kitchen-top cells. So the pool shuffles REVERSE_COUPLE like the other
+#     coupled pools, emitting the faithful fwd/rev overrides (ENTR_THIEVES_HIDEOUT_* /
+#     ENTR_GERUDOS_FORTRESS_*). AP still UNIONS some locations for simplicity (the
+#     carpenter rescue -> THIEVES_HIDEOUT_RESCUE_CARPENTERS, the kitchen pots ->
+#     THIEVES_HIDEOUT_KITCHEN_POTS); those union regions are internal, not shuffled.
 #
 # #5  PRIORITY ENTRANCES DIFFER. Ship uses a static glitchless "priority entrances"
 #     list (Bolero/Nocturne/Requiem); this port instead does per-seed dynamic detection
@@ -103,26 +99,24 @@ logger = logging.getLogger("SOH_OOT.ER")
 #     one-way section.
 #
 # #DEC DECOUPLED ENTRANCES (`decouple_entrances`): under decoupled, BOSS and THIEVES
-#     reverses are NOT shuffled independently the way Ship shuffles its BossReverse /
-#     ThievesHideoutReverse pools. The boss reverse edges now match Ship's topology 1:1
-#     (every boss names its reverse; see BOSS_ENTRANCES), but they are still shuffled
-#     as forward-only dead-ends (REVERSE_DEADEND), not as an independent reverse pool;
-#     the hideout reverses are a non-mirrored maze (see #TH). So under decoupled the
-#     reverses stay vanilla while the forward doors still emit decoupled (-1-dest)
-#     overrides. Removing this needs the per-edge reverse-mode architecture noted in
-#     #MIX/#TH. (The rest of decoupled is a faithful port -- see `_shuffle_decoupled` /
-#     `_build_slot_data(decoupled=True)`.)
+#     reverses are NOT yet shuffled independently the way Ship shuffles its BossReverse /
+#     ThievesHideoutReverse pools. Both now name reverse edges that match Ship's topology
+#     1:1 (see BOSS_ENTRANCES / THIEVES_HIDEOUT_ENTRANCES), but under decoupled the boss
+#     pool still runs REVERSE_DEADEND and the hideout pool still runs REVERSE_KEEP
+#     (forward-only), so their reverses stay vanilla while the forward doors emit
+#     decoupled (-1-dest) overrides. (Coupled TH already shuffles both directions --
+#     REVERSE_COUPLE.) Removing the decoupled gap needs the independent reverse-pool
+#     shuffle noted in #MIX. The rest of decoupled is a faithful port -- see
+#     `_shuffle_decoupled` / `_build_slot_data(decoupled=True)`.
 #
 # #MIX MIXED ENTRANCE POOLS cover only the four COUPLED pools (dungeon, interior,
 #     grotto, overworld), all REVERSE_COUPLE, which combine cleanly: a combined
 #     matching permutes them together and the existing coupled reverse-repointing
 #     ``_apply`` does the right thing per pair. Ship ALSO allows mixing Boss and
-#     Thieves' Hideout, but this port excludes them: their AP reverse handling is not
-#     coupled (boss = REVERSE_DEADEND, hideout = REVERSE_KEEP; see DIVERGENCE #TH), so
-#     a cross-pool pairing of a coupled doorway with a dead-end/uncoupled interior
-#     would leave the coupled side's reverse inconsistent. Including them would need a
-#     per-edge reverse-mode architecture. (The boss reverse edges now match Ship's
-#     topology -- see BOSS_ENTRANCES -- but are still shuffled as dead-ends here.) One-way pools (spawn/warp/owl) are never
+#     Thieves' Hideout. Thieves' Hideout is now REVERSE_COUPLE (its reverse edges mirror
+#     Ship -- see #TH), so it is eligible to join the mix; boss is still REVERSE_DEADEND.
+#     Neither is mixed here yet -- adding them to the combined pool is the remaining
+#     mixed/decoupled work. One-way pools (spawn/warp/owl) are never
 #     mixed (matches Ship -- they live in a separate one-way pool). Mixing is purely
 #     AP-side generation; Ship just applies the resulting per-entrance overrides.
 #
@@ -659,20 +653,20 @@ def _th(name: str, fortress: Regions, cell: Regions,
         fwd_index: int, rev_index: int) -> EntranceDef:
     """Build a Thieves' Hideout entrance (fortress doorway -> hideout cell).
 
-    Reverse handled in REVERSE_KEEP mode (rev_parent/rev_child left None, so the AP
-    reverse edges are never touched), but ``rev_index`` is still the real Ship
-    ENTR_GERUDOS_FORTRESS_* so the coupled reverse override is emitted faithfully.
-    See AP-VS-SHIP DIVERGENCES #TH."""
+    The reverse edge is the exact mirror ``cell -> fortress`` (rev_parent=cell,
+    rev_child=fortress), matching Ship's ENTR_GERUDOS_FORTRESS_* reverse pairs 1:1 now
+    that the AP hideout graph is rewired to mirror them. Shuffled REVERSE_COUPLE like
+    the other coupled pools (rev = ENTR_GERUDOS_FORTRESS_*)."""
     return EntranceDef(name, fortress, cell, fwd_index, rev_index,
-                       ENTRANCE_TYPE_THIEVES_HIDEOUT)
+                       ENTRANCE_TYPE_THIEVES_HIDEOUT, cell, fortress)
 
 
-# Thieves' Hideout entrances (Ship EntranceType::ThievesHideout). 13 forward
-# fortress->cell doorways; ENTR indices verified against entrance_table.h, forward
-# edges verified present in the AP graph. Forward-only shuffle (REVERSE_KEEP): the
-# AP hideout reverse edges are a simplified maze that does not mirror Ship's pairs
-# (see DIVERGENCE #TH), so we permute only the forward doors and emit the faithful
-# coupled fwd/rev index pairs. fwd = ENTR_THIEVES_HIDEOUT_*, rev = ENTR_GERUDOS_FORTRESS_*.
+# Thieves' Hideout entrances (Ship EntranceType::ThievesHideout). 13 fortress->cell
+# doorways, each a coupled two-way pair; ENTR indices verified against entrance_table.h,
+# both directions verified present in the AP graph. The AP hideout graph is now rewired
+# so each cell's reverse edges mirror Ship's ENTR_GERUDOS_FORTRESS_* pairs 1:1 (see
+# DIVERGENCE #TH), so this pool shuffles REVERSE_COUPLE like dungeons/interiors.
+# fwd = ENTR_THIEVES_HIDEOUT_*, rev = ENTR_GERUDOS_FORTRESS_*.
 THIEVES_HIDEOUT_ENTRANCES: list[EntranceDef] = [
     _th("Hideout 1 Torch (Outskirts)", Regions.GERUDO_FORTRESS_OUTSKIRTS, Regions.THIEVES_HIDEOUT_1_TORCH_CELL, 0x486, 0x231),
     _th("Hideout 1 Torch (Near Grotto)", Regions.GF_NEAR_GROTTO, Regions.THIEVES_HIDEOUT_1_TORCH_CELL, 0x48A, 0x235),
@@ -682,10 +676,8 @@ THIEVES_HIDEOUT_ENTRANCES: list[EntranceDef] = [
     _th("Hideout Steep Slope (Lower Vines)", Regions.GF_BOTTOM_OF_LOWER_VINES, Regions.THIEVES_HIDEOUT_STEEP_SLOPE_CELL, 0x49A, 0x2BE),
     _th("Hideout Double Cell (Above GTG)", Regions.GF_ABOVE_GTG, Regions.THIEVES_HIDEOUT_DOUBLE_CELL, 0x49E, 0x2C2),
     _th("Hideout Double Cell (Lower Vines)", Regions.GF_TOP_OF_LOWER_VINES, Regions.THIEVES_HIDEOUT_DOUBLE_CELL, 0x4A2, 0x2C6),
-    # Ship's KITCHEN_BY_CORRIDOR and KITCHEN_OPPOSITE_CORRIDOR are both modeled as the
-    # single AP region THIEVES_HIDEOUT_KITCHEN_TOP (DIVERGENCE #TH).
-    _th("Hideout Kitchen Top (Lower Vines)", Regions.GF_TOP_OF_LOWER_VINES, Regions.THIEVES_HIDEOUT_KITCHEN_TOP, 0x4A6, 0x2D2),
-    _th("Hideout Kitchen Top (Near GS)", Regions.GF_NEAR_GS, Regions.THIEVES_HIDEOUT_KITCHEN_TOP, 0x4AA, 0x2D6),
+    _th("Hideout Kitchen Top (Lower Vines)", Regions.GF_TOP_OF_LOWER_VINES, Regions.THIEVES_HIDEOUT_KITCHEN_BY_CORRIDOR, 0x4A6, 0x2D2),
+    _th("Hideout Kitchen Top (Near GS)", Regions.GF_NEAR_GS, Regions.THIEVES_HIDEOUT_KITCHEN_OPPOSITE_CORRIDOR, 0x4AA, 0x2D6),
     _th("Hideout Break Room (Below Chest)", Regions.GF_BELOW_CHEST, Regions.THIEVES_HIDEOUT_BREAK_ROOM, 0x4AE, 0x2DA),
     _th("Hideout Break Room Corridor (Above Jail)", Regions.GF_ABOVE_JAIL, Regions.THIEVES_HIDEOUT_BREAK_ROOM_CORRIDOR, 0x4B2, 0x2DE),
     _th("Hideout Dead End (Below GS)", Regions.GF_BELOW_GS, Regions.THIEVES_HIDEOUT_DEAD_END_CELL, 0x570, 0x3A4),
@@ -2500,9 +2492,9 @@ _UT_ONE_WAY_TYPES = frozenset((
     ENTRANCE_TYPE_OWL_DROP, ENTRANCE_TYPE_SPAWN, ENTRANCE_TYPE_WARP_SONG))
 
 # Every two-way (coupled) EntranceDef the UT loader / label map iterate over. Shared
-# so a new entrance is added in exactly one place. (Boss/Ganon-Tower reverses that are
-# forward-only dead-ends, and thieves reverses, are handled per their ship_type by the
-# consumers; they still belong here so their forward index resolves.)
+# so a new entrance is added in exactly one place. (Boss/Ganon-Tower reverses are
+# forward-only dead-ends handled per their ship_type by the consumers; every def --
+# including thieves -- names its reverse so both directions resolve.)
 _COUPLED_ENTRANCES: list[EntranceDef] = [
     *DUNGEON_ENTRANCES, GANON_ENTRANCE, GANON_TOWER_ENTRANCE, *BOSS_ENTRANCES,
     *INTERIOR_ENTRANCES, *SPECIAL_INTERIOR_ENTRANCES, *GROTTO_ENTRANCES,
@@ -2515,11 +2507,11 @@ def _build_ut_direction_map() -> "dict[int, tuple[Regions, Regions, bool]]":
     edge direction that maps to a real AP entrance.
 
     Forward indices always resolve; a reverse index resolves only when its def names
-    a reverse AP edge. So the thieves-hideout reverses (``rev_parent``/``rev_child``
-    left None) are simply absent here and get skipped by the loader -- which is exactly
-    what the live shuffle does with them (REVERSE_KEEP leaves them alone). Boss reverses
-    all resolve now and get disconnected on load (REVERSE_DEADEND), matching the live
-    shuffle."""
+    a reverse AP edge. Every coupled/boss/thieves def now names its reverse, so all
+    resolve: coupled + thieves reverses get reconnected to the override target
+    (REVERSE_COUPLE), boss reverses get disconnected (REVERSE_DEADEND) -- matching the
+    live shuffle. (Under decoupled, boss/thieves reverse overrides aren't emitted at all,
+    so nothing here fires for them.)"""
     out: "dict[int, tuple[Regions, Regions, bool]]" = {}
     for d in _COUPLED_ENTRANCES:
         out[d.fwd_index] = (d.fwd_parent, d.fwd_child, False)
@@ -2601,8 +2593,9 @@ def _load_entrances_from_slot_data(world: "SohWorld") -> None:
     keyed off the element's ship_type (see the module note above this function). Fast
     and deterministic -- no re-roll, no trial fill -- so the tracker's graph matches the
     seed exactly without paying the shuffle cost. Indices with no AP entrance to move
-    (thieves reverses, absent boss reverses, unrecognised entries from a newer seed) are
-    skipped, leaving those edges vanilla, just as the live shuffle leaves them."""
+    (absent boss reverses, decoupled reverses that were never emitted, unrecognised
+    entries from a newer seed) are skipped, leaving those edges vanilla, just as the
+    live shuffle leaves them."""
     elements = (getattr(world, "passthrough", None) or {}).get("entrances") or []
     applied = 0
     for el in elements:
@@ -2631,7 +2624,7 @@ def _load_entrances_from_slot_data(world: "SohWorld") -> None:
 
         info = _UT_DIRECTION_MAP.get(index)
         if info is None:
-            continue  # thieves reverse / absent boss reverse -> left vanilla
+            continue  # absent boss reverse / unrecognised index -> left vanilla
         parent, child, is_reverse = info
         try:
             ent = world.get_entrance(_entrance_name(parent, child))
@@ -2801,8 +2794,8 @@ def _run_entrance_pools(world: "SohWorld") -> list[dict[str, int]]:
     opts = world.options
 
     # --- Resolve the coupled pools eligible for mixing (dungeon, overworld,
-    # interior, grotto). Boss (REVERSE_DEADEND) and Thieves' Hideout (REVERSE_KEEP)
-    # are never mixed -- their AP reverse handling isn't coupled (DIVERGENCE #MIX).
+    # interior, grotto). Boss (REVERSE_DEADEND) and Thieves' Hideout (now REVERSE_COUPLE)
+    # are not mixed here yet -- adding TH to the mix is the remaining work (DIVERGENCE #MIX).
     dungeon_opt = opts.shuffle_dungeon_entrances.value
     dungeon_on = dungeon_opt != opts.shuffle_dungeon_entrances.option_off
     dungeon_table = list(DUNGEON_ENTRANCES) if dungeon_on else []
@@ -2962,18 +2955,21 @@ def _run_entrance_pools(world: "SohWorld") -> list[dict[str, int]]:
         overrides += _shuffle_pool(world, "adult boss", adult_bosses, REVERSE_DEADEND,
                                    dead_end_targets=False, decoupled=decoupled)
 
-    # 7) Thieves' Hideout (never mixed): forward-only (REVERSE_KEEP) -- the AP hideout
-    # reverse edges are a simplified maze that doesn't mirror Ship's pairs
-    # (DIVERGENCE #TH). Cells gate the carpenters -> Gerudo card -> wasteland/GTG, so
-    # they are NOT dead ends. check_other_access=True mirrors Ship.
-    # Decoupled emits forward-only (-1-destination) overrides. Ship's ThievesHideoutReverse
-    # pool has no AP counterpart (the AP hideout reverses are a simplified maze, DIVERGENCE
-    # #TH), so under decoupled the reverse edges are left as-is and only the forward doors
-    # are emitted -- consistent with the decoupled contract.
+    # 7) Thieves' Hideout (not yet mixed -- see #MIX): a true coupled two-way shuffle
+    # (REVERSE_COUPLE) now that the AP hideout reverse edges mirror Ship's pairs 1:1
+    # (DIVERGENCE #TH). Cells gate the carpenters -> Gerudo card -> wasteland/GTG, so they
+    # are NOT dead ends. check_other_access=True mirrors Ship. Under decoupled the reverse
+    # pool is not yet shuffled independently (REVERSE_KEEP, forward-only overrides) --
+    # that is #7/DIVERGENCE #DEC; the coupled path is the faithful port.
     if opts.shuffle_thieves_hideout_entrances.value and THIEVES_HIDEOUT_ENTRANCES:
-        overrides += _shuffle_pool(world, "thieves hideout", THIEVES_HIDEOUT_ENTRANCES,
-                                   REVERSE_KEEP, dead_end_targets=False,
-                                   check_other_access=True, decoupled=decoupled)
+        if decoupled:
+            overrides += _shuffle_pool(world, "thieves hideout", THIEVES_HIDEOUT_ENTRANCES,
+                                       REVERSE_KEEP, dead_end_targets=False,
+                                       check_other_access=True, decoupled=True)
+        else:
+            overrides += _shuffle_pool(world, "thieves hideout", THIEVES_HIDEOUT_ENTRANCES,
+                                       REVERSE_COUPLE, dead_end_targets=False,
+                                       check_other_access=True)
 
     # One-way pools (spawns, warp songs, owl drops). Shuffled together as one
     # combined matching so a landing is consumed at most once across them. Run

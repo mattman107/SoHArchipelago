@@ -73,7 +73,8 @@ def set_region_rules(world: "SohWorld") -> None:
     # Connections
     connect_regions(Regions.THIEVES_HIDEOUT_DOUBLE_CELL, world, [
         (Regions.GERUDO_FORTRESS_OUTSKIRTS, lambda bundle: True_()),
-        (Regions.GF_NEAR_GROTTO, lambda bundle: True_()),
+        (Regions.GF_ABOVE_GTG, lambda bundle: True_()),
+        (Regions.GF_TOP_OF_LOWER_VINES, lambda bundle: True_()),
         (Regions.THIEVES_HIDEOUT_RESCUE_CARPENTERS,
          lambda bundle: True_())
     ])
@@ -112,8 +113,8 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Connections
     connect_regions(Regions.THIEVES_HIDEOUT_STEEP_SLOPE_CELL, world, [
-        (Regions.GF_ABOVE_GTG, lambda bundle: True_()),
-        (Regions.GF_TOP_OF_LOWER_VINES, lambda bundle: True_()),
+        (Regions.GF_NEAR_GROTTO, lambda bundle: True_()),
+        (Regions.GF_BOTTOM_OF_LOWER_VINES, lambda bundle: True_()),
         (Regions.THIEVES_HIDEOUT_RESCUE_CARPENTERS,
          lambda bundle: True_())
     ])
@@ -171,22 +172,34 @@ def set_region_rules(world: "SohWorld") -> None:
     connect_regions(Regions.THIEVES_HIDEOUT_KITCHEN_BOTTOM, world, [
         (Regions.THIEVES_HIDEOUT_KITCHEN_CORRIDOR,
          lambda bundle: can_pass_enemy(bundle, Enemies.GERUDO_GUARD)),
-        (Regions.THIEVES_HIDEOUT_KITCHEN_TOP,
+        (Regions.THIEVES_HIDEOUT_KITCHEN_BY_CORRIDOR,
+         lambda bundle: can_pass_enemy(bundle, Enemies.GERUDO_GUARD)),
+        (Regions.THIEVES_HIDEOUT_KITCHEN_OPPOSITE_CORRIDOR,
          lambda bundle: can_pass_enemy(bundle, Enemies.GERUDO_GUARD)),
         (Regions.THIEVES_HIDEOUT_KITCHEN_POTS,
          lambda bundle: can_break_pots(bundle) & can_pass_enemy(bundle, Enemies.GERUDO_GUARD))
     ])
 
-    # Thieves Hideout Kitchen Top
+    # Thieves Hideout Kitchen Top By Corridor
     # Connections
-    connect_regions(Regions.THIEVES_HIDEOUT_KITCHEN_TOP, world, [
+    connect_regions(Regions.THIEVES_HIDEOUT_KITCHEN_BY_CORRIDOR, world, [
         (Regions.THIEVES_HIDEOUT_KITCHEN_BOTTOM, lambda bundle: True_()),
         (Regions.THIEVES_HIDEOUT_KITCHEN_POTS,
          lambda bundle: can_use(Items.BOOMERANG, bundle)),
-        (Regions.GF_NEAR_GS,
+        (Regions.THIEVES_HIDEOUT_KITCHEN_OPPOSITE_CORRIDOR,
          lambda bundle: can_pass_enemy(bundle, Enemies.GERUDO_GUARD) | can_use(Items.HOVER_BOOTS, bundle)),
-        (Regions.GF_TOP_OF_LOWER_VINES,
-         lambda bundle: can_pass_enemy(bundle, Enemies.GERUDO_GUARD) | can_use(Items.HOVER_BOOTS, bundle))
+        (Regions.GF_TOP_OF_LOWER_VINES, lambda bundle: True_())
+    ])
+
+    # Thieves Hideout Kitchen Top Across From Corridor
+    # Connections
+    connect_regions(Regions.THIEVES_HIDEOUT_KITCHEN_OPPOSITE_CORRIDOR, world, [
+        (Regions.THIEVES_HIDEOUT_KITCHEN_BOTTOM, lambda bundle: True_()),
+        (Regions.THIEVES_HIDEOUT_KITCHEN_POTS,
+         lambda bundle: can_use(Items.BOOMERANG, bundle)),
+        (Regions.THIEVES_HIDEOUT_KITCHEN_BY_CORRIDOR,
+         lambda bundle: can_pass_enemy(bundle, Enemies.GERUDO_GUARD) | can_use(Items.HOVER_BOOTS, bundle)),
+        (Regions.GF_NEAR_GS, lambda bundle: True_())
     ])
 
     # Thieves Hideout Kitchen Pots
