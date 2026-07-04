@@ -29,7 +29,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from .Enums import Regions, Ages, TimeOfDay
-from rule_builder.rules import True_
+from rule_builder.rules import True_, False_
 from BaseClasses import CollectionState
 from Fill import fill_restrictive
 
@@ -104,12 +104,14 @@ logger = logging.getLogger("SOH_OOT.ER")
 #
 # #DEC DECOUPLED ENTRANCES (`decouple_entrances`): under decoupled, BOSS and THIEVES
 #     reverses are NOT shuffled independently the way Ship shuffles its BossReverse /
-#     ThievesHideoutReverse pools. AP's boss reverses are forward-only dead-ends and its
-#     hideout reverses are a non-mirrored maze (see #TH), so those pools have no AP
-#     counterpart to shuffle -- the reverses stay vanilla while the forward doors still
-#     emit decoupled (-1-dest) overrides. Removing this needs the per-edge reverse-mode
-#     architecture noted in #MIX/#TH. (The rest of decoupled is a faithful port -- see
-#     `_shuffle_decoupled` / `_build_slot_data(decoupled=True)`.)
+#     ThievesHideoutReverse pools. The boss reverse edges now match Ship's topology 1:1
+#     (every boss names its reverse; see BOSS_ENTRANCES), but they are still shuffled
+#     as forward-only dead-ends (REVERSE_DEADEND), not as an independent reverse pool;
+#     the hideout reverses are a non-mirrored maze (see #TH). So under decoupled the
+#     reverses stay vanilla while the forward doors still emit decoupled (-1-dest)
+#     overrides. Removing this needs the per-edge reverse-mode architecture noted in
+#     #MIX/#TH. (The rest of decoupled is a faithful port -- see `_shuffle_decoupled` /
+#     `_build_slot_data(decoupled=True)`.)
 #
 # #MIX MIXED ENTRANCE POOLS cover only the four COUPLED pools (dungeon, interior,
 #     grotto, overworld), all REVERSE_COUPLE, which combine cleanly: a combined
@@ -119,7 +121,8 @@ logger = logging.getLogger("SOH_OOT.ER")
 #     coupled (boss = REVERSE_DEADEND, hideout = REVERSE_KEEP; see DIVERGENCE #TH), so
 #     a cross-pool pairing of a coupled doorway with a dead-end/uncoupled interior
 #     would leave the coupled side's reverse inconsistent. Including them would need a
-#     per-edge reverse-mode architecture. One-way pools (spawn/warp/owl) are never
+#     per-edge reverse-mode architecture. (The boss reverse edges now match Ship's
+#     topology -- see BOSS_ENTRANCES -- but are still shuffled as dead-ends here.) One-way pools (spawn/warp/owl) are never
 #     mixed (matches Ship -- they live in a separate one-way pool). Mixing is purely
 #     AP-side generation; Ship just applies the resulting per-entrance overrides.
 #
@@ -346,11 +349,22 @@ GANON_TOWER_ENTRANCE = EntranceDef(
 
 
 # Boss-room entrances. Forward edge is "*_BOSS_ENTRYWAY" -> "*_BOSS_ROOM"
-# (ENTR_*_BOSS_ENTRANCE). The reverse (ENTR_*_BOSS_DOOR) is index-only here: boss
-# rooms are treated as forward-only dead-ends (see REVERSE_DEADEND). We still name
-# the reverse AP edge for Deku/Dodongo because theirs is a real ``True_()`` edge
-# that must be disconnected to avoid phantom cross-dungeon paths; the adult bosses'
-# reverse edges are ``False_()`` and Jabu's is absent, so they need no handling.
+# (ENTR_*_BOSS_ENTRANCE); reverse (ENTR_*_BOSS_DOOR) is "*_BOSS_ROOM" -> the exit
+# region. Every boss now names its reverse AP edge, matching Ship's boss entrance
+# pairs 1:1 (entrance.cpp entranceShuffleTable):
+#   - Child bosses (Deku/Dodongo/Jabu) exit to a dedicated ``*_BOSS_EXIT`` region
+#     that leads back into the dungeon. Deku/Dodongo's boss-room->exit edge is a real
+#     ``True_()``; Jabu's is ``False_()`` (Ship marks it so -- the exit region exists
+#     only to host the reverse shuffle unit; the blue warp is Jabu's logical exit).
+#   - Adult bosses exit back to ``*_BOSS_ENTRYWAY``; those edges are ``False_()`` in
+#     both repos (you can't walk back out of an adult boss room in vanilla).
+# The ``False_()`` reverses (adult bosses + Jabu) aren't materialized by the rule
+# builder (AutoWorld.create_entrance drops always-false edges), so ``shuffle_entrances``
+# force-creates them via ``_ensure_reverse_edges`` when boss shuffle is on. Under the
+# current REVERSE_DEADEND shuffle every boss reverse is then disconnected (the real
+# Deku/Dodongo ones to avoid phantom cross-dungeon paths, the ``False_()`` ones
+# harmlessly). Naming + materializing them makes the AP graph match Ship's topology and
+# is the prerequisite for shuffling the boss reverse pool (mixed/decoupled -- #DEC/#MIX).
 BOSS_ENTRANCES: list[EntranceDef] = [
     EntranceDef("Gohma (Deku Tree)",
                 Regions.DEKU_TREE_BOSS_ENTRYWAY, Regions.DEKU_TREE_BOSS_ROOM,
@@ -365,25 +379,35 @@ BOSS_ENTRANCES: list[EntranceDef] = [
     EntranceDef("Barinade (Jabu Jabus Belly)",
                 Regions.JABU_JABUS_BELLY_BOSS_ENTRYWAY,
                 Regions.JABU_JABUS_BELLY_BOSS_ROOM,
-                0x301, 0x407, ENTRANCE_TYPE_CHILD_BOSS),
+                0x301, 0x407, ENTRANCE_TYPE_CHILD_BOSS,
+                Regions.JABU_JABUS_BELLY_BOSS_ROOM,
+                Regions.JABU_JABUS_BELLY_BOSS_EXIT),
     EntranceDef("Phantom Ganon (Forest Temple)",
                 Regions.FOREST_TEMPLE_BOSS_ENTRYWAY,
                 Regions.FOREST_TEMPLE_BOSS_ROOM,
-                0x00C, 0x24E, ENTRANCE_TYPE_ADULT_BOSS),
+                0x00C, 0x24E, ENTRANCE_TYPE_ADULT_BOSS,
+                Regions.FOREST_TEMPLE_BOSS_ROOM,
+                Regions.FOREST_TEMPLE_BOSS_ENTRYWAY),
     EntranceDef("Volvagia (Fire Temple)",
                 Regions.FIRE_TEMPLE_BOSS_ENTRYWAY, Regions.FIRE_TEMPLE_BOSS_ROOM,
-                0x305, 0x175, ENTRANCE_TYPE_ADULT_BOSS),
+                0x305, 0x175, ENTRANCE_TYPE_ADULT_BOSS,
+                Regions.FIRE_TEMPLE_BOSS_ROOM, Regions.FIRE_TEMPLE_BOSS_ENTRYWAY),
     EntranceDef("Morpha (Water Temple)",
                 Regions.WATER_TEMPLE_BOSS_ENTRYWAY, Regions.WATER_TEMPLE_BOSS_ROOM,
-                0x417, 0x423, ENTRANCE_TYPE_ADULT_BOSS),
+                0x417, 0x423, ENTRANCE_TYPE_ADULT_BOSS,
+                Regions.WATER_TEMPLE_BOSS_ROOM, Regions.WATER_TEMPLE_BOSS_ENTRYWAY),
     EntranceDef("Twinrova (Spirit Temple)",
                 Regions.SPIRIT_TEMPLE_BOSS_ENTRYWAY,
                 Regions.SPIRIT_TEMPLE_BOSS_ROOM,
-                0x08D, 0x2F5, ENTRANCE_TYPE_ADULT_BOSS),
+                0x08D, 0x2F5, ENTRANCE_TYPE_ADULT_BOSS,
+                Regions.SPIRIT_TEMPLE_BOSS_ROOM,
+                Regions.SPIRIT_TEMPLE_BOSS_ENTRYWAY),
     EntranceDef("Bongo Bongo (Shadow Temple)",
                 Regions.SHADOW_TEMPLE_BOSS_ENTRYWAY,
                 Regions.SHADOW_TEMPLE_BOSS_ROOM,
-                0x413, 0x2B2, ENTRANCE_TYPE_ADULT_BOSS),
+                0x413, 0x2B2, ENTRANCE_TYPE_ADULT_BOSS,
+                Regions.SHADOW_TEMPLE_BOSS_ROOM,
+                Regions.SHADOW_TEMPLE_BOSS_ENTRYWAY),
 ]
 
 
@@ -718,6 +742,32 @@ def _disconnect(entrance: "Entrance") -> None:
     if child is not None and entrance in child.entrances:
         child.entrances.remove(entrance)
     entrance.connected_region = None
+
+
+def _ensure_reverse_edges(world: "SohWorld", entries: list[EntranceDef]) -> None:
+    """Force-create the reverse edges that the rule builder skips as statically False.
+
+    Ship models every boss as a forward+reverse Entrance pair, but AP's rule builder
+    omits an Entrance whose rule resolves to ``False`` (AutoWorld.create_entrance skips
+    it unless ``force_creation``). So the adult bosses' ``BOSS_ROOM -> BOSS_ENTRYWAY``
+    and Jabu's ``BOSS_ROOM -> BOSS_EXIT`` -- all ``False_()``, matching Ship -- never
+    become real objects. Force-create the missing ones with their ``False_()`` rule so
+    they exist as shuffle units the boss pool can locate and repoint, while staying
+    non-traversable (the blue warp remains the logical exit). Edges that already exist
+    (Deku/Dodongo's real ``True_()`` reverses) are left untouched. Idempotent: run once
+    before the graph snapshot so re-rolls and _restore_graph preserve them."""
+    for d in entries:
+        if d.rev_parent is None or d.rev_child is None:
+            continue
+        name = _entrance_name(d.rev_parent, d.rev_child)
+        try:
+            world.get_entrance(name)
+            continue  # already materialized
+        except KeyError:
+            pass
+        world.create_entrance(world.get_region(str(d.rev_parent)),
+                              world.get_region(str(d.rev_child)),
+                              False_(), name=name, force_creation=True)
 
 
 def _remove_probe_edge(temp: "Entrance") -> None:
@@ -2466,9 +2516,10 @@ def _build_ut_direction_map() -> "dict[int, tuple[Regions, Regions, bool]]":
 
     Forward indices always resolve; a reverse index resolves only when its def names
     a reverse AP edge. So the thieves-hideout reverses (``rev_parent``/``rev_child``
-    left None) and the adult/Jabu boss reverses are simply absent here and get skipped
-    by the loader -- which is exactly what the live shuffle does with them
-    (REVERSE_KEEP leaves them alone; those boss reverses are ``False_()``/absent)."""
+    left None) are simply absent here and get skipped by the loader -- which is exactly
+    what the live shuffle does with them (REVERSE_KEEP leaves them alone). Boss reverses
+    all resolve now and get disconnected on load (REVERSE_DEADEND), matching the live
+    shuffle."""
     out: "dict[int, tuple[Regions, Regions, bool]]" = {}
     for d in _COUPLED_ENTRANCES:
         out[d.fwd_index] = (d.fwd_parent, d.fwd_child, False)
@@ -2682,6 +2733,12 @@ def shuffle_entrances(world: "SohWorld") -> None:
     instead of re-shuffling: a fresh shuffle would be slow (re-rolls + trial fills) and,
     worse, would draw a *different* layout than the seed. See that function."""
     world.entrance_overrides = []
+    # Materialize the boss reverse edges Ship carries but AP's rule builder drops as
+    # statically False, so the boss pool (and UT replay) can locate them. Only needed
+    # when boss entrances shuffle; harmless (inert False edges) otherwise.
+    boss_opt = world.options.shuffle_boss_entrances
+    if boss_opt.value != boss_opt.option_off:
+        _ensure_reverse_edges(world, BOSS_ENTRANCES)
     if getattr(world, "using_ut", False):
         _load_entrances_from_slot_data(world)
         return
