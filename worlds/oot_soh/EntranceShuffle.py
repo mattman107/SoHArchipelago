@@ -2309,6 +2309,34 @@ _UT_BLUE_WARP_DEST_BY_OVERRIDE: "dict[int, Regions]" = {
 }
 
 
+def _build_entrance_label_map() -> "dict[str, str]":
+    """Vanilla entrance name -> a human label describing that specific doorway.
+
+    Used only to disambiguate the rare case where two distinct relocated edges resolve to
+    the same ``"{source} -> {dest}"`` name (a destination region reached by more than one
+    doorway from the same source -- e.g. a Thieves' Hideout cell with two doors, or an
+    overworld region that also has a static internal edge to the same place). The label is
+    the shuffle table's own name for the edge (``EntranceDef``/``OneWayDef`` ``name``), keyed
+    by the edge's vanilla ``"{parent} -> {child}"`` (which is still the entrance's name when
+    the rename pass runs). First writer wins (forward before reverse), so it is deterministic."""
+    labels: "dict[str, str]" = {}
+    coupled: list[EntranceDef] = [
+        *DUNGEON_ENTRANCES, GANON_ENTRANCE, *BOSS_ENTRANCES, *INTERIOR_ENTRANCES,
+        *SPECIAL_INTERIOR_ENTRANCES, *GROTTO_ENTRANCES, *OVERWORLD_ENTRANCES,
+        *THIEVES_HIDEOUT_ENTRANCES,
+    ]
+    for d in coupled:
+        labels.setdefault(_entrance_name(d.fwd_parent, d.fwd_child), d.name)
+        if d.rev_parent is not None and d.rev_child is not None:
+            labels.setdefault(_entrance_name(d.rev_parent, d.rev_child), d.name)
+    for d in (*SPAWN_ENTRANCES, *WARP_SONG_ENTRANCES, *OWL_DROP_ENTRANCES):
+        labels.setdefault(_entrance_name(d.parent, d.dest), d.name)
+    return labels
+
+
+_ENTRANCE_LABELS = _build_entrance_label_map()
+
+
 def _ut_load_blue_warp(world: "SohWorld", index: int, override: int) -> None:
     """Replay one blue-warp *logic* edge from a stored override (the game side is moot
     under UT). Mirror of :func:`_rewire_blue_warp_logic`: repoint the boss room's static
@@ -2382,8 +2410,67 @@ def _load_entrances_from_slot_data(world: "SohWorld") -> None:
         applied += 1
 
     world.entrance_overrides = list(elements)
+    _rename_shuffled_entrances(world)
     logger.debug("ER (UT): applied %d of %d stored entrance overrides for player %d",
                  applied, len(elements), world.player)
+
+
+def _rename_shuffled_entrances(world: "SohWorld") -> None:
+    """Rename every relocated entrance to reflect where it now leads.
+
+    Entrance names are baked as ``"{parent} -> {vanilla child}"`` at graph-build time;
+    the shuffle only repoints ``connected_region``, so an entrance keeps its vanilla name
+    (e.g. ``Nocturne of Shadow Warp -> Graveyard Warp Pad Region`` even after it is
+    repointed to Kak Open Grotto). Universal Tracker (and any name-based display) shows
+    that stale name. Rewrite each moved edge to ``"{parent} -> {current destination}"``,
+    matching AP's own ``Region.connect`` convention.
+
+    Must run only once the layout is FINAL: the shuffle, its re-rolls, and the UT loader
+    all look entrances up by their vanilla names, so renaming earlier would break those
+    lookups. ``region.exits`` is an ``EntranceRegister`` whose ``entrance_cache`` is keyed
+    by name, so we update that cache alongside ``ent.name`` (a later ``.exits`` mutation
+    would otherwise ``del`` a stale key).
+
+    Two-phase, because a pool's placement is a permutation: a 2-cycle swap has each edge's
+    new name transiently held by the *other* edge that hasn't been renamed yet. So we first
+    pull every moving edge out of the cache, then assign. Even after that, two *distinct*
+    transitions can share a ``parent -> dest`` name (a destination region reached by more than
+    one doorway from the same source -- a Thieves' Hideout cell with two doors, or an overworld
+    region with a static internal edge to the same place -- see DIVERGENCE #TH). Leaving those
+    with their stale vanilla name would defeat the point, so we disambiguate with the doorway's
+    descriptive label (``_ENTRANCE_LABELS``), falling back to a numeric suffix. Both worlds walk
+    the graph in the same order, so the same names come out for a normal gen and its UT re-gen."""
+    cache = world.multiworld.regions.entrance_cache[world.player]
+    moving: list[tuple["Entrance", str, "str | None"]] = []
+    for region in world.multiworld.get_regions(world.player):
+        for ent in region.exits:
+            conn = ent.connected_region
+            if conn is None or ent.parent_region is None:
+                continue
+            new_name = f"{ent.parent_region.name} -> {conn.name}"
+            if new_name != ent.name:
+                # ent.name is still the vanilla name here (phase 2 hasn't run) -> label lookup.
+                moving.append((ent, new_name, _ENTRANCE_LABELS.get(ent.name)))
+
+    for ent, _new_name, _label in moving:  # phase 1: vacate the old keys
+        del cache[ent.name]
+
+    for ent, new_name, label in moving:    # phase 2: claim the new keys
+        if new_name not in cache:
+            final = new_name
+        else:
+            # Collision: a distinct doorway already owns "{source} -> {dest}". Tag this one
+            # with its descriptive label so both stay unique and readable.
+            base = f"{new_name} [{label}]" if label else new_name
+            final, n = base, 2
+            while final in cache:
+                final = f"{base} ({n})"
+                n += 1
+        ent.name = final
+        cache[final] = ent
+    if moving:
+        logger.debug("ER: renamed %d relocated entrances for player %d",
+                     len(moving), world.player)
 
 
 def shuffle_entrances(world: "SohWorld") -> None:
@@ -2450,6 +2537,7 @@ def shuffle_entrances(world: "SohWorld") -> None:
                     or all(_trial_fill_accessible(world)
                            for _ in range(TRIAL_FILL_CONFIRMATIONS))):
                 world.entrance_overrides = overrides
+                _rename_shuffled_entrances(world)
                 return
         raise RuntimeError(
             f"SoH ER: could not find an item-fillable entrance layout for player "
