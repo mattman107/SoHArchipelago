@@ -443,7 +443,7 @@ def set_region_rules(world: "SohWorld") -> None:
         (Regions.KAKARIKO_VILLAGE,
          lambda bundle: is_adult(bundle) | has_item(Items.BRONZE_SCALE, bundle) | has_item(Events.DRAIN_WELL,
                                                                                              bundle)),
-        # TODO: Add check for dungeon entrance randomization
-        (Regions.BOTTOM_OF_THE_WELL_ENTRYWAY, lambda bundle: is_child(
-            bundle) | has_item(Events.DRAIN_WELL, bundle)),
+        (Regions.BOTTOM_OF_THE_WELL_ENTRYWAY, lambda bundle: is_child(bundle)
+         | (has_item(Events.DRAIN_WELL, bundle)
+            & OptionFilter(ShuffleDungeonEntrances, ShuffleDungeonEntrances.option_off, operator="ne"))),
     ])
