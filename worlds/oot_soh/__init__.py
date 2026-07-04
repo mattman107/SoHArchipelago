@@ -4,7 +4,6 @@ import pkgutil
 from typing import Any, ClassVar, Callable
 
 from BaseClasses import CollectionState, Item, Tutorial, ItemClassification, Location
-from rule_builder.cached_world import CachedRuleBuilderWorld
 from rule_builder.rules import Has
 from worlds.AutoWorld import WebWorld, World
 from Fill import fill_restrictive
@@ -94,7 +93,7 @@ def create_groups(obj: dict[Items, SohItemData] | dict[str, SohLocData]) -> dict
             groups[tag_name].add(str(key))
     return groups
 
-class SohWorld(CachedRuleBuilderWorld):
+class SohWorld(World):
     """A PC Port of Ocarina of Time"""
 
     game = "Ship of Harkinian"
