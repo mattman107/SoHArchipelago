@@ -720,6 +720,18 @@ def _disconnect(entrance: "Entrance") -> None:
     entrance.connected_region = None
 
 
+def _remove_probe_edge(temp: "Entrance") -> None:
+    """Detach a temporary probe/cover entrance (the inverse of ``create_entrance``).
+
+    Unlike ``_disconnect`` this takes the endpoints from the entrance itself and does
+    not null ``connected_region`` -- the temp object is thrown away right after. Used
+    by the reachability probes that wire a throwaway ``source -> interior`` edge."""
+    if temp.parent_region is not None and temp in temp.parent_region.exits:
+        temp.parent_region.exits.remove(temp)
+    if temp.connected_region is not None and temp in temp.connected_region.entrances:
+        temp.connected_region.entrances.remove(temp)
+
+
 def _build_pool(world: "SohWorld",
                 entries: list[EntranceDef]) -> list[_Edge] | None:
     """Resolve a pool's defs into bound ``_Edge``s.
@@ -957,10 +969,7 @@ def _probe_interior(world: "SohWorld", fwd: "_Edge", source: Regions) -> set[str
         state = _er_pre_fill_state(world)
         return {loc.name for loc in world.get_locations() if loc.can_reach(state)}
     finally:
-        if temp in src_region.exits:
-            src_region.exits.remove(temp)
-        if temp in interior.entrances:
-            interior.entrances.remove(temp)
+        _remove_probe_edge(temp)
         entrance.connected_region = saved
         interior.entrances.append(entrance)
 
@@ -1030,11 +1039,8 @@ def _compute_needs(world: "SohWorld",
             state = _er_pre_fill_state(world)
             return {name for name in owner if loc_by_name[name].can_reach(state)}
         finally:
-            for interior, temp in zip(interiors, temps):
-                if temp in src_region.exits:
-                    src_region.exits.remove(temp)
-                if temp in interior.entrances:
-                    interior.entrances.remove(temp)
+            for temp in temps:
+                _remove_probe_edge(temp)
 
     try:
         child = reachable_owned(Regions.CHILD_SPAWN)
@@ -1050,6 +1056,17 @@ def _compute_needs(world: "SohWorld",
         for name in names:
             per[owner[name]][idx].add(name)
     return {fwd: _needs_from_sets(*per[fwd]) for fwd in forwards}
+
+
+def _age_compatible(caps: dict[_Edge, frozenset], needs: dict[_Edge, frozenset],
+                    forbidden: dict[_Edge, Ages],
+                    doorway: "_Edge", target: "_Edge") -> bool:
+    """The core placement rule shared by the matcher and the walk fallback: the
+    target's interior is reachable as every age it needs, and the doorway's cap
+    excludes any age the target forbids (see ``_find_matching`` / ``_FORBIDDEN_AGE_EXITS``)."""
+    cap = caps[doorway]
+    return (needs[target] <= cap
+            and (target not in forbidden or forbidden[target] not in cap))
 
 
 def _find_matching(world: "SohWorld", forwards: list[_Edge],
@@ -1076,15 +1093,11 @@ def _find_matching(world: "SohWorld", forwards: list[_Edge],
     augmenting paths repair such conflicts in polynomial time. Randomness (a fresh
     bijection each call, so the retry loop explores different seeds) comes from
     shuffling both the doorway processing order and each doorway's candidate list."""
-    def compatible(doorway: "_Edge", target: "_Edge") -> bool:
-        cap = caps[doorway]
-        return (needs[target] <= cap
-                and (target not in forbidden or forbidden[target] not in cap))
-
     # Candidate targets per doorway, each list shuffled for a randomized matching.
     adj: dict[_Edge, list[_Edge]] = {}
     for doorway in forwards:
-        cands = [t for t in forwards if compatible(doorway, t)]
+        cands = [t for t in forwards
+                 if _age_compatible(caps, needs, forbidden, doorway, t)]
         world.random.shuffle(cands)
         adj[doorway] = cands
 
@@ -1188,18 +1201,17 @@ def _has_time_pass_access(state: "CollectionState", world: "SohWorld", age: Ages
     as an age grants both day and night everywhere reachable as that age, this is
     the guarantee that day/night-gated checks can never be permanently lost."""
     player = world.player
-    for region in world.multiworld.get_regions(player):
-        if getattr(region, "provides_time", TimeOfDay.NONE):
-            stored_age = state._soh_age[player]  # type: ignore
-            state._soh_age[player] = age  # type: ignore
-            reachable = region.can_reach(state)
-            state._soh_age[player] = stored_age  # type: ignore
-            if reachable:
-                return True
-    return False
+    stored_age = state._soh_age[player]  # type: ignore
+    state._soh_age[player] = age  # type: ignore
+    try:
+        return any(region.can_reach(state)
+                   for region in world.multiworld.get_regions(player)
+                   if getattr(region, "provides_time", TimeOfDay.NONE))
+    finally:
+        state._soh_age[player] = stored_age  # type: ignore
 
 
-def _world_age_invariants_hold(world: "SohWorld") -> bool:
+def _world_age_invariants_hold(world: "SohWorld", state: "CollectionState") -> bool:
     """Global age/time guarantees Ship enforces once spawns, the overworld, or
     special interiors get shuffled (entrance.cpp:873-898).
 
@@ -1214,7 +1226,8 @@ def _world_age_invariants_hold(world: "SohWorld") -> bool:
       player unable to leave the start at all.
 
     * Conditions 2-3 (both ages can pass time; the Temple of Time is reachable as the
-      *other* age) are checked against the FULL item state, not item-less. With a
+      *other* age) are checked against the FULL item state, not item-less -- the
+      caller's ``state`` (the graph is unchanged, so it needs no rebuild). With a
       closed/song-only Door of Time the other age is only reachable via the Song of
       Time, and with a closed forest leaving Kokiri needs the sword + shield -- both
       items -- so an item-less check there is a false positive (the seed is perfectly
@@ -1231,21 +1244,19 @@ def _world_age_invariants_hold(world: "SohWorld") -> bool:
                for r in starts for age in (Ages.CHILD, Ages.ADULT)):
         return False
 
-    full = _er_pre_fill_state(world)
-
     # 2) Time must be passable as BOTH ages (with the items the player will collect),
     #    or day/night-gated checks could become permanently inaccessible. A
     #    time-passing region must be reachable as each age (Ship's HasTimePassAccess,
     #    location_access.cpp:1128).
-    if not (_has_time_pass_access(full, world, Ages.CHILD)
-            and _has_time_pass_access(full, world, Ages.ADULT)):
+    if not (_has_time_pass_access(state, world, Ages.CHILD)
+            and _has_time_pass_access(state, world, Ages.ADULT)):
         return False
 
     # 3) After going through time, the Temple of Time must remain reachable as the
     #    *other* age, so the player never loses pedestal access.
     starting_child = world.options.starting_age.value == world.options.starting_age.option_child
     other_age = Ages.ADULT if starting_child else Ages.CHILD
-    if not full._soh_can_reach_as_age(Regions.TEMPLE_OF_TIME, other_age, player):
+    if not state._soh_can_reach_as_age(Regions.TEMPLE_OF_TIME, other_age, player):
         return False
 
     return True
@@ -1282,7 +1293,7 @@ def _seed_is_valid(world: "SohWorld", check_other_access: bool = False) -> bool:
         return False
     if not _age_exits_are_safe(world, state):
         return False
-    if check_other_access and not _world_age_invariants_hold(world):
+    if check_other_access and not _world_age_invariants_hold(world, state):
         return False
     # Entrance connectivity: every location reachable with all items (see docstring).
     if not all(loc.can_reach(state) for loc in world.get_locations()):
@@ -1355,11 +1366,6 @@ def _walk_shuffle(world: "SohWorld", forwards: list[_Edge],
     if len(forwards) < 2:
         return None
 
-    def compatible(doorway: "_Edge", target: "_Edge") -> bool:
-        cap = caps[doorway]
-        return (needs[target] <= cap
-                and (target not in forbidden or forbidden[target] not in cap))
-
     targets: dict[_Edge, _Edge] = {e: e for e in forwards}
 
     def apply_current() -> None:
@@ -1375,7 +1381,8 @@ def _walk_shuffle(world: "SohWorld", forwards: list[_Edge],
     made = 0
     for _ in range(budget):
         a, b = world.random.sample(forwards, 2)
-        if not (compatible(a, targets[b]) and compatible(b, targets[a])):
+        if not (_age_compatible(caps, needs, forbidden, a, targets[b])
+                and _age_compatible(caps, needs, forbidden, b, targets[a])):
             continue
         targets[a], targets[b] = targets[b], targets[a]
         apply_current()
@@ -1630,6 +1637,15 @@ _DUNGEON_SLOT_BLUE_WARP: dict[Regions, tuple[Regions, int]] = {
                                      _GANON_BLUE_WARP_INDEX),
 }
 
+# Drift guard: for every boss room that maps to a dungeon slot, the per-boss-room maps
+# and the per-slot table must agree on that slot's (overworld dest, ENTR index) -- these
+# are hand-verified against Ship's entrance_table.h, so a lone edit to one table would
+# otherwise diverge silently.
+for _room, _entryway in _BOSS_ROOM_TO_DUNGEON_ENTRYWAY.items():
+    assert _DUNGEON_SLOT_BLUE_WARP[_entryway] == (
+        _BLUE_WARP_DEST_BY_BOSS_ROOM[_room], _BLUE_WARP_BY_BOSS_ROOM[_room]), (
+        f"blue-warp table mismatch for {_room}")
+
 
 def _resolve_blue_warp_slot(world: "SohWorld", dungeon_table: list[EntranceDef],
                             boss_slot_room: Regions) -> "Regions | None":
@@ -1666,26 +1682,26 @@ def _resolve_blue_warp_slot(world: "SohWorld", dungeon_table: list[EntranceDef],
 
 
 def _blue_warp_overrides(world: "SohWorld", dungeon_table: list[EntranceDef],
-                         include_ganon: bool,
-                         extra_slots: "list[EntranceDef] | None" = None
-                         ) -> list[dict[str, int]]:
+                         boss_slots: list[EntranceDef],
+                         include_ganon: bool) -> list[dict[str, int]]:
     """Derive BlueWarp (type 4) override elements from the current placement.
 
-    Call after the boss/dungeon pools have been applied. For each dungeon boss slot,
-    its forward entrance now points at whatever boss room was placed behind it; that
-    boss room's blue warp must send the player to the overworld of the slot's dungeon
-    -- following both the boss shuffle (which boss is here) and the dungeon-entrance
-    shuffle (where the slot's dungeon now sits, via ``_resolve_blue_warp_slot``). So
-    we emit ``index = blue_warp(boss_room_now_here)``, ``override = blue_warp(resolved
-    slot)``. One-way, so the destination fields are ``-1`` (see ``_ONE_WAY_NO_DEST``).
+    Call after the boss/dungeon pools have been applied. For each boss slot in
+    ``boss_slots``, its forward entrance now points at whatever boss room was placed
+    behind it; that boss room's blue warp must send the player to the overworld of the
+    slot's dungeon -- following both the boss shuffle (which boss is here) and the
+    dungeon-entrance shuffle (where the slot's dungeon now sits, via
+    ``_resolve_blue_warp_slot``). So we emit ``index = blue_warp(boss_room_now_here)``,
+    ``override = blue_warp(resolved slot)``. One-way, so the destination fields are
+    ``-1`` (see ``_ONE_WAY_NO_DEST``).
 
-    ``extra_slots`` adds boss-like slots beyond the eight dungeon bosses -- namely
-    Ganon's Tower when it joins the boss pool. Its FLOOR_1 is treated as a boss room
-    (blue warp ``0x23F``, dungeon Ganon's Castle), so whichever slot now holds the
-    tower climb emits ``0x23F`` and whatever boss now sits behind the tower entryway
-    ejects to Castle Grounds -- exactly one element per boss room across all slots."""
+    ``boss_slots`` is the eight dungeon bosses plus Ganon's Tower when it joins the
+    boss pool (see ``_run_entrance_pools``). The tower's FLOOR_1 is registered as a
+    boss room (blue warp ``0x23F``, dungeon Ganon's Castle), so whichever slot now
+    holds the tower climb emits ``0x23F`` and whatever boss now sits behind the tower
+    entryway ejects to Castle Grounds -- exactly one element per boss room."""
     out: list[dict[str, int]] = []
-    for d in list(BOSS_ENTRANCES) + list(extra_slots or []):
+    for d in boss_slots:
         slot = _resolve_blue_warp_slot(world, dungeon_table, d.fwd_child)
         if slot is None:
             continue
@@ -1705,10 +1721,10 @@ def _blue_warp_overrides(world: "SohWorld", dungeon_table: list[EntranceDef],
         out.append({"type": ENTRANCE_TYPE_BLUE_WARP, "index": boss_index,
                     "destination": _ONE_WAY_NO_DEST, "override": override_index,
                     "overrideDestination": _ONE_WAY_NO_DEST})
-    # The tower slot (in ``extra_slots``) already emits index 0x23F through the loop
-    # above, so only emit the standalone Ganon identity warp when the tower is NOT in
-    # the pool -- otherwise 0x23F would be emitted twice.
-    if include_ganon and not extra_slots:
+    # Emit the standalone Ganon identity warp only if 0x23F was not already emitted by
+    # the loop -- when the tower is in ``boss_slots``, whichever slot holds its FLOOR_1
+    # climb already produced index 0x23F, so a second element would duplicate it.
+    if include_ganon and not any(o["index"] == _GANON_BLUE_WARP_INDEX for o in out):
         out.append({"type": ENTRANCE_TYPE_BLUE_WARP,
                     "index": _GANON_BLUE_WARP_INDEX, "destination": _ONE_WAY_NO_DEST,
                     "override": _GANON_BLUE_WARP_INDEX,
@@ -1718,7 +1734,7 @@ def _blue_warp_overrides(world: "SohWorld", dungeon_table: list[EntranceDef],
 
 def _rewire_blue_warp_logic(world: "SohWorld",
                             dungeon_table: list[EntranceDef],
-                            extra_slots: "list[EntranceDef] | None" = None) -> None:
+                            boss_slots: list[EntranceDef]) -> None:
     """Repoint each boss room's blue-warp *logic* edge to follow the placement.
 
     ``_blue_warp_overrides`` fixes the game side; this fixes the region graph. The
@@ -1736,11 +1752,12 @@ def _rewire_blue_warp_logic(world: "SohWorld",
     ``_restore_graph`` resets it between attempts. The completion-event gate on the
     edge is left untouched -- you trigger the warp by beating whichever boss is there.
 
-    ``extra_slots`` mirrors ``_blue_warp_overrides``: the tower slot, when shuffled.
-    The tower's own FLOOR_1 has no blue-warp-out edge in AP (beating Ganon ends the
-    game), so a slot holding FLOOR_1 finds nothing to repoint; but a real boss room
-    behind the tower entryway is repointed to Castle Grounds like any other slot."""
-    for d in list(BOSS_ENTRANCES) + list(extra_slots or []):
+    ``boss_slots`` matches ``_blue_warp_overrides``: the eight dungeon bosses plus the
+    tower when shuffled. The tower's own FLOOR_1 has no blue-warp-out edge in AP
+    (beating Ganon ends the game), so a slot holding FLOOR_1 finds nothing to repoint;
+    but a real boss room behind the tower entryway is repointed to Castle Grounds like
+    any other slot."""
+    for d in boss_slots:
         slot = _resolve_blue_warp_slot(world, dungeon_table, d.fwd_child)
         if slot is None:
             continue
@@ -2027,14 +2044,14 @@ def _one_way_requirements(world: "SohWorld",
     if not dests:
         return []
 
-    both = frozenset((Ages.CHILD, Ages.ADULT))
+    both = _BOTH_AGES
     # A region that supplies exactly the given lost ages, to simulate coverage so the
     # cascade through the overworld is captured (root supplies both ages; the single-age
     # spawns supply one). Probing with only the lost ages avoids over-restoring.
     cover_source = {
         both: world.get_region(Regions.ROOT),
-        frozenset((Ages.CHILD,)): world.get_region(Regions.CHILD_SPAWN),
-        frozenset((Ages.ADULT,)): world.get_region(Regions.ADULT_SPAWN),
+        _CHILD_ONLY: world.get_region(Regions.CHILD_SPAWN),
+        _ADULT_ONLY: world.get_region(Regions.ADULT_SPAWN),
     }
 
     def reach_all() -> "dict[Regions, frozenset]":
@@ -2050,12 +2067,6 @@ def _one_way_requirements(world: "SohWorld",
             src, region, True_(),
             name=f"{_PROBE_PREFIX}cover {src.name} -> {region.name}")
 
-    def remove_cover(temp: "Entrance") -> None:
-        if temp.parent_region is not None and temp in temp.parent_region.exits:
-            temp.parent_region.exits.remove(temp)
-        if temp.connected_region is not None and temp in temp.connected_region.entrances:
-            temp.connected_region.entrances.remove(temp)
-
     before = reach_all()
     for s in movers:                        # detach (self-loop adds no access)
         _reconnect(s.entrance, s.entrance.parent_region)
@@ -2066,7 +2077,7 @@ def _one_way_requirements(world: "SohWorld",
     # ADULT comes back globally). A requirement should therefore demand only the age(s)
     # that must be delivered DIRECTLY -- a single age a real owl/spawn can supply -- not
     # the raw lost set, which would force a both-age warp where none is needed (or exists).
-    cover_choices = (frozenset((Ages.CHILD,)), frozenset((Ages.ADULT,)), both)
+    cover_choices = (_CHILD_ONLY, _ADULT_ONLY, both)
 
     # A cover is only useful if some actual source can deliver it: owls/single spawns
     # supply one age, warp songs both. Requiring (or scoring) an age-set no source can
@@ -2089,7 +2100,7 @@ def _one_way_requirements(world: "SohWorld",
                 continue
             temp = add_cover(reg, ages)
             trial = reach_all()
-            remove_cover(temp)
+            _remove_probe_edge(temp)
             if not (before[reg] - trial[reg]):
                 return ages, trial
         return None, None
@@ -2129,7 +2140,7 @@ def _one_way_requirements(world: "SohWorld",
             committed.append(add_cover(best_reg, best_ages))
     finally:
         for temp in committed:
-            remove_cover(temp)
+            _remove_probe_edge(temp)
         for s in movers:                    # restore to vanilla
             _reconnect(s.entrance, s.original_region)
     return reqs
@@ -2391,6 +2402,16 @@ _UT_BOSS_TYPES = frozenset((ENTRANCE_TYPE_CHILD_BOSS, ENTRANCE_TYPE_ADULT_BOSS,
 _UT_ONE_WAY_TYPES = frozenset((
     ENTRANCE_TYPE_OWL_DROP, ENTRANCE_TYPE_SPAWN, ENTRANCE_TYPE_WARP_SONG))
 
+# Every two-way (coupled) EntranceDef the UT loader / label map iterate over. Shared
+# so a new entrance is added in exactly one place. (Boss/Ganon-Tower reverses that are
+# forward-only dead-ends, and thieves reverses, are handled per their ship_type by the
+# consumers; they still belong here so their forward index resolves.)
+_COUPLED_ENTRANCES: list[EntranceDef] = [
+    *DUNGEON_ENTRANCES, GANON_ENTRANCE, GANON_TOWER_ENTRANCE, *BOSS_ENTRANCES,
+    *INTERIOR_ENTRANCES, *SPECIAL_INTERIOR_ENTRANCES, *GROTTO_ENTRANCES,
+    *OVERWORLD_ENTRANCES, *THIEVES_HIDEOUT_ENTRANCES,
+]
+
 
 def _build_ut_direction_map() -> "dict[int, tuple[Regions, Regions, bool]]":
     """ENTR index -> ``(parent, child, is_reverse)`` for every coupled/boss/thieves
@@ -2402,12 +2423,7 @@ def _build_ut_direction_map() -> "dict[int, tuple[Regions, Regions, bool]]":
     by the loader -- which is exactly what the live shuffle does with them
     (REVERSE_KEEP leaves them alone; those boss reverses are ``False_()``/absent)."""
     out: "dict[int, tuple[Regions, Regions, bool]]" = {}
-    coupled: list[EntranceDef] = [
-        *DUNGEON_ENTRANCES, GANON_ENTRANCE, GANON_TOWER_ENTRANCE, *BOSS_ENTRANCES,
-        *INTERIOR_ENTRANCES, *SPECIAL_INTERIOR_ENTRANCES, *GROTTO_ENTRANCES,
-        *OVERWORLD_ENTRANCES, *THIEVES_HIDEOUT_ENTRANCES,
-    ]
-    for d in coupled:
+    for d in _COUPLED_ENTRANCES:
         out[d.fwd_index] = (d.fwd_parent, d.fwd_child, False)
         if d.rev_parent is not None and d.rev_child is not None:
             out[d.rev_index] = (d.rev_parent, d.rev_child, True)
@@ -2449,12 +2465,7 @@ def _build_entrance_label_map() -> "dict[str, str]":
     by the edge's vanilla ``"{parent} -> {child}"`` (which is still the entrance's name when
     the rename pass runs). First writer wins (forward before reverse), so it is deterministic."""
     labels: "dict[str, str]" = {}
-    coupled: list[EntranceDef] = [
-        *DUNGEON_ENTRANCES, GANON_ENTRANCE, GANON_TOWER_ENTRANCE, *BOSS_ENTRANCES,
-        *INTERIOR_ENTRANCES, *SPECIAL_INTERIOR_ENTRANCES, *GROTTO_ENTRANCES,
-        *OVERWORLD_ENTRANCES, *THIEVES_HIDEOUT_ENTRANCES,
-    ]
-    for d in coupled:
+    for d in _COUPLED_ENTRANCES:
         labels.setdefault(_entrance_name(d.fwd_parent, d.fwd_child), d.name)
         if d.rev_parent is not None and d.rev_child is not None:
             labels.setdefault(_entrance_name(d.rev_parent, d.rev_child), d.name)
@@ -2706,8 +2717,8 @@ def _run_entrance_pools(world: "SohWorld") -> list[dict[str, int]]:
     grotto_on = bool(opts.shuffle_grotto_entrances.value) and bool(GROTTO_ENTRANCES)
 
     # Decoupled entrances (Ship's RSK_DECOUPLED_ENTRANCES): forward and reverse of each
-    # two-way entrance are shuffled independently. Phase 1 implements this for the
-    # dungeon pool only; the other coupled pools still run coupled until later phases.
+    # two-way entrance are shuffled independently. Applies to every coupled pool below
+    # (dungeon/interior/grotto/overworld/mixed) plus boss and thieves forwards.
     decoupled = bool(opts.decouple_entrances.value)
 
     # A pool joins the mix only if it is shuffled AND its mix flag is on. Ship turns
@@ -2880,15 +2891,14 @@ def _run_entrance_pools(world: "SohWorld") -> list[dict[str, int]]:
     # move, a boss's blue warp ejects to the overworld of the dungeon-entrance slot
     # its dungeon now occupies (Ship's includeBluewarps gate + resolution chain). The
     # game-side overrides and the logic-graph rewiring share that chain so they agree.
-    dungeon_shuffled = dungeon_opt != opts.shuffle_dungeon_entrances.option_off
-    if dungeon_shuffled or opts.shuffle_boss_entrances.value:
+    if dungeon_on or opts.shuffle_boss_entrances.value:
         include_ganon = (dungeon_opt
                          == opts.shuffle_dungeon_entrances.option_on_plus_ganon)
         # The tower joins the blue-warp resolution as a boss-like slot when shuffled,
         # so its FLOOR_1 climb and any boss now behind the tower entryway get correct
         # ejection targets (and the identity Ganon warp is suppressed -- see above).
-        extra = [GANON_TOWER_ENTRANCE] if tower_shuffled else []
-        overrides += _blue_warp_overrides(world, dungeon_table, include_ganon, extra)
-        _rewire_blue_warp_logic(world, dungeon_table, extra)
+        boss_slots = BOSS_ENTRANCES + ([GANON_TOWER_ENTRANCE] if tower_shuffled else [])
+        overrides += _blue_warp_overrides(world, dungeon_table, boss_slots, include_ganon)
+        _rewire_blue_warp_logic(world, dungeon_table, boss_slots)
 
     return overrides
