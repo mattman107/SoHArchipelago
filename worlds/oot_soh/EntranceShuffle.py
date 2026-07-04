@@ -2640,8 +2640,20 @@ def _run_entrance_pools(world: "SohWorld") -> list[dict[str, int]]:
 
     # 6) Boss (never mixed). Runs after dungeons so boss caps reflect the final
     # dungeon placement (whether dungeons were shuffled separately or in the mix).
-    if opts.shuffle_boss_entrances.value:
+    # Ship's three modes (entrance.cpp:1243): Off, Age Restricted (child bosses shuffle
+    # among themselves, adult bosses among themselves), Full (all mixed). Partitioning
+    # the pool is exactly what enforces the age restriction -- the shared caps/needs
+    # machinery is unchanged (need(boss) is empty; caps encode reach-the-door age).
+    boss_opt = opts.shuffle_boss_entrances
+    if boss_opt.value == boss_opt.option_full:
         overrides += _shuffle_pool(world, "boss", BOSS_ENTRANCES, REVERSE_DEADEND,
+                                   dead_end_targets=False)
+    elif boss_opt.value == boss_opt.option_age_restricted:
+        child_bosses = [d for d in BOSS_ENTRANCES if d.ship_type == ENTRANCE_TYPE_CHILD_BOSS]
+        adult_bosses = [d for d in BOSS_ENTRANCES if d.ship_type == ENTRANCE_TYPE_ADULT_BOSS]
+        overrides += _shuffle_pool(world, "child boss", child_bosses, REVERSE_DEADEND,
+                                   dead_end_targets=False)
+        overrides += _shuffle_pool(world, "adult boss", adult_bosses, REVERSE_DEADEND,
                                    dead_end_targets=False)
 
     # 7) Thieves' Hideout (never mixed): forward-only (REVERSE_KEEP) -- the AP hideout

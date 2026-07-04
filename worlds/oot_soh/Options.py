@@ -614,14 +614,22 @@ class ShuffleDungeonEntrances(Choice):
     default = 0
 
 
-class ShuffleBossEntrances(Toggle):
+class ShuffleBossEntrances(Choice):
     """
-    Shuffle the entrances to boss rooms among themselves (child and adult bosses
-    are mixed; the randomizer guarantees every boss stays reachable as a valid age).
+    Shuffle the entrances to boss rooms.
+    Off - Boss entrances are vanilla.
+    Age Restricted - Child boss rooms (Deku Tree, Dodongo's Cavern, Jabu-Jabu) are
+    shuffled among themselves, and adult boss rooms (Forest, Fire, Water, Spirit,
+    Shadow) are shuffled among themselves.
+    Full - All boss rooms (child and adult) are shuffled together.
     A defeated boss's blue warp takes you to the overworld exit of whichever dungeon
     now holds that boss room.
     """
     display_name = "Shuffle Boss Entrances"
+    option_off = 0
+    option_age_restricted = 1
+    option_full = 2
+    default = 0
 
 
 class ShuffleInteriorEntrances(Choice):
