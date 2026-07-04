@@ -716,7 +716,8 @@ class MixedEntrancePools(Toggle):
     A pool is only mixed if it is both shuffled and selected here; at least two such
     pools are required, otherwise mixing has no effect.
 
-    Note: boss-room entrances are not eligible for mixing in this implementation.
+    Note: mixing boss-room entrances requires Shuffle Boss Entrances set to Full
+    (age-restricted boss shuffle keeps its bosses in their own age pools).
     """
     display_name = "Mixed Entrance Pools"
 
@@ -754,6 +755,14 @@ class MixThievesHideoutEntrances(Toggle):
     If Mixed Entrance Pools is on, include shuffled Thieves' Hideout entrances in the mix.
     """
     display_name = "Mix Thieves Hideout Entrances"
+
+
+class MixBossEntrances(Toggle):
+    """
+    If Mixed Entrance Pools is on, include shuffled boss-room entrances in the mix. Only
+    takes effect when Shuffle Boss Entrances is set to Full.
+    """
+    display_name = "Mix Boss Entrances"
 
 
 class DecoupleEntrances(Toggle):
@@ -1794,6 +1803,7 @@ class SohOptions(PerGameCommonOptions):
     mix_grotto_entrances: MixGrottoEntrances
     mix_overworld_entrances: MixOverworldEntrances
     mix_thieves_hideout_entrances: MixThievesHideoutEntrances
+    mix_boss_entrances: MixBossEntrances
     decouple_entrances: DecoupleEntrances
     shuffle_boss_souls: ShuffleBossSouls
     shuffle_fountain_fairies: ShuffleFountainFairies
@@ -2136,10 +2146,11 @@ soh_option_groups = [
         ShuffleOverworldSpawns,
         MixedEntrancePools,
         MixDungeonEntrances,
+        MixBossEntrances,
         MixInteriorEntrances,
         MixGrottoEntrances,
-        MixOverworldEntrances,
         MixThievesHideoutEntrances,
+        MixOverworldEntrances,
         DecoupleEntrances,
     ]),
     OptionGroup("Shuffle Items", [

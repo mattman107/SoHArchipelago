@@ -493,6 +493,7 @@ class SohWorld(World):
             "mix_grotto_entrances": self.options.mix_grotto_entrances.value,
             "mix_overworld_entrances": self.options.mix_overworld_entrances.value,
             "mix_thieves_hideout_entrances": self.options.mix_thieves_hideout_entrances.value,
+            "mix_boss_entrances": self.options.mix_boss_entrances.value,
             "decouple_entrances": self.options.decouple_entrances.value,
             "entrances": self.entrance_overrides,
             "shuffle_boss_souls": self.options.shuffle_boss_souls.value,
