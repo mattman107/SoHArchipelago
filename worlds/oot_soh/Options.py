@@ -740,6 +740,18 @@ class MixOverworldEntrances(Toggle):
     display_name = "Mix Overworld Entrances"
 
 
+class DecoupleEntrances(Toggle):
+    """
+    Decouple entrances so their forward and reverse directions are shuffled
+    independently. Normally an entrance is two-way (coupled): shuffling a door
+    also moves its return so that going back the way you came returns you to
+    where you started. With this on, the return is shuffled separately, so
+    coming back out of a room can lead somewhere else entirely. Applies to
+    whichever entrance pools are being shuffled.
+    """
+    display_name = "Decouple Entrances"
+
+
 class ShuffleBossSouls(Choice):
     """
     Shuffles 8 boss souls (one for each blue warp dungeon). A boss will not appear until you collect its respective soul.
@@ -1764,6 +1776,7 @@ class SohOptions(PerGameCommonOptions):
     mix_interior_entrances: MixInteriorEntrances
     mix_grotto_entrances: MixGrottoEntrances
     mix_overworld_entrances: MixOverworldEntrances
+    decouple_entrances: DecoupleEntrances
     shuffle_boss_souls: ShuffleBossSouls
     shuffle_fountain_fairies: ShuffleFountainFairies
     shuffle_stone_fairies: ShuffleStoneFairies
@@ -1903,19 +1916,20 @@ class SohOptions(PerGameCommonOptions):
         # sphere-0 entrance shuffle that lets the player avoid being trapped in Kokiri
         # Forest as child. Mirrors Ship's Context::FinalizeSettings (settings.cpp): the
         # age is forced to child only if Closed Forest is on AND overworld spawns,
-        # overworld entrances, interior entrances and grotto entrances are all off (Ship
-        # also ANDs in DecoupledEntrances; SOH has no decouple option, so that term is
-        # constant-off and drops out). With any of those shuffles on, adult start stays
-        # beatable (adult spawns at the Temple of Time, outside the forest, and can cross
-        # the LW bridge), so the requested age is kept. Forcing child unconditionally
-        # made those combos UNFILLABLE -- e.g. closed forest + shuffled interiors moves
-        # the Deku-Shield shop out of the forest, so child can never complete the Deku
-        # Tree to escape, stranding the fill (FillError: no more spots).
+        # overworld entrances, interior entrances, grotto entrances and decoupled
+        # entrances are all off (mirrors Ship's Context::FinalizeSettings, settings.cpp).
+        # With any of those shuffles on, adult start stays beatable (adult spawns at the
+        # Temple of Time, outside the forest, and can cross the LW bridge), so the
+        # requested age is kept. Forcing child unconditionally made those combos
+        # UNFILLABLE -- e.g. closed forest + shuffled interiors moves the Deku-Shield shop
+        # out of the forest, so child can never complete the Deku Tree to escape,
+        # stranding the fill (FillError: no more spots).
         if (self.closed_forest == ClosedForest.option_on
                 and self.shuffle_overworld_spawns.value == ShuffleOverworldSpawns.option_false
                 and self.shuffle_overworld_entrances.value == ShuffleOverworldEntrances.option_false
                 and self.shuffle_interior_entrances.value == ShuffleInteriorEntrances.option_off
-                and self.shuffle_grotto_entrances.value == ShuffleGrottoEntrances.option_false):
+                and self.shuffle_grotto_entrances.value == ShuffleGrottoEntrances.option_false
+                and self.decouple_entrances.value == DecoupleEntrances.option_false):
             self.starting_age.value = StartingAge.option_child
             return
         
@@ -2106,7 +2120,7 @@ soh_option_groups = [
         MixInteriorEntrances,
         MixGrottoEntrances,
         MixOverworldEntrances,
-        # Decouple Entrances
+        DecoupleEntrances,
     ]),
     OptionGroup("Shuffle Items", [
         ShuffleSongs,

@@ -97,13 +97,26 @@ logger = logging.getLogger("SOH_OOT.ER")
 #     change that would fight the AP port's intentional simplification -- not done).
 #
 # #5  OMITTED ENTRANCES (intentional, pending features):
-#       - GV Lower Stream -> Lake Hylia overworld one-way (ENTR 0x219): only shuffled
-#         when decoupled entrances are on; belongs with future decoupled work.
 #       - Ship's static glitchless "priority entrances" (Bolero/Nocturne/Requiem) are
 #         replaced by per-seed dynamic detection of load-bearing one-way landings
 #         (`_one_way_requirements`), which subsumes them. See the one-way section.
-#       - Decoupled entrance pools are not implemented yet.
 #       - GANON'S TOWER entrance shuffle is not implemented -- see #GT.
+#
+# #DEC DECOUPLED ENTRANCES (RSK_DECOUPLED_ENTRANCES, `decouple_entrances` option): the
+#     forward and reverse of each two-way entrance are shuffled independently. Ported:
+#     the coupled-four pools (dungeon/interior/grotto shuffle their reverse as a separate
+#     `<Type>Reverse` pool = two independent passes via `_shuffle_decoupled`; overworld
+#     folds both directions + the GV Lower Stream -> Lake Hylia one-way (ENTR 0x219, now
+#     included only when decoupled) into ONE pool; the mixed pool folds all directions in
+#     together). Each direction emits its own override with destination/overrideDestination
+#     = -1 (`_build_slot_data(decoupled=True)`). The wrong-age forbidden check is skipped
+#     (Ship entrance.cpp:822; `_age_exits_are_safe` returns True). Blue warps do NOT chain
+#     through the dungeon shuffle (`_resolve_blue_warp_slot` returns identity) -- each boss
+#     ejects to its own vanilla pad. DIVERGENCE: BOSS and THIEVES reverses are NOT shuffled
+#     independently under decoupled (their AP reverses are forward-only dead-ends / a
+#     non-mirrored maze -- see #TH; Ship's BossReverse/ThievesHideoutReverse have no AP
+#     counterpart), so those reverses stay vanilla; their forward doors still emit decoupled
+#     (-1-dest) overrides.
 #
 # #MIX MIXED ENTRANCE POOLS cover only the four COUPLED pools (dungeon, interior,
 #     grotto, overworld), all REVERSE_COUPLE, which combine cleanly: a combined
@@ -550,9 +563,9 @@ def _ow(name: str, fwd_parent: Regions, fwd_child: Regions, fwd_index: int,
 # differently than Ship -- each such row is annotated; see the AP-VS-SHIP
 # DIVERGENCES note for the general pattern.
 #
-# Ship's GV Lower Stream -> Lake Hylia overworld entrance (ENTR 0x219) is one-way
-# and is only shuffled when decoupled entrances are on; it is intentionally OMITTED
-# here and belongs with the future decoupled-entrances work.
+# Ship's GV Lower Stream -> Lake Hylia overworld entrance (ENTR 0x219) is one-way and
+# is only shuffled when decoupled entrances are on, so it lives in its own
+# OVERWORLD_ONE_WAY_ENTRANCES list (below) rather than this two-way table.
 OVERWORLD_ENTRANCES: list[EntranceDef] = [
     # AP collapses Ship's KF_OUTSIDE_LOST_WOODS buffer into Kokiri Forest, so the
     # Kokiri<->Lost-Woods rows depart from KOKIRI_FOREST and the bridge row lands
@@ -613,6 +626,18 @@ OVERWORLD_ENTRANCES: list[EntranceDef] = [
         Regions.ZORAS_DOMAIN, Regions.ZR_BEHIND_WATERFALL, 0x19D),
     _ow("Zora's Domain/Zora's Fountain", Regions.ZD_BEHIND_KING_ZORA, Regions.ZORAS_FOUNTAIN, 0x225,
         Regions.ZORAS_FOUNTAIN, Regions.ZD_BEHIND_KING_ZORA, 0x1A1),
+]
+
+# Ship's GV Lower Stream -> Lake Hylia overworld exit (ENTR 0x219) is one-way
+# (NO_RETURN) and is shuffled ONLY when decoupled entrances are on (entrance.cpp:1335);
+# in coupled mode it is filtered out and stays vanilla. It has no reverse, so
+# ``rev_parent``/``rev_child`` are left None (``_decoupled_pool_edges`` skips one-way
+# edges when building the reverse side). The rev_index is -1 (``_ONE_WAY_NO_DEST``);
+# it is never emitted since decoupled slot data uses -1 destinations. The AP edge
+# exists (gerudo_valley.py: GV_LOWER_STREAM -> LAKE_HYLIA).
+OVERWORLD_ONE_WAY_ENTRANCES: list[EntranceDef] = [
+    EntranceDef("GV Lower Stream to Lake Hylia", Regions.GV_LOWER_STREAM,
+                Regions.LAKE_HYLIA, 0x219, -1, ENTRANCE_TYPE_OVERWORLD),
 ]
 
 
@@ -736,6 +761,20 @@ def _build_pool(world: "SohWorld",
         edges.append(_Edge(d, fwd_entrance, rev_entrance))
 
     return edges
+
+
+def _reverse_def(d: EntranceDef) -> EntranceDef:
+    """A synthetic def that treats an entrance's REVERSE direction as a forward edge.
+
+    Under decoupled entrances the two directions of a two-way entrance are shuffled
+    independently (Ship builds a separate ``<Type>Reverse`` pool). We model that pool
+    by swapping each def's forward/reverse fields, so ``_build_pool`` binds the reverse
+    AP entrance as the ``_Edge``'s forward and the existing coupled machinery permutes
+    the reverse edges among themselves. Only valid for pools whose defs carry a real
+    reverse (``rev_parent``/``rev_child`` set)."""
+    return EntranceDef(f"{d.name} (reverse)", d.rev_parent, d.rev_child,
+                       d.rev_index, d.fwd_index, d.ship_type,
+                       d.fwd_parent, d.fwd_child)
 
 
 def _apply(forwards: list[_Edge], targets: list[_Edge],
@@ -1127,7 +1166,14 @@ def _age_exits_are_safe(world: "SohWorld", state: "CollectionState") -> bool:
     connectivity never reaches any of these as the forbidden age (verified), so the
     check is safe to run unconditionally and needs no per-pool gating. Using the
     all-items state is conservative -- fewer items could only make a region *less*
-    reachable, never more -- so it can never miss a genuine wrong-age access."""
+    reachable, never more -- so it can never miss a genuine wrong-age access.
+
+    Skipped entirely when entrances are decoupled (Ship, entrance.cpp:822): with the
+    two directions shuffled independently the player can always take the correct return
+    direction, so the coupled "a wrong-age doorway strands you inside" reasoning no
+    longer applies."""
+    if world.options.decouple_entrances.value:
+        return True
     player = world.player
     for region, forbidden_age in _FORBIDDEN_AGE_EXITS:
         if state._soh_can_reach_as_age(region, forbidden_age, player):
@@ -1262,30 +1308,39 @@ def _seed_is_valid(world: "SohWorld", check_other_access: bool = False) -> bool:
     return True
 
 
-def _build_slot_data(forwards: list[_Edge],
-                     targets: list[_Edge]) -> list[dict[str, int]]:
-    """Convert a coupled pairing into the contract's ``entrances`` elements.
+def _build_slot_data(forwards: list[_Edge], targets: list[_Edge],
+                     decoupled: bool = False) -> list[dict[str, int]]:
+    """Convert a pairing into the contract's ``entrances`` elements.
 
     Each shuffled direction is its own element (forward and reverse are separate),
-    matching what Ship's CreateEntranceOverrides()/ParseJson() exchange. For a
-    placement of doorway S onto target T: S's forward adopts T's forward, and T's
-    reverse adopts S's reverse."""
+    matching what Ship's CreateEntranceOverrides()/ParseJson() exchange.
+
+    Coupled (default): a placement of doorway S onto target T emits BOTH directions
+    as a mirrored pair -- S's forward adopts T's forward, and T's reverse adopts S's
+    reverse -- carrying the paired reverse indices in ``destination`` /
+    ``overrideDestination``.
+
+    Decoupled: this pool is a single independent direction (a forward pool or a
+    ``_reverse_def`` reverse pool), so each edge emits ONE element with the destination
+    fields set to ``_ONE_WAY_NO_DEST`` -- Ship's decoupled emission leaves them -1 and
+    rewires purely by ``index -> override`` (entrance.cpp:1652)."""
     entrances: list[dict[str, int]] = []
     for src, tgt in zip(forwards, targets):
         entrances.append({
             "type": src.ship_type,
             "index": src.fwd_index,
-            "destination": src.rev_index,
+            "destination": _ONE_WAY_NO_DEST if decoupled else src.rev_index,
             "override": tgt.fwd_index,
-            "overrideDestination": tgt.rev_index,
+            "overrideDestination": _ONE_WAY_NO_DEST if decoupled else tgt.rev_index,
         })
-        entrances.append({
-            "type": tgt.ship_type,
-            "index": tgt.rev_index,
-            "destination": tgt.fwd_index,
-            "override": src.rev_index,
-            "overrideDestination": src.fwd_index,
-        })
+        if not decoupled:
+            entrances.append({
+                "type": tgt.ship_type,
+                "index": tgt.rev_index,
+                "destination": tgt.fwd_index,
+                "override": src.rev_index,
+                "overrideDestination": src.fwd_index,
+            })
     return entrances
 
 
@@ -1346,7 +1401,8 @@ def _walk_shuffle(world: "SohWorld", forwards: list[_Edge],
 
 def _shuffle_pool(world: "SohWorld", label: str, entries: list[EntranceDef],
                   reverse_mode: str, dead_end_targets: bool,
-                  check_other_access: bool = False) -> list[dict[str, int]]:
+                  check_other_access: bool = False,
+                  decoupled: bool = False) -> list[dict[str, int]]:
     """Shuffle one pool in place on the graph; return its slot-data elements.
 
     Pools are applied cumulatively (not restored between pools): a later pool's
@@ -1359,7 +1415,16 @@ def _shuffle_pool(world: "SohWorld", label: str, entries: list[EntranceDef],
 
     ``check_other_access`` is forwarded to validation; pools that move spawns, the
     overworld, or special interiors should set it so the global age/time invariants
-    are enforced (mirrors Ship's ``checkOtherEntranceAccess``)."""
+    are enforced (mirrors Ship's ``checkOtherEntranceAccess``).
+
+    ``decoupled`` marks a single-direction pool (a forward pool, or a ``_reverse_def``
+    reverse pool, shuffled independently of its opposite direction). It only changes
+    slot-data emission (one ``-1``-destination element per edge) and drops the
+    wrong-age forbidden constraint: Ship skips that check entirely when decoupled
+    (entrance.cpp:822), because with independent directions the player can always take
+    the correct return, so a forbidden interior can no longer be entered as the wrong
+    age via a mirrored doorway. Callers pass ``REVERSE_KEEP`` so the opposite direction
+    (shuffled by its own pass) is left untouched here."""
     forwards = _build_pool(world, entries)
     if not forwards:
         return []
@@ -1375,8 +1440,9 @@ def _shuffle_pool(world: "SohWorld", label: str, entries: list[EntranceDef],
     caps = _compute_caps(world, forwards)
     needs = (_compute_needs(world, forwards) if dead_end_targets
              else _compute_needs_per_edge(world, forwards))
-    forbidden = {edge: age for edge in forwards
-                 if (age := _forbidden_age(edge)) is not None}
+    forbidden = ({} if decoupled else
+                 {edge: age for edge in forwards
+                  if (age := _forbidden_age(edge)) is not None})
 
     # A target can never be *required* as the very age it forbids: the matcher only
     # ever routes it through a doorway whose cap excludes that age, so the player never
@@ -1415,7 +1481,7 @@ def _shuffle_pool(world: "SohWorld", label: str, entries: list[EntranceDef],
         if _seed_is_valid(world, check_other_access):
             logger.debug("ER: shuffled %d %s entrances for player %d",
                          len(forwards), label, world.player)
-            return _build_slot_data(forwards, targets)
+            return _build_slot_data(forwards, targets, decoupled)
         _restore_forwards(forwards, reverse_mode)
 
     # Fast path exhausted (or infeasible under the model -- see the break above). A fresh random bijection rewires every edge at once, so
@@ -1433,12 +1499,50 @@ def _shuffle_pool(world: "SohWorld", label: str, entries: list[EntranceDef],
     if targets is not None:
         logger.debug("ER: shuffled %d %s entrances for player %d via random walk",
                      len(forwards), label, world.player)
-        return _build_slot_data(forwards, targets)
+        return _build_slot_data(forwards, targets, decoupled)
 
     _restore_forwards(forwards, reverse_mode)
     raise RuntimeError(
         f"SoH ER: could not find a valid {label} entrance shuffle for player "
         f"{world.player} after {MAX_SHUFFLE_ATTEMPTS} attempts + random walk.")
+
+
+def _decoupled_pool_edges(entries: list[EntranceDef]) -> list[EntranceDef]:
+    """Both independent directions of every def in a decoupled pool, as one flat list.
+
+    Two-way defs contribute their forward edge plus a :func:`_reverse_def` reverse
+    edge; one-way defs (no ``rev_parent``/``rev_child`` -- e.g. GV Lower Stream ->
+    Lake Hylia) contribute only their forward. Used where a decoupled pool is shuffled
+    as a SINGLE combined matching (the overworld pool and the mixed pool), matching
+    Ship, which folds both directions of the overworld entrances into one pool rather
+    than a separate ``OverworldReverse`` pool."""
+    out = list(entries)
+    out += [_reverse_def(d) for d in entries
+            if d.rev_parent is not None and d.rev_child is not None]
+    return out
+
+
+def _shuffle_decoupled(world: "SohWorld", label: str,
+                       entries: list[EntranceDef]) -> list[dict[str, int]]:
+    """Shuffle a coupled two-way pool as two INDEPENDENT one-directional pools.
+
+    Ship's decoupled mode (entrance.cpp builds a separate ``<Type>Reverse`` pool):
+    the forward edges are permuted among themselves, then the reverse edges -- treated
+    as forwards via :func:`_reverse_def` -- are permuted among themselves, with no
+    round-trip link between the two directions. Each pass runs forward-only
+    (``REVERSE_KEEP`` leaves the opposite direction for its own pass) and emits its
+    own ``-1``-destination overrides (``decoupled=True``).
+
+    Order matters: the forward pass runs first so the reverse pass's reachability is
+    computed against the placed dungeon interiors. ``check_other_access`` is set on
+    both because the reverse pass relocates where dungeon exits deposit the player in
+    the overworld, which can move age/time access."""
+    out = _shuffle_pool(world, f"{label} (fwd)", entries, REVERSE_KEEP,
+                        dead_end_targets=False, check_other_access=True, decoupled=True)
+    out += _shuffle_pool(world, f"{label} (rev)", [_reverse_def(d) for d in entries],
+                         REVERSE_KEEP, dead_end_targets=False, check_other_access=True,
+                         decoupled=True)
+    return out
 
 
 # --- Blue warps --------------------------------------------------------------
@@ -1543,6 +1647,12 @@ def _resolve_blue_warp_slot(world: "SohWorld", dungeon_table: list[EntranceDef],
     entryway = _BOSS_ROOM_TO_DUNGEON_ENTRYWAY.get(boss_slot_room)
     if entryway is None:
         return None
+    # Decoupled: the blue warp does NOT chain through the dungeon-entrance shuffle
+    # (Ship entrance.cpp:1594 skips the chain when decoupled). Exits are independent of
+    # entrances, and AP does not shuffle the boss/dungeon reverse the chain would follow,
+    # so the warp ejects to the slot's OWN vanilla blue-warp pad -- identity, no hop.
+    if world.options.decouple_entrances.value:
+        return entryway
     for e in dungeon_table:
         try:
             ent = world.get_entrance(_entrance_name(e.fwd_parent, e.fwd_child))
@@ -2508,7 +2618,10 @@ def shuffle_entrances(world: "SohWorld") -> None:
                  or bool(opts.shuffle_warp_songs.value)
                  or bool(opts.shuffle_owl_drops.value)
                  or bool(opts.shuffle_thieves_hideout_entrances.value)
-                 or bool(opts.mixed_entrance_pools.value))
+                 or bool(opts.mixed_entrance_pools.value)
+                 # Decoupled shuffling relocates reverse (exit) edges, which moves
+                 # overworld access and so can affect item-fill accessibility.
+                 or bool(opts.decouple_entrances.value))
 
     # Cache the all-items reachability base for the duration of the shuffle; every
     # per-pool reachability probe / validation copies+sweeps it instead of re-collecting
@@ -2573,6 +2686,11 @@ def _run_entrance_pools(world: "SohWorld") -> list[dict[str, int]]:
     overworld_on = bool(opts.shuffle_overworld_entrances.value) and bool(OVERWORLD_ENTRANCES)
     grotto_on = bool(opts.shuffle_grotto_entrances.value) and bool(GROTTO_ENTRANCES)
 
+    # Decoupled entrances (Ship's RSK_DECOUPLED_ENTRANCES): forward and reverse of each
+    # two-way entrance are shuffled independently. Phase 1 implements this for the
+    # dungeon pool only; the other coupled pools still run coupled until later phases.
+    decoupled = bool(opts.decouple_entrances.value)
+
     # A pool joins the mix only if it is shuffled AND its mix flag is on. Ship turns
     # mixing off entirely when fewer than two pools are selected.
     mixed: set[str] = set()
@@ -2596,36 +2714,69 @@ def _run_entrance_pools(world: "SohWorld") -> list[dict[str, int]]:
 
     # 1) Dungeon (separate). Dungeons gate other regions -> per-edge needs.
     if dungeon_on and "dungeon" not in mixed:
-        overrides += _shuffle_pool(world, "dungeon", dungeon_table, REVERSE_COUPLE,
-                                   dead_end_targets=False)
+        if decoupled:
+            overrides += _shuffle_decoupled(world, "dungeon", dungeon_table)
+        else:
+            overrides += _shuffle_pool(world, "dungeon", dungeon_table, REVERSE_COUPLE,
+                                       dead_end_targets=False)
 
     # 2) Overworld (separate) -- the backbone, before interiors/grottos.
     if overworld_on and "overworld" not in mixed:
-        overrides += _shuffle_pool(world, "overworld", OVERWORLD_ENTRANCES,
-                                   REVERSE_COUPLE, dead_end_targets=False,
-                                   check_other_access=True)
+        if decoupled:
+            # Ship pools BOTH overworld directions into the one Overworld pool (no
+            # separate OverworldReverse), plus the decoupled-only GV Lower Stream ->
+            # Lake Hylia one-way. So shuffle them as a single combined matching, not the
+            # two-pass split used for dungeon/interior/grotto (whose reverses are their
+            # own <Type>Reverse pools).
+            ow_edges = _decoupled_pool_edges(
+                list(OVERWORLD_ENTRANCES) + OVERWORLD_ONE_WAY_ENTRANCES)
+            overrides += _shuffle_pool(world, "overworld", ow_edges, REVERSE_KEEP,
+                                       dead_end_targets=False, check_other_access=True,
+                                       decoupled=True)
+        else:
+            overrides += _shuffle_pool(world, "overworld", OVERWORLD_ENTRANCES,
+                                       REVERSE_COUPLE, dead_end_targets=False,
+                                       check_other_access=True)
 
-    # 3) Mixed pool: the selected coupled pools shuffled together as one. All are
-    # REVERSE_COUPLE; the combined pool uses per-edge needs and the global age/time
-    # invariants (superset of the members' requirements).
+    # 3) Mixed pool: the selected coupled pools shuffled together as one. The combined
+    # pool uses per-edge needs and the global age/time invariants (superset of the
+    # members' requirements).
     if mixed:
         combined: list[EntranceDef] = []
         if "dungeon" in mixed:
             combined += dungeon_table
         if "overworld" in mixed:
             combined += list(OVERWORLD_ENTRANCES)
+            if decoupled:
+                # The decoupled-only GV Lower Stream -> Lake Hylia one-way joins the mix
+                # with the overworld pool (Ship keeps it in EntranceType::Overworld).
+                combined += OVERWORLD_ONE_WAY_ENTRANCES
         if "interior" in mixed:
             combined += interior_table
         if "grotto" in mixed:
             combined += list(GROTTO_ENTRANCES)
-        overrides += _shuffle_pool(world, "mixed", combined, REVERSE_COUPLE,
-                                   dead_end_targets=False, check_other_access=True)
+        if decoupled:
+            # Decoupled: every direction is an independent edge in the ONE mixed pool
+            # (Ship folds each member's <Type>Reverse pool into the mix). A single
+            # matching over forwards + reverse-as-forwards (one-way members contribute
+            # only their forward), forward-only per edge.
+            combined_all = _decoupled_pool_edges(combined)
+            overrides += _shuffle_pool(world, "mixed", combined_all, REVERSE_KEEP,
+                                       dead_end_targets=False, check_other_access=True,
+                                       decoupled=True)
+        else:
+            # Coupled: members are REVERSE_COUPLE, each a mirrored two-way pair.
+            overrides += _shuffle_pool(world, "mixed", combined, REVERSE_COUPLE,
+                                       dead_end_targets=False, check_other_access=True)
 
     # 4) Interior (separate). "Simple" = dead-end houses/shops (fast batched needs);
     # "All" mixes in the special/linked interiors (pass-throughs -> per-edge needs +
-    # invariants).
+    # invariants). Decoupled uses per-edge needs both ways (its reverse targets are
+    # overworld regions, not dead-ends).
     if interior_on and "interior" not in mixed:
-        if interior_all:
+        if decoupled:
+            overrides += _shuffle_decoupled(world, "interior", interior_table)
+        elif interior_all:
             overrides += _shuffle_pool(world, "interior+special", interior_table,
                                        REVERSE_COUPLE, dead_end_targets=False,
                                        check_other_access=True)
@@ -2635,8 +2786,11 @@ def _run_entrance_pools(world: "SohWorld") -> list[dict[str, int]]:
 
     # 5) Grotto (separate).
     if grotto_on and "grotto" not in mixed:
-        overrides += _shuffle_pool(world, "grotto", GROTTO_ENTRANCES,
-                                   REVERSE_COUPLE, dead_end_targets=True)
+        if decoupled:
+            overrides += _shuffle_decoupled(world, "grotto", list(GROTTO_ENTRANCES))
+        else:
+            overrides += _shuffle_pool(world, "grotto", GROTTO_ENTRANCES,
+                                       REVERSE_COUPLE, dead_end_targets=True)
 
     # 6) Boss (never mixed). Runs after dungeons so boss caps reflect the final
     # dungeon placement (whether dungeons were shuffled separately or in the mix).
@@ -2644,26 +2798,35 @@ def _run_entrance_pools(world: "SohWorld") -> list[dict[str, int]]:
     # among themselves, adult bosses among themselves), Full (all mixed). Partitioning
     # the pool is exactly what enforces the age restriction -- the shared caps/needs
     # machinery is unchanged (need(boss) is empty; caps encode reach-the-door age).
+    # Under decoupled, emit forward-only (-1-destination) overrides, consistent with the
+    # decoupled contract. Ship would shuffle the boss-room reverse (BossReverse pool)
+    # independently; AP's boss reverses are forward-only dead-ends (DIVERGENCE: absent /
+    # False_ / disconnected), so there is nothing to shuffle -- the boss door reverse
+    # stays vanilla under decoupled. Boss forward still permutes as normal.
     boss_opt = opts.shuffle_boss_entrances
     if boss_opt.value == boss_opt.option_full:
         overrides += _shuffle_pool(world, "boss", BOSS_ENTRANCES, REVERSE_DEADEND,
-                                   dead_end_targets=False)
+                                   dead_end_targets=False, decoupled=decoupled)
     elif boss_opt.value == boss_opt.option_age_restricted:
         child_bosses = [d for d in BOSS_ENTRANCES if d.ship_type == ENTRANCE_TYPE_CHILD_BOSS]
         adult_bosses = [d for d in BOSS_ENTRANCES if d.ship_type == ENTRANCE_TYPE_ADULT_BOSS]
         overrides += _shuffle_pool(world, "child boss", child_bosses, REVERSE_DEADEND,
-                                   dead_end_targets=False)
+                                   dead_end_targets=False, decoupled=decoupled)
         overrides += _shuffle_pool(world, "adult boss", adult_bosses, REVERSE_DEADEND,
-                                   dead_end_targets=False)
+                                   dead_end_targets=False, decoupled=decoupled)
 
     # 7) Thieves' Hideout (never mixed): forward-only (REVERSE_KEEP) -- the AP hideout
     # reverse edges are a simplified maze that doesn't mirror Ship's pairs
     # (DIVERGENCE #TH). Cells gate the carpenters -> Gerudo card -> wasteland/GTG, so
     # they are NOT dead ends. check_other_access=True mirrors Ship.
+    # Decoupled emits forward-only (-1-destination) overrides. Ship's ThievesHideoutReverse
+    # pool has no AP counterpart (the AP hideout reverses are a simplified maze, DIVERGENCE
+    # #TH), so under decoupled the reverse edges are left as-is and only the forward doors
+    # are emitted -- consistent with the decoupled contract.
     if opts.shuffle_thieves_hideout_entrances.value and THIEVES_HIDEOUT_ENTRANCES:
         overrides += _shuffle_pool(world, "thieves hideout", THIEVES_HIDEOUT_ENTRANCES,
                                    REVERSE_KEEP, dead_end_targets=False,
-                                   check_other_access=True)
+                                   check_other_access=True, decoupled=decoupled)
 
     # One-way pools (spawns, warp songs, owl drops). Shuffled together as one
     # combined matching so a landing is consumed at most once across them. Run
