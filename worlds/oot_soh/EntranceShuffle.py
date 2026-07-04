@@ -35,7 +35,7 @@ from Fill import fill_restrictive
 
 if TYPE_CHECKING:
     from . import SohWorld
-    from BaseClasses import Entrance, Region
+    from BaseClasses import Entrance, Location, Region
 
 import logging
 logger = logging.getLogger("SOH_OOT.ER")
@@ -2303,6 +2303,52 @@ def _restore_graph(world: "SohWorld",
             ent.parent_region.exits.append(ent)
 
 
+def _player_fulfills_accessibility(world: "SohWorld") -> bool:
+    """Per-player port of ``MultiWorld.fulfills_accessibility`` (BaseClasses.py:655).
+
+    The multiworld version sweeps EVERY player's locations and requires the whole
+    multiworld beatable. That is wrong for the ER trial: it runs during this
+    player's ``connect_entrances``, before any other player has been filled, and
+    only this player is trial-filled (``single_player_placement=True``). Other
+    players are therefore structurally unbeatable, so the whole-multiworld check
+    can never pass and every re-roll is spuriously rejected -- a deterministic
+    generation failure for any 2+ SoH-player multiworld on a fill-gated pool.
+
+    This scopes the identical sphere-sweep / accessibility logic to ``world.player``
+    only, matching the trial's single-player fill and this function's documented
+    single-player intent."""
+    mw = world.multiworld
+    player = world.player
+    state = CollectionState(mw)
+    acc = world.options.accessibility.current_key
+    full = acc == "full"
+    minimal = acc == "minimal"
+
+    # A location must be reachable when the accessibility setting requires it:
+    # `full` -> all of the player's locations; `items` -> those holding an item;
+    # `minimal` -> none (only the goal, checked via has_beaten_game).
+    def location_relevant(loc: "Location") -> bool:
+        return full or loc.advancement
+
+    def location_condition(loc: "Location") -> bool:
+        return full or (loc.item is not None and not minimal)
+
+    locations = [loc for loc in mw.get_locations(player) if location_relevant(loc)]
+    while locations:
+        sphere: list["Location"] = []
+        for n in range(len(locations) - 1, -1, -1):
+            if locations[n].can_reach(state):
+                sphere.append(locations.pop(n))
+        if not sphere:
+            return False
+        for loc in sphere:
+            if loc.item:
+                state.collect(loc.item, True, loc)
+        if mw.has_beaten_game(state, player) and not any(location_condition(l) for l in locations):
+            return True
+    return False
+
+
 def _trial_fill_accessible(world: "SohWorld") -> bool:
     """Whether this player's items can actually be filled into the shuffled graph: a
     throwaway run of the real pre_fill + an assumed fill of the rest, then fully undone.
@@ -2356,14 +2402,15 @@ def _trial_fill_accessible(world: "SohWorld") -> bool:
                          name="SOH_ER_trial")
         if items:
             return False  # overflow: some progression could not be placed
-        # Accept iff the real fill's own gate would: beatable AND every location the
-        # world's accessibility option requires is reachable. Using the multiworld's
-        # `fulfills_accessibility` (rather than a hand-rolled "all advancement
-        # reachable") keeps the trial faithful to each accessibility setting -- under
-        # `minimal` only the goal must be reachable, so demanding every advancement
-        # location would spuriously reject perfectly fillable minimal layouts. It
-        # raises FillError under `__debug__` when unsatisfiable, caught below as False.
-        return mw.fulfills_accessibility(CollectionState(mw))
+        # Accept iff the real fill's own gate would: this player beatable AND every
+        # location this player's accessibility option requires is reachable. Scoped to
+        # the current player (see _player_fulfills_accessibility): the multiworld-wide
+        # MultiWorld.fulfills_accessibility would demand other, not-yet-filled players
+        # be beatable too and so reject every layout in a 2+ SoH-player multiworld.
+        # Faithful to each accessibility setting -- under `minimal` only the goal must
+        # be reachable, so demanding every advancement location would spuriously reject
+        # perfectly fillable minimal layouts.
+        return _player_fulfills_accessibility(world)
     except Exception:
         return False
     finally:
