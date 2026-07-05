@@ -74,6 +74,10 @@ def setup_options_from_slot_data(world: "SohWorld") -> None:
                 "shuffle_frog_song_rupees"]
             world.options.shuffle_adult_trade_items.value = world.passthrough[
                 "shuffle_adult_trade_items"]
+            world.options.shuffle_boss_entrances.value = world.passthrough.get(
+                "shuffle_boss_entrances", 0)
+            world.options.decouple_entrances.value = world.passthrough.get(
+                "decouple_entrances", 0)
             world.options.shuffle_boss_souls.value = world.passthrough["shuffle_boss_souls"]
             world.options.shuffle_fountain_fairies.value = world.passthrough[
                 "shuffle_fountain_fairies"]

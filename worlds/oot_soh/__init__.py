@@ -19,7 +19,7 @@ from .DungeonRewardShuffle import pre_fill_dungeon_rewards, get_pre_fill_rewards
 from .KeyShuffle import pre_fill_own_dungeon_items, pre_fill_any_dungeon_keys, pre_fill_overworld_items, get_own_dungeon_prefill_items, get_dungeon_item_prefill_items
 from .SongShuffle import pre_fill_songs, get_prefill_songs
 from .ShopItems import fill_shop_items, generate_prices
-from .EntranceShuffle import shuffle_entrances
+from .EntranceShuffle import shuffle_entrances, compute_mixed_pools
 from .Presets import oot_soh_options_presets
 from .UniversalTracker import setup_options_from_slot_data
 from settings import Group, Bool
@@ -189,6 +189,41 @@ class SohWorld(World):
             if self.options.ganons_trials_count.value < 6:
                 self.random.shuffle(self.ganons_trials)
                 self.ganons_trials = self.ganons_trials[:self.options.ganons_trials_count.value]
+
+        # GT can only be shuffled when boss entrances are; force it off otherwise so the
+        # generator, slot data, and UT passthrough all agree (mirrors tower_shuffled).
+        if not bool(self.options.shuffle_boss_entrances):
+            self.options.shuffle_ganons_tower.value = 0
+
+        # Mixing self-disables when fewer than two eligible pools are selected, and a pool
+        # only mixes if it's actually shuffled (boss only in Full). The Ship applies this
+        # in ShuffleAllEntrances, which the AP path skips, so normalize the mix options to
+        # the effective set here (compute_mixed_pools is the same logic the shuffle uses).
+        mixed = compute_mixed_pools(self)
+        self.options.mixed_entrance_pools.value = 1 if mixed else 0
+        self.options.mix_dungeon_entrances.value = 1 if "dungeon" in mixed else 0
+        self.options.mix_overworld_entrances.value = 1 if "overworld" in mixed else 0
+        self.options.mix_interior_entrances.value = 1 if "interior" in mixed else 0
+        self.options.mix_grotto_entrances.value = 1 if "grotto" in mixed else 0
+        self.options.mix_thieves_hideout_entrances.value = 1 if "thieves" in mixed else 0
+        self.options.mix_boss_entrances.value = 1 if "boss" in mixed else 0
+
+        # Decoupling only means anything when some pool is actually shuffled; otherwise the
+        # Ship would still apply decoupled-only runtime behavior (e.g. clearing grotto
+        # return flags) to a vanilla layout. Force it off when nothing is shuffled.
+        er_shuffle_enabled = any((
+            bool(self.options.shuffle_dungeon_entrances),
+            bool(self.options.shuffle_boss_entrances),
+            bool(self.options.shuffle_overworld_entrances),
+            bool(self.options.shuffle_interior_entrances),
+            bool(self.options.shuffle_grotto_entrances),
+            bool(self.options.shuffle_thieves_hideout_entrances),
+            bool(self.options.shuffle_owl_drops),
+            bool(self.options.shuffle_warp_songs),
+            bool(self.options.shuffle_overworld_spawns),
+        ))
+        if not er_shuffle_enabled:
+            self.options.decouple_entrances.value = 0
 
         # These things get modified after we call setup_options_from_slot_data, so we need to set them here.
         if self.using_ut:

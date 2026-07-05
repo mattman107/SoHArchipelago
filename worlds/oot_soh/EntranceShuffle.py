@@ -416,7 +416,8 @@ def _grave(name: str, child: Regions, fwd_index: int,
 # Interior entrances (the "simple" tier; Ship EntranceType::Interior). Matches
 # Ship's Interior pool exactly. Special interiors (Temple of Time, Link's house,
 # the windmill, the linked Kak potion shop) are a separate Ship type
-# (SpecialInterior) and not handled yet. The Market back-alley Dog Lady house is
+# (SpecialInterior), handled below as SPECIAL_INTERIOR_ENTRANCES and mixed in only
+# under interior "All". The Market back-alley Dog Lady house is
 # not in Ship's shuffle table at all. Impa's House front + back are dead-ends (the
 # shared cow cage they both reach has no exit), so they are safe to include.
 INTERIOR_ENTRANCES: list[EntranceDef] = [
@@ -2801,6 +2802,41 @@ def shuffle_entrances(world: "SohWorld") -> None:
         _er_end_cache(world)
 
 
+def compute_mixed_pools(world: "SohWorld") -> set[str]:
+    """Return the set of entrance pools that combine into one mixed pool for the given
+    options: a pool joins only if it is shuffled AND its mix flag is on (boss only in
+    Full mode), and mixing self-disables below two pools. Shared by _run_entrance_pools
+    and by SohWorld.generate_early's slot-data normalization so the two can't drift; the
+    Ship applies the equivalent guard in ShuffleAllEntrances (entrance.cpp:1349-1360)."""
+    opts = world.options
+    if not opts.mixed_entrance_pools.value:
+        return set()
+    dungeon_on = opts.shuffle_dungeon_entrances.value != opts.shuffle_dungeon_entrances.option_off
+    interior_on = (opts.shuffle_interior_entrances.value != opts.shuffle_interior_entrances.option_off
+                   and bool(INTERIOR_ENTRANCES))
+    overworld_on = bool(opts.shuffle_overworld_entrances.value) and bool(OVERWORLD_ENTRANCES)
+    grotto_on = bool(opts.shuffle_grotto_entrances.value) and bool(GROTTO_ENTRANCES)
+    thieves_on = (bool(opts.shuffle_thieves_hideout_entrances.value)
+                  and bool(THIEVES_HIDEOUT_ENTRANCES))
+    boss_full = opts.shuffle_boss_entrances.value == opts.shuffle_boss_entrances.option_full
+    mixed: set[str] = set()
+    if dungeon_on and opts.mix_dungeon_entrances.value:
+        mixed.add("dungeon")
+    if overworld_on and opts.mix_overworld_entrances.value:
+        mixed.add("overworld")
+    if interior_on and opts.mix_interior_entrances.value:
+        mixed.add("interior")
+    if grotto_on and opts.mix_grotto_entrances.value:
+        mixed.add("grotto")
+    if thieves_on and opts.mix_thieves_hideout_entrances.value:
+        mixed.add("thieves")
+    if boss_full and opts.mix_boss_entrances.value:
+        mixed.add("boss")
+    if len(mixed) < 2:
+        mixed.clear()
+    return mixed
+
+
 def _run_entrance_pools(world: "SohWorld") -> list[dict[str, int]]:
     """Run every enabled entrance pool once on the current graph and return the
     accumulated slot-data overrides (see :func:`shuffle_entrances` for the gate/re-roll
@@ -2844,24 +2880,9 @@ def _run_entrance_pools(world: "SohWorld") -> list[dict[str, int]]:
     # two-way entrance are shuffled independently. Applies to every shuffled pool below.
     decoupled = bool(opts.decouple_entrances.value)
 
-    # A pool joins the mix only if it is shuffled AND its mix flag is on. Ship turns
-    # mixing off entirely when fewer than two pools are selected.
-    mixed: set[str] = set()
-    if opts.mixed_entrance_pools.value:
-        if dungeon_on and opts.mix_dungeon_entrances.value:
-            mixed.add("dungeon")
-        if overworld_on and opts.mix_overworld_entrances.value:
-            mixed.add("overworld")
-        if interior_on and opts.mix_interior_entrances.value:
-            mixed.add("interior")
-        if grotto_on and opts.mix_grotto_entrances.value:
-            mixed.add("grotto")
-        if thieves_on and opts.mix_thieves_hideout_entrances.value:
-            mixed.add("thieves")
-        if boss_full and opts.mix_boss_entrances.value:
-            mixed.add("boss")
-        if len(mixed) < 2:
-            mixed.clear()
+    # Which pools combine into the mixed pool. Shared with generate_early's slot-data
+    # normalization (compute_mixed_pools) so the two can't disagree.
+    mixed = compute_mixed_pools(world)
 
     # Pool order is chosen so the overworld backbone is placed before interior doors
     # (DIVERGENCE-free convergence rule: interior-"all" relocates the Temple of Time
