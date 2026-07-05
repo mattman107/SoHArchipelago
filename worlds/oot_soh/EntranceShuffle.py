@@ -30,8 +30,8 @@ from typing import TYPE_CHECKING
 
 from .Enums import Regions, Ages, TimeOfDay
 from rule_builder.rules import True_, False_
-from BaseClasses import CollectionState
-from Fill import fill_restrictive
+from BaseClasses import CollectionState, LocationProgressType
+from Fill import fill_restrictive, sweep_from_pool
 
 if TYPE_CHECKING:
     from . import SohWorld
@@ -1404,6 +1404,19 @@ def _build_slot_data(forwards: list[_Edge], targets: list[_Edge],
     return entrances
 
 
+# Validated-walk budgeting. Each attempted swap costs a full-connectivity sweep, the
+# walk's dominant expense. WALK_ATTEMPTS_PER_EDGE * n bounds attempts (capped by
+# WALK_ATTEMPTS_CAP for the largest pools); the walk also EARLY-EXITS once
+# WALK_MIX_TARGET * n swaps are accepted -- by then every edge has moved a few times, so
+# the layout is well mixed and further swaps only add cost. The walk's output is a valid,
+# vanilla-adjacent layout (it starts at vanilla and keeps only valid swaps); fewer swaps =
+# closer to vanilla = still valid and MORE reliably trial-fillable, so a smaller budget is
+# both cheaper and friendlier to the fill gate. These were 12/1500 with no early exit.
+WALK_ATTEMPTS_PER_EDGE = 12
+WALK_ATTEMPTS_CAP = 1500
+WALK_MIX_TARGET = 4
+
+
 def _walk_shuffle(world: "SohWorld", forwards: list[_Edge],
                   caps: dict[_Edge, frozenset], needs: dict[_Edge, frozenset],
                   forbidden: dict[_Edge, Ages], reverse_mode: str,
@@ -1434,11 +1447,14 @@ def _walk_shuffle(world: "SohWorld", forwards: list[_Edge],
     if not _seed_is_valid(world, check_other_access):
         return None
 
-    # Enough attempted swaps to thoroughly mix n edges (~n*ln n successful swaps);
-    # bounded so the largest (mixed) pool can't run away.
-    budget = min(12 * len(forwards), 1500)
+    # Attempt budget (each attempt = one full-connectivity sweep) with an early exit once
+    # enough swaps land to mix the pool (see the WALK_* constants above).
+    budget = min(WALK_ATTEMPTS_PER_EDGE * len(forwards), WALK_ATTEMPTS_CAP)
+    mix_target = WALK_MIX_TARGET * len(forwards)
     made = 0
     for _ in range(budget):
+        if made >= mix_target:
+            break
         a, b = world.random.sample(forwards, 2)
         if not (_age_compatible(caps, needs, forbidden, a, targets[b])
                 and _age_compatible(caps, needs, forbidden, b, targets[a])):
@@ -2364,8 +2380,11 @@ MAX_FILL_REROLLS = 12
 # accept only ROBUSTLY-fillable layouts: a layout fillable with probability p passes only
 # p**N of the time, so fragile layouts are re-rolled away while a solidly-fillable one (p~1)
 # still passes cheaply. Higher N -> lower residual fail rate, at ~N trial fills per shipped
-# layout. (Re-rolled candidates usually fail the FIRST trial, so they stay cheap.)
-TRIAL_FILL_CONFIRMATIONS = 2
+# layout. (Re-rolled candidates usually fail the FIRST trial, so they stay cheap.) 5 was
+# chosen after finding marginal (~80%-fillable) layouts that slipped a 3x gate (0.8**3=0.51)
+# and then lost the real fill's single draw; 0.8**5=0.33 re-rolls most of them away, at a
+# negligible cost for solid layouts (their extra trials short-circuit on the first pass).
+TRIAL_FILL_CONFIRMATIONS = 5
 
 
 def _snapshot_graph(world: "SohWorld") -> list[tuple["Entrance", "Region | None"]]:
@@ -2485,11 +2504,29 @@ def _trial_fill_accessible(world: "SohWorld") -> bool:
     saved_completion = mw.completion_condition.get(player)
     try:
         world.pre_fill()
-        locations = [loc for loc in mw.get_unfilled_locations(player) if not loc.locked]
+        unfilled = [loc for loc in mw.get_unfilled_locations(player) if not loc.locked]
         items = [it for it in world.item_pool if it.advancement]
-        world.random.shuffle(locations)
+        world.random.shuffle(unfilled)
         world.random.shuffle(items)
-        fill_restrictive(mw, CollectionState(mw), locations, items,
+        # Mirror distribute_items_restrictive's fill ORDER, not just its item set. The real
+        # fill places progression into PRIORITY locations FIRST with swap=False, then adds
+        # those locations to the default pool and fills the rest with swap=True; progression
+        # never lands in EXCLUDED locations. A single combined swap-fill is far more
+        # forgiving than that two-phase order -- the priority phase can wedge an item into
+        # Link's Pocket (SoH's lone PRIORITY location) that the swap-less phase cannot undo,
+        # leaving the real fill unable to place a late progression item on a layout the
+        # combined fill placed fine. Replicating the order here (verified on a config-83 seed
+        # where the old trial passed 12/12 but the real fill failed every time) lets the gate
+        # reject those layouts and re-roll to one the real fill can actually complete.
+        priority = [loc for loc in unfilled if loc.progress_type == LocationProgressType.PRIORITY]
+        default = [loc for loc in unfilled
+                   if loc.progress_type == LocationProgressType.DEFAULT]
+        if priority:
+            fill_restrictive(mw, sweep_from_pool(mw.state), priority, items,
+                             single_player_placement=True, swap=False, allow_partial=True,
+                             name="SOH_ER_trial_priority")
+            default = priority + default
+        fill_restrictive(mw, sweep_from_pool(mw.state), default, items,
                          single_player_placement=True, swap=True, allow_partial=True,
                          name="SOH_ER_trial")
         if items:
