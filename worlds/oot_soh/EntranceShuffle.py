@@ -1083,6 +1083,40 @@ def _compute_needs(world: "SohWorld",
     return {fwd: _needs_from_sets(*per[fwd]) for fwd in forwards}
 
 
+# Ship types whose target interior gates NOTHING beyond its own locations, so the fast
+# batched needs sweep (:func:`_compute_needs`) is exact for them even when they sit inside
+# a larger non-dead-end pool. These are exactly the types the *separate* pools already
+# trust as ``dead_end_targets=True`` (simple interiors, grottos/graves). Special interiors
+# (pass-throughs), dungeons, overworld, thieves cells and boss rooms (dungeon-reward
+# gating) are excluded -- they must stay on the per-target probe.
+_LOCAL_NEEDS_TYPES = frozenset((ENTRANCE_TYPE_INTERIOR, ENTRANCE_TYPE_GROTTO_GRAVE))
+
+
+def _compute_needs_split(world: "SohWorld",
+                         forwards: list[_Edge]) -> dict[_Edge, frozenset]:
+    """Per-target needs for a non-dead-end pool, batching the members that are safe to.
+
+    A non-dead-end pool (the mixed pool, interior "All") mixes members that gate other
+    regions (dungeons, overworld, special interiors, thieves, bosses) with members that
+    don't (simple interiors, grottos/graves). The former need the expensive per-target
+    probe (:func:`_compute_needs_per_edge`, three whole-world sweeps *each*); the latter
+    are exact under the cheap batched sweep (:func:`_compute_needs`, three sweeps *total*
+    for the whole subset) by the same locality argument that pool uses when shuffled
+    separately. Splitting the pool by that criterion and running each half with the
+    right method collapses the dominant needs cost for large pools (a full mix drops from
+    ~pool-size*3 sweeps to ~gating-size*3 + 3) while being value-identical to running
+    everything per-edge. The batched half severs+restores its own targets, so it leaves
+    the graph fully connected for the per-edge half that follows."""
+    local = [f for f in forwards if f.ship_type in _LOCAL_NEEDS_TYPES]
+    gating = [f for f in forwards if f.ship_type not in _LOCAL_NEEDS_TYPES]
+    if not local:
+        return _compute_needs_per_edge(world, forwards)
+    needs = _compute_needs(world, local)
+    if gating:
+        needs.update(_compute_needs_per_edge(world, gating))
+    return needs
+
+
 def _age_compatible(caps: dict[_Edge, frozenset], needs: dict[_Edge, frozenset],
                     forbidden: dict[_Edge, Ages],
                     doorway: "_Edge", target: "_Edge") -> bool:
@@ -1464,8 +1498,17 @@ def _shuffle_pool(world: "SohWorld", label: str, entries: list[EntranceDef],
                 edge.rev_entrance = None
 
     caps = _compute_caps(world, forwards)
-    needs = (_compute_needs(world, forwards) if dead_end_targets
-             else _compute_needs_per_edge(world, forwards))
+    if dead_end_targets:
+        needs = _compute_needs(world, forwards)
+    elif decoupled:
+        # Decoupled: a reverse-as-forward interior/grotto edge targets an OVERWORLD
+        # region, not its dead-end interior, so the local-batching criterion doesn't
+        # hold; keep the whole (mixed) pool on the per-edge probe.
+        needs = _compute_needs_per_edge(world, forwards)
+    else:
+        # Coupled non-dead-end pool: batch the members that gate nothing beyond
+        # themselves (simple interiors, grottos), probe the rest per-edge.
+        needs = _compute_needs_split(world, forwards)
     forbidden = ({} if decoupled else
                  {edge: age for edge in forwards
                   if (age := _forbidden_age(edge)) is not None})
