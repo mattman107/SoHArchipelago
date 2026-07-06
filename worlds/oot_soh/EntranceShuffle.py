@@ -38,6 +38,7 @@ if TYPE_CHECKING:
     from BaseClasses import Entrance, Location, Region
 
 import logging
+import os
 logger = logging.getLogger("SOH_OOT.ER")
 
 
@@ -965,12 +966,21 @@ def _er_begin_cache(world: "SohWorld") -> None:
         state.collect(world.create_item(name), True)
     world._er_base_state = state
     world._er_locations = list(world.multiworld.get_locations(world.player))
+    # Every region holding a location, for _seed_is_valid's region pre-filter.
+    world._er_locd_regions = {loc.parent_region for loc in world._er_locations}
+    # None disables the first-pool caps/needs cache (A/B benchmarking knob).
+    world._er_pool_model_cache = (
+        None if os.environ.get("SOH_ER_DISABLE_POOL_CACHE") else {})
 
 
 def _er_end_cache(world: "SohWorld") -> None:
     """Drop the cached base so a later genuine ``get_pre_fill_state`` (real fill) is fresh."""
     world.__dict__.pop("_er_base_state", None)
     world.__dict__.pop("_er_locations", None)
+    world.__dict__.pop("_er_locd_regions", None)
+    world.__dict__.pop("_er_pool_model_cache", None)
+    world.__dict__.pop("_er_graph_pristine", None)
+    world.__dict__.pop("_er_valid_fail_hints", None)
 
 
 def _probe_interior(world: "SohWorld", fwd: "_Edge", source: Regions) -> set[str]:
@@ -1355,8 +1365,45 @@ def _seed_is_valid(world: "SohWorld", check_other_access: bool = False) -> bool:
     if check_other_access and not _world_age_invariants_hold(world, state):
         return False
     # Entrance connectivity: every location reachable with all items (see docstring).
-    if not all(loc.can_reach(state) for loc in world.get_locations()):
-        return False
+    # Layered for speed -- ER validates thousands of candidate layouts per shuffle and
+    # the FAILING ones dominate (doomed matcher attempts, rejected walk swaps). Each
+    # layer below is a pure short-circuit: it returns False only when the full scan
+    # would, so accept/reject outcomes (and thus the shuffle's RNG draws) are unchanged.
+    player = world.player
+    # (1) Region pre-filter: a location whose region is reachable in NO (age, time)
+    # context cannot pass the scan -- its can_reach reads exactly these sets with
+    # age/time unpinned. Stale guard mirrors SohRegion.can_reach.
+    locd = getattr(world, "_er_locd_regions", None)
+    if locd is not None:
+        if state._soh_stale[player]:
+            stored_age = state._soh_age[player]
+            stored_time = state._soh_time[player]
+            state._soh_update_age_reachable_regions(player)
+            state._soh_age[player] = stored_age
+            state._soh_time[player] = stored_time
+        if not locd.issubset(state._soh_childday_regions[player]
+                             | state._soh_childnight_regions[player]
+                             | state._soh_adultday_regions[player]
+                             | state._soh_adultnight_regions[player]):
+            return False
+    # (2) Recent-failure hints: consecutive failing candidates (walk swaps above all)
+    # tend to strand the same location, so checking the last few failures first turns
+    # a repeat failure into ~one can_reach instead of a full ~1400-location scan.
+    hints = getattr(world, "_er_valid_fail_hints", None)
+    if hints is None:
+        hints = world._er_valid_fail_hints = []
+    for i, loc in enumerate(hints):
+        if not loc.can_reach(state):
+            if i:
+                hints.insert(0, hints.pop(i))
+            return False
+    # (3) Full scan; record the failure as a fresh hint (small MRU list).
+    for loc in getattr(world, "_er_locations", None) or world.get_locations():
+        if not loc.can_reach(state):
+            if loc not in hints:
+                hints.insert(0, loc)
+                del hints[8:]
+            return False
     # NOTE: progressive (assumed-fill) BOOTSTRAP soundness -- that an item collection
     # order exists out of the start under closed/song Door of Time -- is NOT checked
     # here. It is a property of the whole layout, not of any single pool, so a per-pool
@@ -1501,6 +1548,19 @@ def _shuffle_pool(world: "SohWorld", label: str, entries: list[EntranceDef],
     if not forwards:
         return []
 
+    # First-pool model cache: a whole-shuffle re-roll (_restore_graph) resets the graph
+    # to the EXACT vanilla state, so the first pool to run each attempt recomputes its
+    # caps/needs -- the dominant per-re-roll cost, whole-world probe sweeps -- against an
+    # identical graph, for identical values. Cache them by pool label for the life of
+    # shuffle_entrances (values keyed per edge by its stable forward Entrance object;
+    # _Edge wrappers are rebuilt each attempt). Later pools see the earlier pools'
+    # RNG-dependent placements, so only the pristine-graph pool may touch the cache:
+    # the flag is set per attempt in shuffle_entrances and cleared here the moment a
+    # non-empty pool is about to mutate the graph (its own dead-end disconnects are
+    # deterministic, hence part of the cached model's pre-state).
+    pristine = getattr(world, "_er_graph_pristine", False)
+    world._er_graph_pristine = False
+
     # Dead-end edges (boss rooms / tower climb): make the target a forward-only sink so a
     # vanilla reverse edge can't create a phantom cross-area path once the forward moves.
     # Per-edge, so a coupled pool (incl. the mix) can hold both dead-end and coupled
@@ -1513,18 +1573,39 @@ def _shuffle_pool(world: "SohWorld", label: str, entries: list[EntranceDef],
                 _disconnect(edge.rev_entrance)
                 edge.rev_entrance = None
 
-    caps = _compute_caps(world, forwards)
-    if dead_end_targets:
-        needs = _compute_needs(world, forwards)
-    elif decoupled:
-        # Decoupled: a reverse-as-forward interior/grotto edge targets an OVERWORLD
-        # region, not its dead-end interior, so the local-batching criterion doesn't
-        # hold; keep the whole (mixed) pool on the per-edge probe.
-        needs = _compute_needs_per_edge(world, forwards)
+    cache = getattr(world, "_er_pool_model_cache", None) if pristine else None
+    cached = cache.get(label) if cache is not None else None
+    if cached is not None:
+        # Loud KeyError on a membership mismatch: pool membership is a pure function
+        # of options, so a miss here means the pristine premise broke -- recomputing
+        # would risk silently-wrong values for the edges that DO match.
+        caps_by_ent, needs_by_ent = cached
+        caps = {edge: caps_by_ent[edge.fwd_entrance] for edge in forwards}
+        needs = {edge: needs_by_ent[edge.fwd_entrance] for edge in forwards}
+        if os.environ.get("SOH_ER_VERIFY_POOL_CACHE"):
+            fresh_caps = _compute_caps(world, forwards)
+            fresh_needs = (_compute_needs(world, forwards) if dead_end_targets
+                           else _compute_needs_per_edge(world, forwards) if decoupled
+                           else _compute_needs_split(world, forwards))
+            assert caps == fresh_caps and needs == fresh_needs, (
+                f"ER pool-model cache diverged for '{label}'")
     else:
-        # Coupled non-dead-end pool: batch the members that gate nothing beyond
-        # themselves (simple interiors, grottos), probe the rest per-edge.
-        needs = _compute_needs_split(world, forwards)
+        caps = _compute_caps(world, forwards)
+        if dead_end_targets:
+            needs = _compute_needs(world, forwards)
+        elif decoupled:
+            # Decoupled: a reverse-as-forward interior/grotto edge targets an OVERWORLD
+            # region, not its dead-end interior, so the local-batching criterion doesn't
+            # hold; keep the whole (mixed) pool on the per-edge probe.
+            needs = _compute_needs_per_edge(world, forwards)
+        else:
+            # Coupled non-dead-end pool: batch the members that gate nothing beyond
+            # themselves (simple interiors, grottos), probe the rest per-edge.
+            needs = _compute_needs_split(world, forwards)
+        if cache is not None:
+            cache[label] = (
+                {edge.fwd_entrance: caps[edge] for edge in forwards},
+                {edge.fwd_entrance: needs[edge] for edge in forwards})
     forbidden = ({} if decoupled else
                  {edge: age for edge in forwards
                   if (age := _forbidden_age(edge)) is not None})
@@ -2885,6 +2966,9 @@ def shuffle_entrances(world: "SohWorld") -> None:
                 _restore_graph(world, snapshot)
                 logger.debug("ER: layout not item-fillable, re-rolling (attempt %d) for "
                              "player %d", attempt + 1, world.player)
+            # The graph is vanilla-exact here (attempt 0, or just _restore_graph'd), so
+            # the first pool to run may reuse its cached caps/needs (see _shuffle_pool).
+            world._er_graph_pristine = True
             try:
                 overrides = _run_entrance_pools(world)
             except _OneWayInfeasible as exc:
