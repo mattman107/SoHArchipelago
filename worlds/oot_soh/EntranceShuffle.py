@@ -2370,8 +2370,12 @@ def _shuffle_one_way(world: "SohWorld",
 
 # Global re-roll budget for the item-fillability gate (see shuffle_entrances). A whole
 # re-shuffle is cheap relative to a failed Generate, and fillable layouts dominate, so a
-# small budget suffices; exceeding it raises rather than emitting an unfillable layout.
-MAX_FILL_REROLLS = 12
+# modest budget suffices; exceeding it raises rather than emitting an unfillable layout.
+# 24 (was 12) because full-accessibility full-mix configs draw seeds where fillable
+# layouts are rare -- observed hard seeds succeed on attempts 14 and 20 where 12 was a
+# hard gen failure. The deeper budget trades those hard failures for a slow tail
+# (~1.5-2 minutes worst observed) rather than runaway generation times.
+MAX_FILL_REROLLS = 24
 
 # A single trial fill is RNG-flaky: pre_fill and the assumed fill both draw randomly, so a
 # layout that is only *occasionally* fillable can pass one trial by luck and then fail the
@@ -2385,6 +2389,15 @@ MAX_FILL_REROLLS = 12
 # and then lost the real fill's single draw; 0.8**5=0.33 re-rolls most of them away, at a
 # negligible cost for solid layouts (their extra trials short-circuit on the first pass).
 TRIAL_FILL_CONFIRMATIONS = 5
+
+# Marginality is a ONE-WAY / overworld / mixed-pool phenomenon (age/time scarcity makes a
+# layout fillable only under some fill draws). When the gate is armed only by the
+# reward-relocating pools (dungeons/bosses), the failure it exists to catch -- a medallion
+# reward circle -- is DETERMINISTIC: the progressive sweep sticks on it no matter how the
+# trial fill drew, so one confirming pass adds all the certainty extra passes would, and a
+# second guards the plain fill flake. Scaling down here keeps the (very common)
+# dungeon/boss-shuffle configs from paying five trial fills per accepted layout.
+TRIAL_FILL_CONFIRMATIONS_REWARD_ONLY = 2
 
 
 def _snapshot_graph(world: "SohWorld") -> list[tuple["Entrance", "Region | None"]]:
@@ -2811,11 +2824,17 @@ def shuffle_entrances(world: "SohWorld") -> None:
     Pools that move the start / age access / pass-throughs (overworld, spawns, warps,
     owls, special interiors, the mixed pool, thieves) can produce a layout that passes
     every per-pool check yet has no valid item placement (see ``_trial_fill_accessible``).
-    Those failures can originate in any pool, so a per-pool retry can't fix them; instead
-    we snapshot the vanilla graph, run all pools, trial-fill once, and on failure restore
-    and re-roll the whole shuffle (a fresh RNG draw). The cheaper dead-end-only pools
-    (dungeon/boss/simple-interior/grotto) never hit this, so they skip the gate and run
-    exactly once, unchanged.
+    So can the pools that relocate DUNGEON-REWARD-bearing regions (dungeons, bosses):
+    a boss room's medallion event gates other content -- Sheik's songs, the rainbow
+    bridge -- so e.g. Volvagia placed behind Shadow Temple's boss door makes the Fire
+    Medallion require Nocturne, which requires the Fire Medallion. That circle is
+    invisible to the all-items ``_seed_is_valid`` (it grants the song wholesale) and,
+    with songs/rewards unshuffled, no item placement can break it; only the trial
+    fill's progressive sweep sees it. Those failures can originate in any pool, so a
+    per-pool retry can't fix them; instead we snapshot the vanilla graph, run all
+    pools, trial-fill once, and on failure restore and re-roll the whole shuffle (a
+    fresh RNG draw). The remaining dead-end-only pools (simple-interior/grotto) can't
+    hit either failure mode, so they skip the gate and run exactly once, unchanged.
 
     Under Universal Tracker (``world.using_ut``) the layout is already fixed and stored
     in slot data, so we replay it directly (:func:`_load_entrances_from_slot_data`)
@@ -2834,17 +2853,25 @@ def shuffle_entrances(world: "SohWorld") -> None:
     opts = world.options
     interior_all = (opts.shuffle_interior_entrances.value
                     == opts.shuffle_interior_entrances.option_all)
-    # Only the pools that set check_other_access can produce a non-item-fillable layout;
-    # gate the (re-roll + trial-fill) on them so plain dead-end shuffles are untouched.
-    fill_gate = (bool(opts.shuffle_overworld_entrances.value) or interior_all
-                 or bool(opts.shuffle_overworld_spawns.value)
-                 or bool(opts.shuffle_warp_songs.value)
-                 or bool(opts.shuffle_owl_drops.value)
-                 or bool(opts.shuffle_thieves_hideout_entrances.value)
-                 or bool(opts.mixed_entrance_pools.value)
-                 # Decoupled shuffling relocates reverse (exit) edges, which moves
-                 # overworld access and so can affect item-fill accessibility.
-                 or bool(opts.decouple_entrances.value))
+    # Gate on the pools that can produce a non-item-fillable layout: everything that
+    # sets check_other_access (marginal, RNG-flaky layouts -> full confirmations), PLUS
+    # the reward-relocating pools (dungeons/bosses -- deterministic medallion-circle
+    # deadlocks, see the docstring -> a light confirmation count suffices). Plain
+    # dead-end shuffles (simple interiors, grottos) stay gate-free and run exactly once.
+    marginal_gate = (bool(opts.shuffle_overworld_entrances.value) or interior_all
+                     or bool(opts.shuffle_overworld_spawns.value)
+                     or bool(opts.shuffle_warp_songs.value)
+                     or bool(opts.shuffle_owl_drops.value)
+                     or bool(opts.shuffle_thieves_hideout_entrances.value)
+                     or bool(opts.mixed_entrance_pools.value)
+                     # Decoupled shuffling relocates reverse (exit) edges, which moves
+                     # overworld access and so can affect item-fill accessibility.
+                     or bool(opts.decouple_entrances.value))
+    fill_gate = (marginal_gate
+                 or bool(opts.shuffle_dungeon_entrances.value)
+                 or bool(boss_opt.value))
+    confirmations = (TRIAL_FILL_CONFIRMATIONS if marginal_gate
+                     else TRIAL_FILL_CONFIRMATIONS_REWARD_ONLY)
 
     # Cache the all-items reachability base for the duration of the shuffle; every
     # per-pool reachability probe / validation copies+sweeps it instead of re-collecting
@@ -2871,7 +2898,7 @@ def shuffle_entrances(world: "SohWorld") -> None:
                 continue
             if (not fill_gate or not overrides
                     or all(_trial_fill_accessible(world)
-                           for _ in range(TRIAL_FILL_CONFIRMATIONS))):
+                           for _ in range(confirmations))):
                 world.entrance_overrides = overrides
                 _rename_shuffled_entrances(world)
                 return
