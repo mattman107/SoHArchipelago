@@ -171,7 +171,6 @@ standard_options = {
     "gs_50_hint":                                       Toggle.option_true,
 }
 
-# Missing ER
 advanced_options = {
     "closed_forest":                                    ClosedForest.option_off,
     "kakariko_gate":                                    KakarikoGate.option_open,
@@ -200,6 +199,9 @@ advanced_options = {
     "shuffle_merchants":                                ShuffleMerchants.option_all,
     "shuffle_frog_song_rupees":                         ShuffleFrogSongRupees.option_true,
     "shuffle_adult_trade_items":                        ShuffleAdultTradeItems.option_true,
+    "shuffle_dungeon_entrances":                        ShuffleDungeonEntrances.option_on_plus_ganon,
+    "shuffle_boss_entrances":                           ShuffleBossEntrances.option_full,
+    "shuffle_overworld_spawns":                         ShuffleOverworldSpawns.option_true,
     "shuffle_dungeon_rewards":                          ShuffleDungeonRewards.option_end_of_dungeons,
     "maps_and_compasses":                               MapsAndCompasses.option_start_with,
     "ganons_castle_boss_key":                           GanonsCastleBossKey.option_lacs_dungeon_rewards,
