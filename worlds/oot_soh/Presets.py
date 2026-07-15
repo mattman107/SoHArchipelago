@@ -213,8 +213,6 @@ advanced_options = {
     "gs_50_hint":                                       Toggle.option_true,
 }
 
-# Missing ER
-# Missing Starting Health at 1 heart
 hell_mode_options = {
     "kakariko_gate":                                    KakarikoGate.option_open,
     "door_of_time":                                     DoorOfTime.option_open,
@@ -251,6 +249,24 @@ hell_mode_options = {
     "shuffle_merchants":                                ShuffleMerchants.option_all,
     "shuffle_frog_song_rupees":                         ShuffleFrogSongRupees.option_true,
     "shuffle_adult_trade_items":                        ShuffleAdultTradeItems.option_true,
+    "shuffle_dungeon_entrances":                        ShuffleDungeonEntrances.option_on_plus_ganon,
+    "shuffle_boss_entrances":                           ShuffleBossEntrances.option_full,
+    "shuffle_ganons_tower":                             ShuffleGanonsTower.option_true,
+    "shuffle_interior_entrances":                       ShuffleInteriorEntrances.option_all,
+    "shuffle_grotto_entrances":                         ShuffleGrottoEntrances.option_true,
+    "shuffle_thieves_hideout_entrances":                ShuffleThievesHideoutEntrances.option_true,
+    "shuffle_overworld_entrances":                      ShuffleOverworldEntrances.option_true,
+    "shuffle_owl_drops":                                ShuffleOwlDrops.option_true,
+    "shuffle_warp_songs":                               ShuffleWarpSongs.option_true,
+    "shuffle_overworld_spawns":                         ShuffleOverworldSpawns.option_true,
+    "mixed_entrance_pools":                             MixedEntrancePools.option_true,
+    "mix_dungeon_entrances":                            MixDungeonEntrances.option_true,
+    "mix_boss_entrances":                               MixBossEntrances.option_true,
+    "mix_overworld_entrances":                          MixOverworldEntrances.option_true,
+    "mix_interior_entrances":                           MixInteriorEntrances.option_true,
+    "mix_thieves_hideout_entrances":                    MixThievesHideoutEntrances.option_true,
+    "mix_grotto_entrances":                             MixGrottoEntrances.option_true,
+    "decouple_entrances":                               DecoupleEntrances.option_true,
     "shuffle_boss_souls":                               ShuffleBossSouls.option_on_plus_ganons,
     "shuffle_fountain_fairies":                         ShuffleFountainFairies.option_true,
     "shuffle_stone_fairies":                            ShuffleStoneFairies.option_true,
