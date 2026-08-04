@@ -43,7 +43,7 @@ class AccessDungeons(Choice):
 class AccessMajoraMasksCount(Range):
     display_name = "Access Majora Masks Count"
     range_start = 0
-    range_end = 24
+    range_end = 20  # only 20 non-transform moon masks exist; >20 makes Majora's Lair unreachable
     default = 0
 
 

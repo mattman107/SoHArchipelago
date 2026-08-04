@@ -183,6 +183,16 @@ class MM2ShipWorld(World):
                 self.starting_clock_name = "Progressive Time"
             self.multiworld.push_precollected(self.create_item(self.starting_clock_name))
 
+        # Clamp each hunt's required to it's max
+        for req, mx in (
+            ("skulltula_tokens_required", "skulltula_tokens_max"),
+            ("stray_fairies_required", "stray_fairies_max"),
+            ("triforce_pieces_required", "triforce_pieces_max"),
+        ):
+            req_opt, max_opt = getattr(self.options, req), getattr(self.options, mx)
+            if req_opt.value > max_opt.value:
+                req_opt.value = max_opt.value
+
     def create_regions(self) -> None:
         create_regions_and_locations(self)
 
