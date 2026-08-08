@@ -127,6 +127,7 @@ class LighthouseWorld(CachedRuleBuilderWorld):
 
     def fill_slot_data(self) -> dict[str, Any]:
         return {
+            "apworld_version": self.apworld_version,
             "shuffle_honey_combs": self.options.shuffle_honey_combs.value,
             "shuffle_jiggies": self.options.shuffle_jiggies.value,
             "shuffle_jinjos": self.options.shuffle_jinjos.value,
