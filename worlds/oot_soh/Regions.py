@@ -45,6 +45,8 @@ def location_enabled(world: "SohWorld", location: Locations, data: ShipLocation)
     # Checks with an option of their own, whatever their check type.
     if location in (Locations.RC_HC_MALON_EGG, Locations.RC_HC_ZELDAS_LETTER):
         return not o.skip_child_zelda
+    if location == Locations.RC_LH_HYRULE_LOACH:
+        return o.shuffle_fish == "hyrule_loach"
     if location == Locations.RC_KAK_100_GOLD_SKULLTULA_REWARD:
         return bool(o.shuffle_100_gs_reward)
     if location == Locations.RC_ZR_MAGIC_BEAN_SALESMAN:

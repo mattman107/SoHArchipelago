@@ -1385,7 +1385,6 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Locations
     add_locations(Regions.RR_DMC_CENTRAL, world, [
-        (Locations.RC_SHEIK_IN_CRATER, lambda bundle: is_adult(bundle)),
         (Locations.RC_DMC_BEAN_SPROUT_FAIRY_1, lambda bundle: is_child(bundle) & can_use(bundle, Items.RG_MAGIC_BEAN) & has_item(bundle, Items.RG_DEATH_MOUNTAIN_CRATER_BEAN_SOUL) & can_use(bundle, Items.RG_SONG_OF_STORMS)),
         (Locations.RC_DMC_BEAN_SPROUT_FAIRY_2, lambda bundle: is_child(bundle) & can_use(bundle, Items.RG_MAGIC_BEAN) & has_item(bundle, Items.RG_DEATH_MOUNTAIN_CRATER_BEAN_SOUL) & can_use(bundle, Items.RG_SONG_OF_STORMS)),
         (Locations.RC_DMC_BEAN_SPROUT_FAIRY_3, lambda bundle: is_child(bundle) & can_use(bundle, Items.RG_MAGIC_BEAN) & has_item(bundle, Items.RG_DEATH_MOUNTAIN_CRATER_BEAN_SOUL) & can_use(bundle, Items.RG_SONG_OF_STORMS)),
@@ -1398,6 +1397,7 @@ def set_region_rules(world: "SohWorld") -> None:
         (Locations.RC_DMC_MIDDLE_PLATFORM_BLUE_RUPEE_5, lambda bundle: is_child(bundle)),
         (Locations.RC_DMC_MIDDLE_PLATFORM_BLUE_RUPEE_6, lambda bundle: is_child(bundle)),
         (Locations.RC_DMC_GS_BEAN_PATCH, lambda bundle: can_spawn_soil_skull(bundle, Items.RG_DEATH_MOUNTAIN_CRATER_BEAN_SOUL) & can_kill(bundle, Enemies.RE_GOLD_SKULLTULA, EnemyDistance.ED_CLOSE, True, 1, False, False)),
+        (Locations.RC_SHEIK_IN_CRATER, lambda bundle: is_adult(bundle)),
     ])
 
     # DMC Cracked Wall
@@ -6360,9 +6360,9 @@ def set_region_rules(world: "SohWorld") -> None:
     # Graveyard Composers Grave
     # Locations
     add_locations(Regions.RR_GRAVEYARD_COMPOSERS_GRAVE, world, [
-        (Locations.RC_SONG_FROM_ROYAL_FAMILYS_TOMB, lambda bundle: can_use_projectile(bundle) | can_jumpslash(bundle)),
         (Locations.RC_GRAVEYARD_ROYAL_FAMILYS_TOMB_CHEST, lambda bundle: has_fire_source(bundle) & has_item(bundle, Items.RG_OPEN_CHEST)),
         (Locations.RC_GRAVEYARD_ROYAL_FAMILYS_TOMB_SUN_FAIRY, lambda bundle: can_use(bundle, Items.RG_SUNS_SONG)),
+        (Locations.RC_SONG_FROM_ROYAL_FAMILYS_TOMB, lambda bundle: can_use_projectile(bundle) | can_jumpslash(bundle)),
     ])
     # Exits
     connect_regions(Regions.RR_GRAVEYARD_COMPOSERS_GRAVE, world, [
@@ -6947,7 +6947,6 @@ def set_region_rules(world: "SohWorld") -> None:
     # Locations
     add_locations(Regions.RR_HYRULE_FIELD, world, [
         (Locations.RC_HF_OCARINA_OF_TIME_ITEM, lambda bundle: is_child(bundle) & has_enough_stones(bundle, 3) & has_item(bundle, Items.RG_BRONZE_SCALE)),
-        (Locations.RC_SONG_FROM_OCARINA_OF_TIME, lambda bundle: is_child(bundle) & has_enough_stones(bundle, 3) & has_item(bundle, Items.RG_BRONZE_SCALE)),
         (Locations.RC_HF_BUSH_NEAR_LAKE_1, lambda bundle: True_()),
         (Locations.RC_HF_BUSH_NEAR_LAKE_2, lambda bundle: True_()),
         (Locations.RC_HF_BUSH_NEAR_LAKE_3, lambda bundle: True_()),
@@ -7055,6 +7054,7 @@ def set_region_rules(world: "SohWorld") -> None:
         (Locations.RC_HF_NEAR_KF_GRASS_10, lambda bundle: can_cut_shrubs(bundle)),
         (Locations.RC_HF_NEAR_KF_GRASS_11, lambda bundle: can_cut_shrubs(bundle)),
         (Locations.RC_HF_NEAR_KF_GRASS_12, lambda bundle: can_cut_shrubs(bundle)),
+        (Locations.RC_SONG_FROM_OCARINA_OF_TIME, lambda bundle: is_child(bundle) & has_enough_stones(bundle, 3) & has_item(bundle, Items.RG_BRONZE_SCALE)),
         (Locations.RC_HF_NEAR_LLR_TREE, lambda bundle: can_bonk_trees(bundle)),
         (Locations.RC_HF_NEAR_LH_TREE, lambda bundle: can_bonk_trees(bundle)),
         (Locations.RC_HF_CHILD_NEAR_GV_TREE, lambda bundle: is_child(bundle) & can_bonk_trees(bundle)),
@@ -7214,8 +7214,8 @@ def set_region_rules(world: "SohWorld") -> None:
     # Ice Cavern Final Room
     # Locations
     add_locations(Regions.RR_ICE_CAVERN_FINAL_ROOM, world, [
-        (Locations.RC_SHEIK_IN_ICE_CAVERN, lambda bundle: any_age(bundle, (lambda bundle: can_kill(bundle, Enemies.RE_WOLFOS, EnemyDistance.ED_CLOSE, True, 1, False, False))) & has_item(bundle, Items.RG_OPEN_CHEST)),
         (Locations.RC_ICE_CAVERN_IRON_BOOTS_CHEST, lambda bundle: any_age(bundle, (lambda bundle: can_kill(bundle, Enemies.RE_WOLFOS, EnemyDistance.ED_CLOSE, True, 1, False, False))) & has_item(bundle, Items.RG_OPEN_CHEST)),
+        (Locations.RC_SHEIK_IN_ICE_CAVERN, lambda bundle: any_age(bundle, (lambda bundle: can_kill(bundle, Enemies.RE_WOLFOS, EnemyDistance.ED_CLOSE, True, 1, False, False))) & has_item(bundle, Items.RG_OPEN_CHEST)),
     ])
     # Exits
     connect_regions(Regions.RR_ICE_CAVERN_FINAL_ROOM, world, [
@@ -7349,8 +7349,8 @@ def set_region_rules(world: "SohWorld") -> None:
     # Ice Cavern MQ Stalfos Room
     # Locations
     add_locations(Regions.RR_ICE_CAVERN_MQ_STALFOS_ROOM, world, [
-        (Locations.RC_SHEIK_IN_ICE_CAVERN, lambda bundle: can_kill(bundle, Enemies.RE_STALFOS, EnemyDistance.ED_CLOSE, True, 1, False, False) & has_item(bundle, Items.RG_OPEN_CHEST)),
         (Locations.RC_ICE_CAVERN_MQ_IRON_BOOTS_CHEST, lambda bundle: can_kill(bundle, Enemies.RE_STALFOS, EnemyDistance.ED_CLOSE, True, 1, False, False) & has_item(bundle, Items.RG_OPEN_CHEST)),
+        (Locations.RC_SHEIK_IN_ICE_CAVERN, lambda bundle: can_kill(bundle, Enemies.RE_STALFOS, EnemyDistance.ED_CLOSE, True, 1, False, False) & has_item(bundle, Items.RG_OPEN_CHEST)),
     ])
     # Exits
     connect_regions(Regions.RR_ICE_CAVERN_MQ_STALFOS_ROOM, world, [
@@ -8011,7 +8011,6 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Locations
     add_locations(Regions.RR_KAKARIKO_VILLAGE, world, [
-        (Locations.RC_SHEIK_IN_KAKARIKO, lambda bundle: is_adult(bundle) & has_item(bundle, Items.RG_FOREST_MEDALLION) & has_item(bundle, Items.RG_FIRE_MEDALLION) & has_item(bundle, Items.RG_WATER_MEDALLION)),
         (Locations.RC_KAK_ANJU_AS_CHILD, lambda bundle: is_child(bundle) & at_day(bundle) & has_item(bundle, Items.RG_CLIMB) & has_item(bundle, Items.RG_POWER_BRACELET) & can_break_crates(bundle) & has_item(bundle, Items.RG_SPEAK_HYLIAN)),
         (Locations.RC_KAK_ANJU_AS_ADULT, lambda bundle: is_adult(bundle) & at_day(bundle) & has_item(bundle, Items.RG_SPEAK_HYLIAN)),
         (Locations.RC_KAK_TRADE_POCKET_CUCCO, lambda bundle: is_adult(bundle) & at_day(bundle) & (can_use(bundle, Items.RG_POCKET_EGG) & has_item(bundle, Events.LOGIC_WAKE_UP_ADULT_TALON))),
@@ -8055,6 +8054,7 @@ def set_region_rules(world: "SohWorld") -> None:
         (Locations.RC_KAK_NEAR_GUARDS_HOUSE_POT_1, lambda bundle: is_child(bundle) & can_break_pots(bundle, EnemyDistance.ED_CLOSE, True, False)),
         (Locations.RC_KAK_NEAR_GUARDS_HOUSE_POT_2, lambda bundle: is_child(bundle) & can_break_pots(bundle, EnemyDistance.ED_CLOSE, True, False)),
         (Locations.RC_KAK_NEAR_GUARDS_HOUSE_POT_3, lambda bundle: is_child(bundle) & can_break_pots(bundle, EnemyDistance.ED_CLOSE, True, False)),
+        (Locations.RC_SHEIK_IN_KAKARIKO, lambda bundle: is_adult(bundle) & has_item(bundle, Items.RG_FOREST_MEDALLION) & has_item(bundle, Items.RG_FIRE_MEDALLION) & has_item(bundle, Items.RG_WATER_MEDALLION)),
         (Locations.RC_KAK_TREE, lambda bundle: can_bonk_trees(bundle)),
     ])
     # Exits
@@ -8715,6 +8715,7 @@ def set_region_rules(world: "SohWorld") -> None:
         (Locations.RC_LH_ADULT_FISH_14, lambda bundle: can_use(bundle, Items.RG_FISHING_POLE) & has_item(bundle, Items.RG_SPEAK_HYLIAN) & is_adult(bundle) & True_(options=[OptionFilter(RSK_FISHSANITY_AGE_SPLIT, True)])),
         (Locations.RC_LH_ADULT_FISH_15, lambda bundle: can_use(bundle, Items.RG_FISHING_POLE) & has_item(bundle, Items.RG_SPEAK_HYLIAN) & is_adult(bundle) & True_(options=[OptionFilter(RSK_FISHSANITY_AGE_SPLIT, True)])),
         (Locations.RC_LH_ADULT_LOACH, lambda bundle: can_use(bundle, Items.RG_FISHING_POLE) & has_item(bundle, Items.RG_SPEAK_HYLIAN) & is_adult(bundle) & True_(options=[OptionFilter(RSK_FISHSANITY_AGE_SPLIT, True)])),
+        (Locations.RC_LH_HYRULE_LOACH, lambda bundle: can_use(bundle, Items.RG_FISHING_POLE) & has_item(bundle, Items.RG_SPEAK_HYLIAN)),
         (Locations.RC_FISHING_POLE_HINT, lambda bundle: has_item(bundle, Items.RG_SPEAK_HYLIAN)),
     ])
     # Exits
@@ -9274,11 +9275,11 @@ def set_region_rules(world: "SohWorld") -> None:
     ])
     # Locations
     add_locations(Regions.RR_SACRED_FOREST_MEADOW, world, [
-        (Locations.RC_SONG_FROM_SARIA, lambda bundle: is_child(bundle) & has_item(bundle, Items.RG_ZELDAS_LETTER)),
-        (Locations.RC_SHEIK_IN_FOREST, lambda bundle: is_adult(bundle)),
         (Locations.RC_SFM_SARIA_GOSSIP_STONE_FAIRY, lambda bundle: call_gossip_fairy_except_suns(bundle)),
         (Locations.RC_SFM_SARIA_GOSSIP_STONE_FAIRY_BIG, lambda bundle: can_use(bundle, Items.RG_SONG_OF_STORMS)),
         (Locations.RC_SFM_SARIA_GOSSIP_STONE, lambda bundle: True_()),
+        (Locations.RC_SONG_FROM_SARIA, lambda bundle: is_child(bundle) & has_item(bundle, Items.RG_ZELDAS_LETTER)),
+        (Locations.RC_SHEIK_IN_FOREST, lambda bundle: is_adult(bundle)),
     ])
     # Exits
     connect_regions(Regions.RR_SACRED_FOREST_MEADOW, world, [
@@ -11939,8 +11940,8 @@ def set_region_rules(world: "SohWorld") -> None:
     # Locations
     add_locations(Regions.RR_WATER_TEMPLE_BLOCK_LOOP_BACK, world, [
         (Locations.RC_WATER_TEMPLE_CENTRAL_BOW_TARGET_CHEST, lambda bundle: has_item(bundle, Items.RG_OPEN_CHEST)),
-        (Locations.RC_WATER_TEMPLE_CENTRAL_BOW_POT_1, lambda bundle: can_use(bundle, Items.RG_BOMBCHU_5) & (has_item(bundle, Items.RG_GOLDEN_SCALE) | can_use(bundle, Items.RG_IRON_BOOTS))),
-        (Locations.RC_WATER_TEMPLE_CENTRAL_BOW_POT_2, lambda bundle: can_use(bundle, Items.RG_BOMBCHU_5) & (has_item(bundle, Items.RG_GOLDEN_SCALE) | can_use(bundle, Items.RG_IRON_BOOTS))),
+        (Locations.RC_WATER_TEMPLE_CENTRAL_BOW_POT_1, lambda bundle: can_break_pots(bundle, EnemyDistance.ED_CLOSE, True, False)),
+        (Locations.RC_WATER_TEMPLE_CENTRAL_BOW_POT_2, lambda bundle: can_break_pots(bundle, EnemyDistance.ED_CLOSE, True, False)),
     ])
 
     # Water Temple Block Room

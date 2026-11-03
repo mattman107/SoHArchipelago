@@ -487,17 +487,19 @@ class ShuffleShopsMaximumPrice(Range):
 
 class ShuffleFish(Choice):
     """
-    Shuffles various fish in the game. The Hylian Loach is not included.
+    Shuffles various fish in the game.
     Off - Fish will not be shuffled. No changes will be made to fish behavior.
-    Pond - Only the fishing pond's fish will be shuffled. Catching a fish in the fishing pond will grant a reward, and there are 15 fish for each age.
+    Hyrule Loach - Only the Hyrule Loach is shuffled. Giving it to the fishing pond owner will grant a reward.
+    Pond - Only the fishing pond's fish will be shuffled. Catching a fish in the fishing pond will grant a reward. There are 15 fish for each age, plus the loaches: two as child and one as adult.
     Overworld - Only fish in generic grottos and Zora's domain will be shuffled. These fish will need a bottle in order to scoop them up.
     All - All fish will be shuffled.
     """
     display_name = "Shuffle Fish"
     option_off = 0
-    option_pond = 1
-    option_overworld = 2
-    option_all = 3
+    option_hyrule_loach = 1
+    option_pond = 2
+    option_overworld = 3
+    option_all = 4
     default = 0
 
 

@@ -27,9 +27,7 @@ class SohLocData(NamedTuple):
 
 # Not AP locations
 EXCLUDED_TYPES = {CheckType.RCTYPE_GOSSIP_STONE, CheckType.RCTYPE_STATIC_HINT, CheckType.RCTYPE_CHEST_GAME}
-EXCLUDED = {Locations.RC_UNKNOWN_CHECK, Locations.RC_GANON, Locations.RC_TRIFORCE_COMPLETED,
-            Locations.RC_LH_CHILD_LOACH_1, Locations.RC_LH_CHILD_LOACH_2, Locations.RC_LH_ADULT_LOACH,
-            Locations.RC_LH_HYRULE_LOACH}
+EXCLUDED = {Locations.RC_UNKNOWN_CHECK, Locations.RC_GANON, Locations.RC_TRIFORCE_COMPLETED}
 
 location_data_table: dict[Locations, SohLocData] = {
     location: SohLocData(data.id, data.area if data.dungeon else None)
