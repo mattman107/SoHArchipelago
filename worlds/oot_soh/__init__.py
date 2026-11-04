@@ -127,7 +127,7 @@ class SohWorld(World):
         self.mq_dungeons = list[str]()
         self.mq_scenes = frozenset[str]()
         self._soh_pending_locations = dict()
-        self.pre_fill_pool = list[Items]()
+        self.pre_fill_pool = list[SohItem]()
         self.reserved_pre_fill_locations = list[Locations]()
 
         apworld_manifest = orjson.loads(pkgutil.get_data(
@@ -172,6 +172,8 @@ class SohWorld(World):
         elif self.options.key_rings == "selection" and self.options.fortress_carpenters == "normal" and self.options.gerudo_fortress_key_shuffle == "vanilla":
             self.options.gerudo_fortress_key_ring.value = False
 
+        self.options.adjust_key_rings()
+
         self.mq_dungeons = resolve_mq_dungeons(self)
 
         if self.options.ganons_trials == "set_number" and self.options.ganons_trials_count.value > 0:
@@ -196,20 +198,27 @@ class SohWorld(World):
 
         self.mq_scenes = mq_scenes(self.mq_dungeons)
 
-        # generate the prefill pool after the dungeons' quests are known, since Master Quest
-        # dungeons hold a different number of small keys
-        self.pre_fill_pool += get_pre_fill_rewards(self)
-        self.pre_fill_pool += get_prefill_songs(self)
-        for key_shuffle in get_own_dungeon_prefill_items(self).values():
-            self.pre_fill_pool += key_shuffle
-        self.pre_fill_pool += get_dungeon_item_prefill_items(self, False)
-        self.pre_fill_pool += get_dungeon_item_prefill_items(self, True)
-        self.pre_fill_pool += ShopItems.get_vanilla_shop_pool(self)
+    def get_item_from_pool(self, item: Items, item_pool: list[SohItem]) -> SohItem|None:
+        item_id = item_data_table[item].item_id
+        found_item = None
+        for soh_item in item_pool:
+            if soh_item.code == item_id:
+                found_item = soh_item
+                break
+        if found_item:
+            item_pool.remove(found_item)
+        return found_item
+    
+    def precollect_from_pool(self, item: Items):
+        world_item = self.get_item_from_pool(item, self.item_pool)
+        if not world_item:
+            return
 
+        world_item.code = None
+        self.push_precollected(world_item)
 
     def create_regions(self) -> None:
         create_regions_and_locations(self)
-        place_locked_items(self)
         self.reserve_prefill_locations()
         for location in self.get_locations():
             location.name = str(location.name)
@@ -239,7 +248,7 @@ class SohWorld(World):
                        None if create_as_event else item_data_table[item_entry].item_id, self.player)
 
     def get_pre_fill_items(self) -> list[Item]:
-        return [self.create_item(item) for item in self.pre_fill_pool]
+        return self.pre_fill_pool
 
     def get_filler_item_name(self) -> str:
         return get_filler_item(self)
@@ -270,7 +279,7 @@ class SohWorld(World):
         for item in self.item_pool:
             prefill_state.collect(item, True)
         for item in self.pre_fill_pool:
-            prefill_state.collect(self.create_item(item), True)
+            prefill_state.collect(item, True)
         prefill_state.sweep_for_advancements(my_locations)
         return prefill_state
     
@@ -280,36 +289,39 @@ class SohWorld(World):
 
 
     def create_items(self) -> None:
-        # these are for making the progressive items collect/remove work properly
-        if not self.options.shuffle_swim:
-            self.push_precollected(self.create_item(
-                Items.RG_PROGRESSIVE_SCALE, create_as_event=True))
-        if not self.options.shuffle_grab:
-            self.push_precollected(self.create_item(
-                Items.RG_PROGRESSIVE_STRENGTH, create_as_event=True))
-        if not self.options.shuffle_deku_stick_bag:
-            self.push_precollected(self.create_item(
-                Items.RG_PROGRESSIVE_STICK_UPGRADE, create_as_event=True))
-        if not self.options.shuffle_deku_nut_bag:
-            self.push_precollected(self.create_item(
-                Items.RG_PROGRESSIVE_NUT_UPGRADE, create_as_event=True))
-        if not self.options.shuffle_childs_wallet:
-            self.push_precollected(self.create_item(
-                Items.RG_PROGRESSIVE_WALLET, create_as_event=True))
+        # generate the prefill pool once the dungeons' quests are known, since Master Quest
+        # dungeons hold a different number of small keys
+        pre_fill_items = list()
+        pre_fill_items += get_pre_fill_rewards(self)
+        pre_fill_items += get_prefill_songs(self)
+        for key_shuffle in get_own_dungeon_prefill_items(self).values():
+            pre_fill_items += key_shuffle
+        pre_fill_items += get_dungeon_item_prefill_items(self, False)
+        pre_fill_items += get_dungeon_item_prefill_items(self, True)
 
-        # Pre-Collect Extra Fire Temple Small Key (vanilla Fire Temple only)
-        if self.options.small_key_shuffle in ("vanilla", "own_dungeon") and "Fire Temple" not in self.mq_dungeons:
-            self.multiworld.push_precollected(
-                self.create_item(str(Items.RG_FIRE_TEMPLE_SMALL_KEY), True))
-            
-        give_starting_items(self)
+        vanilla_shop_pool = ShopItems.get_vanilla_shop_pool(self)
+        pre_fill_items += vanilla_shop_pool
+        self.item_pool += [self.create_item(item) for item in vanilla_shop_pool]
 
+        # Generate the item pool
         create_item_pool(self)
+
+        # Pre-place items from the pool
+        give_starting_items(self)
+        place_locked_items(self)
 
         if self.options.triforce_hunt:
             create_triforce_pieces(self)
 
         create_filler_item_pool(self)
+
+        # Extract pre fill items from the pool
+        for item in pre_fill_items:
+            if (pre_fill_item := self.get_item_from_pool(item, self.item_pool)):
+                self.pre_fill_pool.append(pre_fill_item)
+
+        # Send items to the multiworld
+        self.multiworld.itempool.extend(self.item_pool)
 
         self.set_completion_rule()
 
@@ -324,16 +336,20 @@ class SohWorld(World):
         """On a restrictive start with shuffled Open Chest, place it in the first sphere"""
         if not self.options.shuffle_open_chest or self.options.closed_forest != "on" or len(self.start_locations()) >= 10:
             return
-        item = next(i for i in self.item_pool if i.name == Items.RG_OPEN_CHEST)
-        self.item_pool.remove(item)
+        item = self.get_item_from_pool(Items.RG_OPEN_CHEST, self.item_pool)
+        if not item:
+            return
         self.multiworld.itempool.remove(item)
         if spots := self.start_locations():
             spots[0].place_locked_item(item)
             self.preplaced_items.append(item)
         else:
             logger.warning("[%s] Not able to place %s early, so the player starts with it.", self.player_name, item.name)
+            item.code = None
             self.push_precollected(item)
-            self.add_items_to_item_pool_list([self.create_item(self.get_filler_item_name())])
+            filler = self.create_item(self.get_filler_item_name())
+            self.item_pool.append(filler)
+            self.multiworld.itempool.append(filler)
 
     def pre_fill(self) -> None:
         self.place_start_items_early()
@@ -346,21 +362,21 @@ class SohWorld(World):
 
         self.set_completion_rule()
 
-    def run_prefill(self, item_pool: list[Items], locations: list[Locations], prefill_state: CollectionState | None = None, original_goal: Callable[[CollectionState], bool] | None = None):
+    def run_prefill(self, item_pool: list[Items], locations: list[Locations], original_goal: Callable[[CollectionState], bool] | None = None):
         def create_new_goal(empty_locations: list[Location]):
             goal = True_()
             # set region accessability of locations as the goal
             for reg in empty_locations:
                 goal &= CanReachLocation(str(reg.name))
             return goal
-        
-        # check if we're using specific collectionstate
-        if prefill_state is None:
-            for item in item_pool:
-                if item in self.pre_fill_pool: 
-                    self.pre_fill_pool.remove(item)
-            
-            prefill_state = self.get_pre_fill_state()
+
+        # Get the items from the prefill pool
+        items = list()
+        for item in item_pool:
+            if (pre_fill_item := self.get_item_from_pool(item, self.pre_fill_pool)):
+                items.append(pre_fill_item)
+
+        prefill_state = self.get_pre_fill_state()
 
         # get empty, non reserved locations
         empty_locations_all = self.get_empty_locations_from_list_shuffled(locations)
@@ -373,7 +389,6 @@ class SohWorld(World):
         else:
             empty_locations = empty_locations_all[:chunk]
 
-        items = [self.create_item(str(item)) for item in item_pool]
         self.preplaced_items.extend(items)
         
         if original_goal is None:
@@ -394,7 +409,9 @@ class SohWorld(World):
             fill_restrictive(self.multiworld, prefill_state, empty_locations, items, single_player_placement=True, lock=True, allow_partial=True, name="SOH_Prefill_Secondary")
         
         # Add any unplaced items to the item pool
-        self.add_items_to_item_pool_list(items)
+        if len(items) > 0:
+            self.item_pool.extend(items)
+            self.multiworld.itempool.extend(items)
 
         for item in items:
             self.preplaced_items.remove(item)
@@ -419,7 +436,6 @@ class SohWorld(World):
     def add_items_to_item_pool_list(self, items: list[SohItem]) -> None:
         if len(items) > 0:
             self.item_pool.extend(items)
-            self.multiworld.itempool.extend(items)
 
     def remove(self, state: CollectionState, item: Item) -> bool:
         changed = super().remove(state, item)
