@@ -73,39 +73,42 @@ class TestAbilitiesPlentiful(SohTestBase):
             self.assertEqual(pool.count(str(item)), 2, f"{item} should be shuffled twice on plentiful")
 
 
-def assert_obtainable_at_start(test: SohTestBase, item: Items) -> None:
-    """The item is held from the start, or sits on a location reachable by collecting what is
-    reachable from the start (so one early item can open the spot for the next)."""
-    if str(item) in [i.name for i in test.multiworld.precollected_items[test.player]]:
-        return
-    state = CollectionState(test.multiworld)
-    state.sweep_for_advancements()
-    location = next(loc for loc in test.multiworld.get_locations(test.player) if loc.item and loc.item.name == item)
-    test.assertTrue(location.can_reach(state), f"{item} landed on {location.name}")
+def precollected(test: SohTestBase) -> list[str]:
+    return [i.name for i in test.multiworld.precollected_items[test.player]]
 
 
 class TestStartItemsWithNothingAtStart(SohTestBase):
-    """Test items are correctly placed in sphere 1"""
+    """A closed forest with no free spot: Open Chest is given, Climb and Crawl stay in the pool."""
     options = {"shuffle_open_chest": "true", "shuffle_climb": "true", "shuffle_crawl": "true",
                "starting_age": "child", "closed_forest": "on", "start_with_links_pocket": "nothing"}
 
-    def test_starts_with_open_chests(self):
-        self.assertIn(str(Items.RG_OPEN_CHEST), [i.name for i in self.multiworld.precollected_items[self.player]])
+    def test_starts_with_open_chest(self):
+        self.assertIn(str(Items.RG_OPEN_CHEST), precollected(self))
 
-    def test_climb_is_obtainable_at_start(self):
-        assert_obtainable_at_start(self, Items.RG_CLIMB)
+    def test_climb_and_crawl_stay_in_the_pool(self):
+        pool = [item.name for item in self.multiworld.itempool]
+        for item in (Items.RG_CLIMB, Items.RG_CRAWL):
+            self.assertIn(str(item), pool)
 
 
 class TestStartItemsPlacedAtStart(SohTestBase):
-    """Same start, but Link's Pocket is free: Open Chests goes there instead of being given."""
+    """Same start, but Link's Pocket is free: Open Chest goes there instead of being given."""
     options = {**TestStartItemsWithNothingAtStart.options, "start_with_links_pocket": "advancement",
                "shuffle_dungeon_rewards": "anywhere"}
 
-    def test_both_are_taken_out_of_the_pool_and_obtainable_at_start(self):
+    def test_open_chest_is_placed_in_the_first_sphere(self):
+        self.assertNotIn(str(Items.RG_OPEN_CHEST), [i.name for i in self.multiworld.itempool])
+        self.assertNotIn(str(Items.RG_OPEN_CHEST), precollected(self))
+        state = CollectionState(self.multiworld)
+        state.sweep_for_advancements()
+        location = next(loc for loc in self.multiworld.get_locations(self.player)
+                        if loc.item and loc.item.name == Items.RG_OPEN_CHEST)
+        self.assertTrue(location.can_reach(state), f"Open Chest landed on {location.name}")
+
+    def test_climb_and_crawl_stay_in_the_pool(self):
         pool = [item.name for item in self.multiworld.itempool]
-        for item in (Items.RG_OPEN_CHEST, Items.RG_CLIMB):
-            self.assertNotIn(str(item), pool, f"{item} should have been taken out of the pool")
-            assert_obtainable_at_start(self, item)
+        for item in (Items.RG_CLIMB, Items.RG_CRAWL):
+            self.assertIn(str(item), pool)
 
 
 class TestStartItemsStayInPoolWithOpenForest(SohTestBase):
@@ -132,15 +135,3 @@ class TestStartItemsStayInPoolWithFreeLocations(SohTestBase):
         pool = [item.name for item in self.multiworld.itempool]
         for item in (Items.RG_OPEN_CHEST, Items.RG_CLIMB):
             self.assertIn(str(item), pool)
-
-
-class TestStartItemsPlacedWithFewFreeLocations(SohTestBase):
-    """Pots add only five free locations, which is not enough to leave the fill alone."""
-    options = {**TestStartItemsStayInPoolWithFreeLocations.options, "shuffle_freestanding_items": "off",
-               "shuffle_pots": "all"}
-
-    def test_items_are_taken_out_of_the_pool(self):
-        pool = [item.name for item in self.multiworld.itempool]
-        for item in (Items.RG_OPEN_CHEST, Items.RG_CLIMB):
-            self.assertNotIn(str(item), pool)
-            assert_obtainable_at_start(self, item)

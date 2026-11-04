@@ -321,23 +321,19 @@ class SohWorld(World):
             [loc.name for loc in self.get_locations() if loc.address is not None]) if loc.can_reach(state)]
 
     def place_start_items_early(self) -> None:
-        """Place ability shuffle items in an early sphere if it is a restrictive start"""
-        if self.options.closed_forest != "on" or len(self.start_locations()) >= 10:
+        """On a restrictive start with shuffled Open Chest, place it in the first sphere"""
+        if not self.options.shuffle_open_chest or self.options.closed_forest != "on" or len(self.start_locations()) >= 10:
             return
-        wanted = [item for item, shuffled in ((Items.RG_OPEN_CHEST, self.options.shuffle_open_chest),
-                                              (Items.RG_CLIMB, self.options.shuffle_climb),
-                                              (Items.RG_CRAWL, self.options.shuffle_crawl)) if shuffled]
-        for name in wanted:
-            item = next(i for i in self.item_pool if i.name == name)
-            self.item_pool.remove(item)
-            self.multiworld.itempool.remove(item)
-            if spots := self.start_locations():
-                spots[0].place_locked_item(item)
-                self.preplaced_items.append(item)
-            else:
-                logger.warning("[%s] Not able to place %s early, so the player starts with it.", self.player_name, item.name)
-                self.push_precollected(item)
-                self.add_items_to_item_pool_list([self.create_item(self.get_filler_item_name())])
+        item = next(i for i in self.item_pool if i.name == Items.RG_OPEN_CHEST)
+        self.item_pool.remove(item)
+        self.multiworld.itempool.remove(item)
+        if spots := self.start_locations():
+            spots[0].place_locked_item(item)
+            self.preplaced_items.append(item)
+        else:
+            logger.warning("[%s] Not able to place %s early, so the player starts with it.", self.player_name, item.name)
+            self.push_precollected(item)
+            self.add_items_to_item_pool_list([self.create_item(self.get_filler_item_name())])
 
     def pre_fill(self) -> None:
         self.place_start_items_early()
