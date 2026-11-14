@@ -101,7 +101,7 @@ def get_dungeon_item_prefill_items(world: "SohWorld", overworld_shuffle: bool) -
                 if world.options.gerudo_fortress_key_ring and world.options.fortress_carpenters == "normal" and world.options.gerudo_fortress_key_shuffle != "vanilla":
                     shuffle_items.append(Items.RG_GERUDO_FORTRESS_KEY_RING)
                 else:
-                    for _ in range(item_data_table[Items.RG_GERUDO_FORTRESS_SMALL_KEY].quantity_in_item_pool if world.options.fortress_carpenters == "normal" else 1):
+                    for _ in range(item_data_table[Items.RG_GERUDO_FORTRESS_SMALL_KEY].balanced_quantity if world.options.fortress_carpenters == "normal" else 1):
                         shuffle_items.append(Items.RG_GERUDO_FORTRESS_SMALL_KEY)
 
         # Maps and Compasses

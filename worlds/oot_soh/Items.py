@@ -82,7 +82,7 @@ class SohItemData(NamedTuple):
     item_id: int | None
     classification: IC = IC.progression
     # balanced amount
-    quantity_in_item_pool: int = 0
+    balanced_quantity: int = 0
     item_type: int = ItemType.none
     child_only: bool = False
     adult_only: bool = False
