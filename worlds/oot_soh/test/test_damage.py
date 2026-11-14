@@ -1,7 +1,7 @@
 from .. import SohWorld
 from ..Items import Items, SohItem
 from .bases import SohTestBase
-from ..rls_data.functions_gen import can_attack
+from ..gen.RLS.functions_gen import can_attack
 from itertools import combinations
 
 class TestCanAttack(SohTestBase):

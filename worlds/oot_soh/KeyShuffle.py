@@ -5,7 +5,7 @@ from .Items import Items, item_data_table
 from .Locations import location_data_table
 from .Regions import maps_and_compasses
 from .Enums import Locations
-from .ship_data_gen import CheckArea
+from .gen.Ship.ship_data_gen import CheckArea
 from .LogicHelpers import key_to_ring
 from .MasterQuest import small_key_count
 from .DungeonRewardShuffle import dungeon_reward_item_mapping

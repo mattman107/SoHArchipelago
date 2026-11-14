@@ -1,7 +1,7 @@
 from typing import Callable, NamedTuple
 from BaseClasses import CollectionState, Location
 from .Enums import Locations, Ages
-from .ship_data_gen import SHIP_LOCATIONS, CheckType, CheckArea, Items, ShipLocation
+from .gen.Ship.ship_data_gen import SHIP_LOCATIONS, CheckType, CheckArea, Items, ShipLocation
 
 
 class SohLocation(Location):

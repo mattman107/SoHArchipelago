@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Regenerate the RLS-derived logic for the oot_soh world into rls_data/.
+"""Regenerate the RLS-derived logic for the oot_soh world into gen/RLS/.
 
 Builds the RandoLogicScript compiler from the logic/ submodule and transpiles logic/src/*.rls into Python.
 """
 import os
+import re
 import pathlib
 import shutil
 import subprocess
@@ -14,7 +15,7 @@ WORLD = pathlib.Path(__file__).resolve().parent.parent
 LOGIC = WORLD / "logic"
 COMPILER = LOGIC / "RandoLogicScript"
 BUILD = COMPILER / "build"
-OUT = WORLD / "rls_data"
+OUT = WORLD / "gen" / "RLS"
 
 
 def run(*cmd: object, **kw) -> subprocess.CompletedProcess:
@@ -39,7 +40,8 @@ def main() -> int:
     if git("diff", "--quiet", "HEAD").returncode != 0:
         rev += "-dirty"
 
-    OUT.mkdir(exist_ok=True)
+    OUT.mkdir(parents=True, exist_ok=True)
+    (OUT.parent / "__init__.py").touch()
     (OUT / "__init__.py").touch()
 
     print(f"==> Transpiling logic -> {OUT}")
@@ -50,7 +52,11 @@ def main() -> int:
     for name in ("rls_match.py", "rls_conditional.py"):
         shutil.copyfile(COMPILER / "transpilers" / "soh_ap" / "src" / name, OUT / name)
 
-    print("==> Done. Generated: rls_data/{enums,functions,regions}_gen.py")
+    # The transpiler emits `from ..X`; one package deeper (gen/RLS) needs `from ...X`.
+    for f in OUT.glob("*.py"):
+        f.write_text(re.sub(r"^(\s*)from \.\.", r"\1from ...", f.read_text(), flags=re.M))
+
+    print("==> Done. Generated: gen/RLS/{enums,functions,regions}_gen.py")
     return 0
 
 

@@ -1,6 +1,6 @@
 from test.bases import WorldTestBase
 from ..Enums import Items
-from ..rls_data.enums_gen import Regions
+from ..gen.RLS.enums_gen import Regions
 from .. Items import SohItem
 from BaseClasses import ItemClassification as IC
 

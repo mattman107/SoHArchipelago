@@ -1,5 +1,5 @@
 from enum import StrEnum, IntEnum
-from .ship_data_gen import (Items, Locations, Tricks, DISABLED_TRICKS, Enemies, EnemyDistance,
+from .gen.Ship.ship_data_gen import (Items, Locations, Tricks, DISABLED_TRICKS, Enemies, EnemyDistance,
                              TrialKey)
 
 

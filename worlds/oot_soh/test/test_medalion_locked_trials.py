@@ -1,6 +1,6 @@
 from .bases import SohTestBase
 from ..Enums import Items
-from ..rls_data.enums_gen import Regions
+from ..gen.RLS.enums_gen import Regions
 
 class TestAllTrialsOpen(SohTestBase):
     options = {"starting_age": "adult",

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate ship_data_gen.py: the enums and data tables the world mirrors from Shipwright.
+"""Generate gen/Ship/ship_data_gen.py: the enums and data tables the world mirrors from Shipwright.
 
 - Locations / Items / Tricks: Ship's names, which the client resolves checks, items and
   tricks_in_logic by. Only tricks the logic uses; ones with no OPT_TRICK are in DISABLED_TRICKS.
@@ -19,7 +19,7 @@ import sys
 import types
 
 WORLD = pathlib.Path(__file__).resolve().parent.parent
-OUT = WORLD / "ship_data_gen.py"
+OUT = WORLD / "gen/Ship/ship_data_gen.py"
 RANDO = "soh/soh/Enhancements/randomizer"
 
 # Items with no Ship itemTable row

@@ -2,7 +2,7 @@ from collections import namedtuple
 from typing import TYPE_CHECKING
 
 from .Options import MQDungeons, MasterQuestChoice
-from .ship_data_gen import CheckArea, DUNGEON_SMALL_KEYS
+from .gen.Ship.ship_data_gen import CheckArea, DUNGEON_SMALL_KEYS
 
 if TYPE_CHECKING:
     from . import SohWorld

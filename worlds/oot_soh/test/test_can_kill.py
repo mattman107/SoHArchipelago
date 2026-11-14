@@ -1,8 +1,8 @@
 from .. import SohWorld
 from ..Enums import Items, Enemies, EnemyDistance
-from ..rls_data.enums_gen import Events
+from ..gen.RLS.enums_gen import Events
 from .bases import SohTestBase
-from ..rls_data.functions_gen import can_kill
+from ..gen.RLS.functions_gen import can_kill
 from itertools import combinations
 
 class KillBase(SohTestBase):

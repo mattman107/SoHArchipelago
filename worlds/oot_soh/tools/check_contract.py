@@ -9,7 +9,7 @@ import sys
 WORLD = pathlib.Path(__file__).resolve().parent.parent
 REPO = WORLD.parent.parent
 sys.path.insert(0, str(REPO))
-RLS = WORLD / "rls_data"
+RLS = WORLD / "gen" / "RLS"
 GENERATED = ["functions_gen.py", "regions_gen.py"]
 
 
@@ -94,7 +94,7 @@ def enum_member_report(uses: dict[str, set[str]]) -> str:
     transpiles cleanly; this is where it surfaces.
     """
     available: dict[str, set[str]] = {}
-    for mod in ["Enums.py", "rls_data/enums_gen.py", "ship_data_gen.py", "LogicHelpers.py"]:
+    for mod in ["Enums.py", "gen/RLS/enums_gen.py", "gen/Ship/ship_data_gen.py", "LogicHelpers.py"]:
         for cls, members in enum_members(WORLD / mod).items():
             available.setdefault(cls, set()).update(members)
     used = {cls: attrs for cls, attrs in uses.items() if cls in available}
@@ -121,7 +121,7 @@ def item_table_report(used: set[str]) -> str:
     """
     try:
         from worlds.oot_soh.Items import item_data_table  # noqa: PLC0415
-        from worlds.oot_soh.ship_data_gen import Items  # noqa: PLC0415
+        from worlds.oot_soh.gen.Ship.ship_data_gen import Items  # noqa: PLC0415
     except Exception as e:  # noqa: BLE001 - importing the world drags in all of AP
         return f"item table: skipped ({type(e).__name__}: {e})"
 
@@ -147,7 +147,7 @@ def alias_report() -> str:
     """
     lines = ["generated enum value collisions:"]
     found = False
-    for node in (n for mod in ("rls_data/enums_gen.py", "ship_data_gen.py")
+    for node in (n for mod in ("gen/RLS/enums_gen.py", "gen/Ship/ship_data_gen.py")
                  for n in ast.walk(ast.parse((WORLD / mod).read_text()))):
         if not (isinstance(node, ast.ClassDef) and any(getattr(b, "id", None) == "StrEnum" for b in node.bases)):
             continue

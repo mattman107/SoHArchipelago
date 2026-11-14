@@ -1,9 +1,9 @@
 from .. import SohWorld
 from ..Options import *
 from ..Items import Items, SohItem
-from ..rls_data.enums_gen import Events
+from ..gen.RLS.enums_gen import Events
 from .bases import SohTestBase
-from ..rls_data.functions_gen import bombchu_refill, is_fire_loop_locked, scarecrows_song, trade_quest_step
+from ..gen.RLS.functions_gen import bombchu_refill, is_fire_loop_locked, scarecrows_song, trade_quest_step
 from ..LogicHelpers import can_build_rainbow_bridge, can_trigger_lacs
 from itertools import combinations
 

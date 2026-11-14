@@ -1,4 +1,4 @@
-from ..ship_data_gen import SHIP_LOCATIONS, CheckQuest, DUNGEON_SMALL_KEYS
+from ..gen.Ship.ship_data_gen import SHIP_LOCATIONS, CheckQuest, DUNGEON_SMALL_KEYS
 from .bases import SohTestBase
 from .test_master_quest import MQ_QUEST_FIELDS
 

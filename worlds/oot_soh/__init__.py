@@ -13,7 +13,7 @@ from .Options import SohOptions, soh_option_groups, wallet_capacities
 from .LogicHelpers import prune_unreachable_events
 from .Regions import create_regions_and_locations, place_locked_items
 from .Enums import HostEvents, Items, Locations, TrialKey
-from .rls_data.enums_gen import Regions
+from .gen.RLS.enums_gen import Regions
 from .ItemPool import create_item_pool, create_filler_item_pool, create_triforce_pieces, get_filler_item, give_starting_items
 from . import DungeonRewardShuffle, RegionAgeAccess, ShopItems, SongShuffle
 from .DungeonRewardShuffle import pre_fill_dungeon_rewards, get_pre_fill_rewards

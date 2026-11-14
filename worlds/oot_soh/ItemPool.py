@@ -4,7 +4,7 @@ from .Enums import Items, Locations, TokenCounts, Tricks
 from .Items import item_data_table, GroupTag, filler_items, no_rules_bottles, SohItem
 from .Regions import dungeon_reward_item_mapping, dungeon_boss_keys
 from .MasterQuest import small_key_count
-from .ship_data_gen import CheckArea, DUNGEON_SMALL_KEYS
+from .gen.Ship.ship_data_gen import CheckArea, DUNGEON_SMALL_KEYS
 from .LogicHelpers import key_to_ring
 from BaseClasses import ItemClassification
 from .SongShuffle import song_vanilla_locations, get_shuffled_songs

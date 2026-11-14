@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from . import SohItem
 from .Locations import Locations
 from .Items import Items
-from .ship_data_gen import SHIP_LOCATIONS, CheckType
+from .gen.Ship.ship_data_gen import SHIP_LOCATIONS, CheckType
 
 if TYPE_CHECKING:
     from . import SohWorld
