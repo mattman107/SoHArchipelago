@@ -11,7 +11,7 @@ from BaseClasses import ItemClassification as IC
 
 from .bases import SohTestBase
 from ..Enums import Items
-from ..enums_gen import Regions
+from ..rls_data.enums_gen import Regions
 from ..Items import SohItem
 from ..Locations import SohLocData, location_data_table
 from ..Regions import materialize_locations

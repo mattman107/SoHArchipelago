@@ -1,6 +1,6 @@
 from .bases import SohTestBase
 from ..Enums import Items, HostEvents
-from ..enums_gen import Regions, Events
+from ..rls_data.enums_gen import Regions, Events
 from .. import LogicHelpers
 from .. import Options
 import itertools

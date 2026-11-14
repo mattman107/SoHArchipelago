@@ -1,5 +1,5 @@
 from ..Enums import Items, Locations
-from ..enums_gen import Events
+from ..rls_data.enums_gen import Events
 from .bases import SohTestBase
 
 MASKS = [Items.RG_KEATON_MASK, Items.RG_SKULL_MASK, Items.RG_SPOOKY_MASK, Items.RG_BUNNY_HOOD,

@@ -8,7 +8,7 @@
   must equal the AP `option_*` value.
 
 Also verifies the RSK_* option classes, MQ dungeon names and slot-data keys against Ship.
-Run after gen_logic.sh (the trick filter reads the generated logic).
+Run after gen_logic.py (the trick filter reads the generated logic).
 
 Usage: python3 worlds/oot_soh/tools/gen_ship_data.py path/to/Shipwright
 """

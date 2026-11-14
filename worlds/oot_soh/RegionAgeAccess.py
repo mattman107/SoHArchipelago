@@ -3,7 +3,7 @@ from BaseClasses import CollectionState, MultiWorld
 from worlds.AutoWorld import LogicMixin
 from .LogicHelpers import IsChild, IsAdult
 from .Enums import Ages
-from .enums_gen import Regions
+from .rls_data.enums_gen import Regions
 import copy
 
 

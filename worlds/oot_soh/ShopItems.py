@@ -5,7 +5,7 @@ from BaseClasses import CollectionState, MultiWorld
 
 from .Locations import scrubs_location_table, merchants_items_location_table, scrubs_one_time_only
 from .Enums import Items, Locations
-from .enums_gen import Regions
+from .rls_data.enums_gen import Regions
 from . import SohItem
 
 if TYPE_CHECKING:

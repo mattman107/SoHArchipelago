@@ -5,11 +5,11 @@ from .Enums import Ages, HostEvents, Items, Locations
 from .Items import SohItem, item_data_table
 from .Locations import SohLocation, location_data_table, scrubs_one_time_only
 from .ship_data_gen import SHIP_LOCATIONS, ShipLocation, CheckType, DUNGEON_SMALL_KEYS
-from .enums_gen import Regions
+from .rls_data.enums_gen import Regions
 from .Options import (RSK_GERUDO_FORTRESS, RSK_SELECTED_STARTING_AGE, ShuffleDungeonRewards, ShuffleSongs, StartWithLinksPocket,
                       StartWithOcarina)
 from .LogicHelpers import add_host_events, add_events
-from .regions_gen import set_region_rules
+from .rls_data.regions_gen import set_region_rules
 from .SongShuffle import song_vanilla_locations, get_shuffled_songs
 from .ShopItems import no_shop_shuffle
 

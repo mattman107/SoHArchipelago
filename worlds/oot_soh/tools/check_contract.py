@@ -11,6 +11,7 @@ import sys
 WORLD = pathlib.Path(__file__).resolve().parent.parent
 REPO = WORLD.parent.parent
 sys.path.insert(0, str(REPO))
+RLS = WORLD / "rls_data"
 GENERATED = ["functions_gen.py", "regions_gen.py"]
 
 
@@ -30,8 +31,8 @@ def imported_names() -> dict[tuple[str, str], set[str]]:
     generated files that import it."""
     wanted: dict[tuple[str, str], set[str]] = {}
     for name in GENERATED:
-        for node in ast.walk(ast.parse((WORLD / name).read_text())):
-            if isinstance(node, ast.ImportFrom) and node.level == 1 and node.module:
+        for node in ast.walk(ast.parse((RLS / name).read_text())):
+            if isinstance(node, ast.ImportFrom) and node.level == 2 and node.module:
                 for alias in node.names:
                     wanted.setdefault((node.module, alias.name), set()).add(name)
     return wanted
@@ -39,15 +40,15 @@ def imported_names() -> dict[tuple[str, str], set[str]]:
 
 def main() -> int:
     for name in GENERATED:
-        if not (WORLD / name).exists():
-            print(f"error: {name} not generated. Run tools/gen_logic.sh", file=sys.stderr)
+        if not (RLS / name).exists():
+            print(f"error: {name} not generated. Run tools/gen_logic.py", file=sys.stderr)
             return 2
 
     wanted = imported_names()
     missing: list[tuple[str, str]] = []
     for (module, name), _files in sorted(wanted.items()):
         if module in {path.removesuffix(".py") for path in GENERATED} | {"enums_gen"}:
-            provided = name in definitions(WORLD / f"{module}.py")
+            provided = name in definitions(RLS / f"{module}.py")
         else:
             provided = hasattr(importlib.import_module(f"worlds.oot_soh.{module}"), name)
         if not provided:
@@ -80,7 +81,7 @@ def attribute_uses() -> dict[str, set[str]]:
     """`Name.attr` accesses in the generated logic, as name -> attrs."""
     uses: dict[str, set[str]] = {}
     for name in GENERATED:
-        for node in ast.walk(ast.parse((WORLD / name).read_text())):
+        for node in ast.walk(ast.parse((RLS / name).read_text())):
             if isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name):
                 uses.setdefault(node.value.id, set()).add(node.attr)
     return uses
@@ -93,7 +94,7 @@ def enum_member_report(uses: dict[str, set[str]]) -> str:
     transpiles cleanly; this is where it surfaces.
     """
     available: dict[str, set[str]] = {}
-    for mod in ["Enums.py", "enums_gen.py", "ship_data_gen.py", "LogicHelpers.py"]:
+    for mod in ["Enums.py", "rls_data/enums_gen.py", "ship_data_gen.py", "LogicHelpers.py"]:
         for cls, members in enum_members(WORLD / mod).items():
             available.setdefault(cls, set()).update(members)
     used = {cls: attrs for cls, attrs in uses.items() if cls in available}
@@ -146,7 +147,7 @@ def alias_report() -> str:
     """
     lines = ["generated enum value collisions:"]
     found = False
-    for node in (n for mod in ("enums_gen.py", "ship_data_gen.py")
+    for node in (n for mod in ("rls_data/enums_gen.py", "ship_data_gen.py")
                  for n in ast.walk(ast.parse((WORLD / mod).read_text()))):
         if not (isinstance(node, ast.ClassDef) and any(getattr(b, "id", None) == "StrEnum" for b in node.bases)):
             continue

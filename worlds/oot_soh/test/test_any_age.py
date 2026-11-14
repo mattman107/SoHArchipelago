@@ -1,7 +1,7 @@
 from .bases import SohTestBase
 from ..Enums import Items, Ages
-from ..enums_gen import Regions
-from ..functions_gen import blast_or_smash
+from ..rls_data.enums_gen import Regions
+from ..rls_data.functions_gen import blast_or_smash
 from ..LogicHelpers import any_age, is_adult
 from ..Regions import SohRegion
 

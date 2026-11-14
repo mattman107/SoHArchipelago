@@ -1,7 +1,7 @@
 from .. import SohWorld
 from ..Items import Items, SohItem
 from BaseClasses import ItemClassification as IC
-from ..enums_gen import Regions
+from ..rls_data.enums_gen import Regions
 from ..Enums import Locations, Tricks
 from .bases import SohTestBase
 
