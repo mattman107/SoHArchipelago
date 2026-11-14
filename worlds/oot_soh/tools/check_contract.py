@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
-"""Report whether Ship APs Enum, location, and Item definitions are up to date with the generated RLS output and gen_ship_data.py
-
-Usage: python3 worlds/oot_soh/tools/check_contract.py
-"""
+"""Report whether Ship APs Enum, location, and Item definitions are up to date with the generated RLS output and gen_ship_data.py"""
+import argparse
 import ast
 import importlib
 import pathlib
@@ -39,6 +37,8 @@ def imported_names() -> dict[tuple[str, str], set[str]]:
 
 
 def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.parse_args()
     for name in GENERATED:
         if not (RLS / name).exists():
             print(f"error: {name} not generated. Run tools/gen_logic.py", file=sys.stderr)

@@ -9,9 +9,8 @@
 
 Also verifies the RSK_* option classes, MQ dungeon names and slot-data keys against Ship.
 Run after gen_logic.py (the trick filter reads the generated logic).
-
-Usage: python3 worlds/oot_soh/tools/gen_ship_data.py path/to/Shipwright
 """
+import argparse
 import ast
 import json
 import pathlib
@@ -423,9 +422,9 @@ def report_stubs() -> None:
 
 
 def main() -> int:
-    if len(sys.argv) < 2:
-        sys.exit("error: pass the path to a Shipwright checkout.")
-    ship = pathlib.Path(sys.argv[1])
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("shipwright", type=pathlib.Path, help="path to a Shipwright checkout")
+    ship = parser.parse_args().shipwright
     rando = ship / RANDO
     if not (rando / "location_list.cpp").exists():
         sys.exit(f"error: no Shipwright checkout at {ship}")

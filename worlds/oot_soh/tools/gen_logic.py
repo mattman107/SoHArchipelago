@@ -2,8 +2,6 @@
 """Regenerate the RLS-derived logic for the oot_soh world into rls_data/.
 
 Builds the RandoLogicScript compiler from the logic/ submodule and transpiles logic/src/*.rls into Python.
-
-Usage: python3 worlds/oot_soh/tools/gen_logic.py
 """
 import os
 import pathlib
