@@ -37,9 +37,10 @@ class SohRegion(Region):
             return self in state._soh_child_reachable_regions[self.player] or self in state._soh_adult_reachable_regions[self.player]
 
 
-def location_enabled(world: "SohWorld", location: Locations, data: ShipLocation) -> bool:
+def location_enabled(world: "SohWorld", location: Locations) -> bool:
     """Whether this seed's options shuffle a location, decided by Ship's check type."""
     options = world.options
+    data: ShipLocation = SHIP_LOCATIONS[location]
 
     def split(choice) -> bool:
         # Options offering overworld / dungeon / all, split by Ship's Location::IsDungeon.
@@ -161,7 +162,7 @@ def create_regions_and_locations(world: "SohWorld") -> None:
             world.multiworld.regions.append(SohRegion(region_name, world.player, world.multiworld))
 
     world.included_locations.update({name: data for name, data in location_data_table.items()
-                                     if location_enabled(world, name, SHIP_LOCATIONS[name])})
+                                     if location_enabled(world, name)})
 
     # Set region rules and location rules after all locations are created
     set_region_rules(world)
