@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING
 
 from .Options import MQDungeons, DekuTreeQuest
+from .ship_data_gen import DUNGEON_SMALL_KEYS
 
 if TYPE_CHECKING:
     from . import SohWorld
@@ -60,6 +61,5 @@ def mq_scenes(dungeons: list[str]) -> frozenset[str]:
 
 def small_key_count(world: "SohWorld", key) -> int:
     """How many of a dungeon's small keys exist. Vanilla VS MQ"""
-    from .ship_data_gen import DUNGEON_SMALL_KEYS  # noqa: PLC0415 - keep this module import-light
     dungeon, vanilla, mq = DUNGEON_SMALL_KEYS[key]
     return mq if dungeon in world.mq_dungeons else vanilla
