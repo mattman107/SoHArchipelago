@@ -1,8 +1,8 @@
-from ..MasterQuest import MQ_DUNGEONS
 from ..ship_data_gen import SHIP_LOCATIONS, CheckQuest, DUNGEON_SMALL_KEYS
 from .bases import SohTestBase
+from .test_master_quest import MQ_QUEST_FIELDS
 
-ALL_MQ = {"mq_dungeons": "selection_only", **{field: "master_quest" for field, _ in MQ_DUNGEONS.values()}}
+ALL_MQ = {"mq_dungeons": "selection_only", **{field: "master_quest" for field in MQ_QUEST_FIELDS}}
 
 
 def quest_locations(test: SohTestBase, quest: CheckQuest) -> set[str]:

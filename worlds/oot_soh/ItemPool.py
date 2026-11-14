@@ -4,7 +4,7 @@ from .Enums import Items, Locations, TokenCounts, Tricks
 from .Items import item_data_table, GroupTag, filler_items, no_rules_bottles, SohItem
 from .Regions import dungeon_reward_item_mapping, dungeon_boss_keys
 from .MasterQuest import small_key_count
-from .ship_data_gen import DUNGEON_SMALL_KEYS
+from .ship_data_gen import CheckArea, DUNGEON_SMALL_KEYS
 from .LogicHelpers import key_to_ring
 from BaseClasses import ItemClassification
 from .SongShuffle import song_vanilla_locations, get_shuffled_songs
@@ -391,7 +391,7 @@ def give_starting_items(world: "SohWorld") -> None:
         world.precollect_from_pool(Items.RG_PROGRESSIVE_WALLET)
 
     # Pre-Collect Extra Fire Temple Small Key (vanilla Fire Temple only)
-    if options.small_key_shuffle in (RSK_KEYSANITY.option_vanilla, RSK_KEYSANITY.option_own_dungeon) and "Fire Temple" not in world.mq_dungeons:
+    if options.small_key_shuffle in (RSK_KEYSANITY.option_vanilla, RSK_KEYSANITY.option_own_dungeon) and CheckArea.RCAREA_FIRE_TEMPLE not in world.mq_dungeons:
         world.multiworld.push_precollected(
             world.create_item(str(Items.RG_FIRE_TEMPLE_SMALL_KEY), True))
 

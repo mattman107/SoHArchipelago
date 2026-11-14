@@ -1,15 +1,19 @@
 import random
+from dataclasses import fields
 import unittest
 
-from ..MasterQuest import MQ_DUNGEONS, mq_scenes, resolve_mq_dungeons
-from ..Options import MasterQuestChoice, MQDungeonCount, MQDungeons
+from ..MasterQuest import mq_dungeon_mapping, mq_scenes, resolve_mq_dungeons
+from ..Options import MasterQuestChoice, MQDungeonCount, MQDungeons, SohOptions
+
+# The per-dungeon quest option fields, for the tests that set options by name.
+MQ_QUEST_FIELDS = [f.name for f in fields(SohOptions) if isinstance(f.type, type) and issubclass(f.type, MasterQuestChoice)]
 
 
 class StubOptions:
     def __init__(self, mode, count=0, **quests):
         self.mq_dungeons = MQDungeons(mode)
         self.mq_dungeon_count = MQDungeonCount(count)
-        for field, _scene in MQ_DUNGEONS.values():
+        for field in MQ_QUEST_FIELDS:
             setattr(self, field, MasterQuestChoice(MasterQuestChoice.option_random_quest))
         for field, value in quests.items():
             setattr(self, field, MasterQuestChoice(value))
@@ -19,6 +23,13 @@ class StubWorld:
     def __init__(self, options, seed=0):
         self.options = options
         self.random = random.Random(seed)
+
+
+def stub_world(mode=0, seed=0, **quests):
+    return StubWorld(StubOptions(mode, 0, **quests), seed)
+
+
+ALL_DUNGEONS = list(mq_dungeon_mapping(stub_world()))
 
 
 def resolve(mode, count=0, seed=0, **quests):
@@ -48,7 +59,7 @@ class TestResolveMQDungeons(unittest.TestCase):
         self.assertIn("Ice Cavern", chosen)
 
     def test_vanilla_dungeons_are_never_chosen(self):
-        vanilla = {field: MasterQuestChoice.option_vanilla for field, _ in MQ_DUNGEONS.values()}
+        vanilla = {field: MasterQuestChoice.option_vanilla for field in MQ_QUEST_FIELDS}
         vanilla["deku_tree_quest"] = MasterQuestChoice.option_random_quest
         chosen = resolve(MQDungeons.option_set_number, 12, **vanilla)
         # Only one dungeon was available, so Ship's "you will have fewer MQ Dungeons than the
@@ -58,7 +69,7 @@ class TestResolveMQDungeons(unittest.TestCase):
     def test_count_above_available_yields_fewer(self):
         chosen = resolve(MQDungeons.option_set_number, 12,
                          **{field: MasterQuestChoice.option_vanilla
-                            for field, _ in MQ_DUNGEONS.values()})
+                            for field in MQ_QUEST_FIELDS})
         self.assertEqual(chosen, [])
 
     def test_selection_only_keeps_forced_and_rolls_the_rest(self):
@@ -69,14 +80,14 @@ class TestResolveMQDungeons(unittest.TestCase):
         self.assertNotIn("Ice Cavern", chosen)
 
     def test_set_number_is_exact_only_because_random_quest_defers(self):
-        deferred = {field: MasterQuestChoice.option_random_quest for field, _ in MQ_DUNGEONS.values()}
+        deferred = {field: MasterQuestChoice.option_random_quest for field in MQ_QUEST_FIELDS}
         for seed in range(30):
             self.assertEqual(len(resolve(MQDungeons.option_set_number, 3, seed=seed, **deferred)), 3)
 
         # Pre-committing them instead makes the count unenforceable -- not an error, just no
         # longer the number the player chose.
         committed = dict(deferred)
-        for i, field in enumerate(f for f, _ in MQ_DUNGEONS.values()):
+        for i, field in enumerate(MQ_QUEST_FIELDS):
             committed[field] = (MasterQuestChoice.option_master_quest if i % 2
                                 else MasterQuestChoice.option_vanilla)
         self.assertGreater(len(resolve(MQDungeons.option_set_number, 3, **committed)), 3)
@@ -85,21 +96,21 @@ class TestResolveMQDungeons(unittest.TestCase):
         # The count slider belongs to Set Number; under Selection Only each dungeon is its own
         # roll, which is what makes the total a bell curve rather than a chosen number.
         everything_forced = {field: MasterQuestChoice.option_master_quest
-                             for field, _ in MQ_DUNGEONS.values()}
+                             for field in MQ_QUEST_FIELDS}
         chosen = resolve(MQDungeons.option_selection_only, 1, **everything_forced)
-        self.assertEqual(len(chosen), len(MQ_DUNGEONS))
+        self.assertEqual(len(chosen), len(ALL_DUNGEONS))
 
     def test_random_number_stays_in_range(self):
         for seed in range(25):
             self.assertLessEqual(len(resolve(MQDungeons.option_random_number, seed=seed)),
-                                 len(MQ_DUNGEONS))
+                                 len(ALL_DUNGEONS))
 
     def test_result_is_deterministic_for_a_seed(self):
         self.assertEqual(resolve(MQDungeons.option_set_number, 4, seed=7),
                          resolve(MQDungeons.option_set_number, 4, seed=7))
 
     def test_scenes_map_back(self):
-        self.assertEqual(mq_scenes(["Deku Tree", "Ice Cavern"]),
+        self.assertEqual(mq_scenes(stub_world(), ["Deku Tree", "Ice Cavern"]),
                          frozenset({"SCENE_DEKU_TREE", "SCENE_ICE_CAVERN"}))
 
 
@@ -113,7 +124,7 @@ class TestRegionGating(unittest.TestCase):
     @staticmethod
     def world(*dungeons):
         """region_is_active only reads world.mq_scenes."""
-        return type("StubMQWorld", (), {"mq_scenes": mq_scenes(list(dungeons))})()
+        return type("StubMQWorld", (), {"mq_scenes": mq_scenes(stub_world(), list(dungeons))})()
 
     def test_mq_regions_only_when_that_dungeon_is_mq(self):
         mq_region = self.Regions.RR_DEKU_TREE_MQ_1F
@@ -155,13 +166,13 @@ class TestRegionGating(unittest.TestCase):
         """No region may be dropped by both quests, and every variant-specific scene must be a
         dungeon MasterQuest.py knows about -- otherwise it could never be switched on."""
         from ..LogicHelpers import REGION_QUEST
-        vanilla, all_mq = self.world(), self.world(*MQ_DUNGEONS)
+        vanilla, all_mq = self.world(), self.world(*ALL_DUNGEONS)
         orphans = [r.name for r in self.REGION_SCENE
                    if not self.active(r, vanilla) and not self.active(r, all_mq)]
         self.assertEqual(orphans, [], "regions no configuration can reach")
 
         variant_scenes = {self.REGION_SCENE[r] for r, q in REGION_QUEST.items() if q}
-        known_scenes = mq_scenes(list(MQ_DUNGEONS))
+        known_scenes = mq_scenes(stub_world(), ALL_DUNGEONS)
         self.assertTrue(variant_scenes <= known_scenes,
                         f"quest-specific regions in unknown scenes: {variant_scenes - known_scenes}")
 

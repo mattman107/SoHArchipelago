@@ -17,6 +17,7 @@ import json
 import pathlib
 import re
 import sys
+import types
 
 WORLD = pathlib.Path(__file__).resolve().parent.parent
 OUT = WORLD / "ship_data_gen.py"
@@ -369,10 +370,15 @@ def verify_dungeon_names(rando: pathlib.Path) -> int:
     mismatch silently leaves the dungeon vanilla while the logic assumed MQ."""
     ship = list(dungeon_infos(rando))
     sys.path.insert(0, str(WORLD.parent.parent))
-    from worlds.oot_soh.MasterQuest import MQ_DUNGEONS  # noqa: PLC0415
+    from worlds.oot_soh.MasterQuest import mq_dungeon_mapping  # noqa: PLC0415
 
-    missing = [name for name in MQ_DUNGEONS if name not in ship]
-    extra = [name for name in ship if name not in MQ_DUNGEONS]
+    class AnyOptions:  # only the dungeon names are wanted, not the options
+        def __getattr__(self, name):
+            return None
+
+    mq_dungeons = mq_dungeon_mapping(types.SimpleNamespace(options=AnyOptions()))
+    missing = [name for name in mq_dungeons if name not in ship]
+    extra = [name for name in ship if name not in mq_dungeons]
     for name in missing:
         print(f"  {name!r} is not a Ship dungeon name")
     for name in extra:

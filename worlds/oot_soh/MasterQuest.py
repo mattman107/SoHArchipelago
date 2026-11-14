@@ -1,39 +1,45 @@
+from collections import namedtuple
 from typing import TYPE_CHECKING
 
 from .Options import MQDungeons, MasterQuestChoice
-from .ship_data_gen import DUNGEON_SMALL_KEYS
+from .ship_data_gen import CheckArea, DUNGEON_SMALL_KEYS
 
 if TYPE_CHECKING:
     from . import SohWorld
 
-# Dungeon -> (options field, Ship scene).
-MQ_DUNGEONS: dict[str, tuple[str, str]] = {
-    "Deku Tree": ("deku_tree_quest", "SCENE_DEKU_TREE"),
-    "Dodongo's Cavern": ("dodongos_cavern_quest", "SCENE_DODONGOS_CAVERN"),
-    "Jabu Jabu's Belly": ("jabu_jabus_belly_quest", "SCENE_JABU_JABU"),
-    "Forest Temple": ("forest_temple_quest", "SCENE_FOREST_TEMPLE"),
-    "Fire Temple": ("fire_temple_quest", "SCENE_FIRE_TEMPLE"),
-    "Water Temple": ("water_temple_quest", "SCENE_WATER_TEMPLE"),
-    "Spirit Temple": ("spirit_temple_quest", "SCENE_SPIRIT_TEMPLE"),
-    "Shadow Temple": ("shadow_temple_quest", "SCENE_SHADOW_TEMPLE"),
-    "Bottom of the Well": ("bottom_of_the_well_quest", "SCENE_BOTTOM_OF_THE_WELL"),
-    "Ice Cavern": ("ice_cavern_quest", "SCENE_ICE_CAVERN"),
-    "Gerudo Training Ground": ("gerudo_training_ground_quest", "SCENE_GERUDO_TRAINING_GROUND"),
-    "Ganon's Castle": ("ganons_castle_quest", "SCENE_INSIDE_GANONS_CASTLE"),
-}
+MQDungeon = namedtuple('MQDungeon', ['Option', 'Scene'])
 
 
-def resolve_mq_dungeons(world: "SohWorld") -> list[str]:
-    """The dungeons that are Master Quest this seed, as MQ_DUNGEONS keys."""
+def mq_dungeon_mapping(world: "SohWorld") -> dict[CheckArea, MQDungeon]:
+    options = world.options
+    return {
+        CheckArea.RCAREA_DEKU_TREE: MQDungeon(options.deku_tree_quest, "SCENE_DEKU_TREE"),
+        CheckArea.RCAREA_DODONGOS_CAVERN: MQDungeon(options.dodongos_cavern_quest, "SCENE_DODONGOS_CAVERN"),
+        CheckArea.RCAREA_JABU_JABUS_BELLY: MQDungeon(options.jabu_jabus_belly_quest, "SCENE_JABU_JABU"),
+        CheckArea.RCAREA_FOREST_TEMPLE: MQDungeon(options.forest_temple_quest, "SCENE_FOREST_TEMPLE"),
+        CheckArea.RCAREA_FIRE_TEMPLE: MQDungeon(options.fire_temple_quest, "SCENE_FIRE_TEMPLE"),
+        CheckArea.RCAREA_WATER_TEMPLE: MQDungeon(options.water_temple_quest, "SCENE_WATER_TEMPLE"),
+        CheckArea.RCAREA_SPIRIT_TEMPLE: MQDungeon(options.spirit_temple_quest, "SCENE_SPIRIT_TEMPLE"),
+        CheckArea.RCAREA_SHADOW_TEMPLE: MQDungeon(options.shadow_temple_quest, "SCENE_SHADOW_TEMPLE"),
+        CheckArea.RCAREA_BOTTOM_OF_THE_WELL: MQDungeon(options.bottom_of_the_well_quest, "SCENE_BOTTOM_OF_THE_WELL"),
+        CheckArea.RCAREA_ICE_CAVERN: MQDungeon(options.ice_cavern_quest, "SCENE_ICE_CAVERN"),
+        CheckArea.RCAREA_GERUDO_TRAINING_GROUND: MQDungeon(options.gerudo_training_ground_quest, "SCENE_GERUDO_TRAINING_GROUND"),
+        CheckArea.RCAREA_GANONS_CASTLE: MQDungeon(options.ganons_castle_quest, "SCENE_INSIDE_GANONS_CASTLE"),
+    }
+
+
+def resolve_mq_dungeons(world: "SohWorld") -> list[CheckArea]:
+    """The dungeons that are Master Quest this seed, as CheckArea names."""
     mode = world.options.mq_dungeons
 
     if mode == MQDungeons.option_none:
         return []
 
-    forced: list[str] = []
-    eligible: list[str] = []
-    for dungeon, (field, _scene) in MQ_DUNGEONS.items():
-        choice = getattr(world.options, field).value
+    forced: list[CheckArea] = []
+    eligible: list[CheckArea] = []
+    mapping = mq_dungeon_mapping(world)
+    for dungeon, (option, _scene) in mapping.items():
+        choice = option.value
         if choice == MasterQuestChoice.option_master_quest:
             forced.append(dungeon)
         elif choice == MasterQuestChoice.option_random_quest:
@@ -44,7 +50,7 @@ def resolve_mq_dungeons(world: "SohWorld") -> list[str]:
         return sorted(forced + [d for d in eligible if world.random.randint(0, 1)])
 
     if mode == MQDungeons.option_random_number:
-        target = world.random.randint(0, len(MQ_DUNGEONS))
+        target = world.random.randint(0, len(mapping))
     else:
         target = world.options.mq_dungeon_count.value
 
@@ -53,8 +59,9 @@ def resolve_mq_dungeons(world: "SohWorld") -> list[str]:
     return sorted(forced + eligible[:remaining])
 
 
-def mq_scenes(dungeons: list[str]) -> frozenset[str]:
-    return frozenset(MQ_DUNGEONS[dungeon][1] for dungeon in dungeons if dungeon in MQ_DUNGEONS)
+def mq_scenes(world: "SohWorld", dungeons: list[str]) -> frozenset[str]:
+    mapping = mq_dungeon_mapping(world)
+    return frozenset(mapping[dungeon].Scene for dungeon in dungeons if dungeon in mapping)
 
 
 def small_key_count(world: "SohWorld", key) -> int:

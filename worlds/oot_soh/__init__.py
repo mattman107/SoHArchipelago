@@ -21,7 +21,7 @@ from .KeyShuffle import pre_fill_own_dungeon_items, pre_fill_any_dungeon_keys, p
 from .SongShuffle import pre_fill_songs, get_prefill_songs
 from .ShopItems import fill_shop_items, generate_prices
 from .Presets import oot_soh_options_presets
-from .MasterQuest import resolve_mq_dungeons, mq_scenes, MQ_DUNGEONS
+from .MasterQuest import resolve_mq_dungeons, mq_scenes, mq_dungeon_mapping
 from .UniversalTracker import setup_options_from_slot_data
 from settings import Group, Bool
 from Options import OptionError
@@ -196,7 +196,7 @@ class SohWorld(World):
             self.options.gerudo_training_ground_key_ring.value = self.passthrough.get("gerudo_training_ground_key_ring", False)
             self.options.ganons_castle_key_ring.value = self.passthrough.get("ganons_castle_key_ring", False)
 
-        self.mq_scenes = mq_scenes(self.mq_dungeons)
+        self.mq_scenes = mq_scenes(self, self.mq_dungeons)
 
     def get_item_from_pool(self, item: Items, item_pool: list[SohItem]) -> SohItem|None:
         item_id = item_data_table[item].item_id
@@ -490,8 +490,8 @@ class SohWorld(World):
             "mq_dungeons": self.mq_dungeons,
             "mq_dungeons_mode": self.options.mq_dungeons.value,
             "mq_dungeon_count": self.options.mq_dungeon_count.value,
-            "mq_dungeon_quests": {dungeon: getattr(self.options, field).value
-                                  for dungeon, (field, _) in MQ_DUNGEONS.items()},
+            "mq_dungeon_quests": {str(dungeon): mq_dungeon.Option.value
+                                  for dungeon, mq_dungeon in mq_dungeon_mapping(self).items()},
             "triforce_hunt": self.options.triforce_hunt.value,
             "triforce_hunt_pieces_total": self.options.triforce_hunt_pieces_total.value,
             "triforce_hunt_pieces_required": self.triforce_pieces_required,
