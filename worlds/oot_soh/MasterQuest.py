@@ -22,8 +22,6 @@ MQ_DUNGEONS: dict[str, tuple[str, str]] = {
     "Ganon's Castle": ("ganons_castle_quest", "SCENE_INSIDE_GANONS_CASTLE"),
 }
 
-MQ_SCENES: frozenset[str] = frozenset(scene for _, scene in MQ_DUNGEONS.values())
-
 
 def resolve_mq_dungeons(world: "SohWorld") -> list[str]:
     """The dungeons that are Master Quest this seed, as MQ_DUNGEONS keys."""

@@ -1,7 +1,7 @@
 import random
 import unittest
 
-from ..MasterQuest import MQ_DUNGEONS, MQ_SCENES, mq_scenes, resolve_mq_dungeons
+from ..MasterQuest import MQ_DUNGEONS, mq_scenes, resolve_mq_dungeons
 from ..Options import (BottomOfTheWellQuest, DekuTreeQuest, DodongosCavernQuest,
                        GanonsCastleQuest, IceCavernQuest, MQDungeonCount, MQDungeons,
                        SpiritTempleQuest)
@@ -103,7 +103,6 @@ class TestResolveMQDungeons(unittest.TestCase):
     def test_scenes_map_back(self):
         self.assertEqual(mq_scenes(["Deku Tree", "Ice Cavern"]),
                          frozenset({"SCENE_DEKU_TREE", "SCENE_ICE_CAVERN"}))
-        self.assertTrue(mq_scenes(list(MQ_DUNGEONS)) == MQ_SCENES)
 
 
 class TestRegionGating(unittest.TestCase):
@@ -164,8 +163,9 @@ class TestRegionGating(unittest.TestCase):
         self.assertEqual(orphans, [], "regions no configuration can reach")
 
         variant_scenes = {self.REGION_SCENE[r] for r, q in REGION_QUEST.items() if q}
-        self.assertTrue(variant_scenes <= MQ_SCENES,
-                        f"quest-specific regions in unknown scenes: {variant_scenes - MQ_SCENES}")
+        known_scenes = mq_scenes(list(MQ_DUNGEONS))
+        self.assertTrue(variant_scenes <= known_scenes,
+                        f"quest-specific regions in unknown scenes: {variant_scenes - known_scenes}")
 
 
 if __name__ == "__main__":
