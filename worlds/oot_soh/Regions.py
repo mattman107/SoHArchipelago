@@ -39,7 +39,7 @@ class SohRegion(Region):
 
 def location_enabled(world: "SohWorld", location: Locations, data: ShipLocation) -> bool:
     """Whether this seed's options shuffle a location, decided by Ship's check type."""
-    o = world.options
+    options = world.options
 
     def split(choice) -> bool:
         # Options offering overworld / dungeon / all, split by Ship's Location::IsDungeon.
@@ -47,60 +47,60 @@ def location_enabled(world: "SohWorld", location: Locations, data: ShipLocation)
 
     # Checks with an option of their own, whatever their check type.
     if location in (Locations.RC_HC_MALON_EGG, Locations.RC_HC_ZELDAS_LETTER):
-        return not o.skip_child_zelda
+        return not options.skip_child_zelda
     if location == Locations.RC_LH_HYRULE_LOACH:
-        return o.shuffle_fish == "hyrule_loach"
+        return options.shuffle_fish == "hyrule_loach"
     if location == Locations.RC_KAK_100_GOLD_SKULLTULA_REWARD:
-        return bool(o.shuffle_100_gs_reward)
+        return bool(options.shuffle_100_gs_reward)
     if location == Locations.RC_ZR_MAGIC_BEAN_SALESMAN:
-        return o.shuffle_merchants in ("bean_merchant_only", "all")
+        return options.shuffle_merchants in ("bean_merchant_only", "all")
     if location == Locations.RC_TH_FREED_CARPENTERS or data.type == CheckType.RCTYPE_GF_KEY:
-        return o.fortress_carpenters == "normal" or (
-            o.fortress_carpenters == "fast"
+        return options.fortress_carpenters == "normal" or (
+            options.fortress_carpenters == "fast"
             and location in (Locations.RC_TH_FREED_CARPENTERS, Locations.RC_TH_1_TORCH_CARPENTER))
 
     match data.type:
         case CheckType.RCTYPE_SCRUB:
-            return o.shuffle_scrubs == "all" or (o.shuffle_scrubs == "one_time_only"
+            return options.shuffle_scrubs == "all" or (options.shuffle_scrubs == "one_time_only"
                                                  and location in scrubs_one_time_only)
         case CheckType.RCTYPE_ADULT_TRADE:
-            return bool(o.shuffle_adult_trade_items)
+            return bool(options.shuffle_adult_trade_items)
         case CheckType.RCTYPE_MERCHANT:
-            return o.shuffle_merchants in ("all_but_beans", "all")
+            return options.shuffle_merchants in ("all_but_beans", "all")
         case CheckType.RCTYPE_COW:
-            return bool(o.shuffle_cows)
+            return bool(options.shuffle_cows)
         case CheckType.RCTYPE_FROG_SONG:
-            return bool(o.shuffle_frog_song_rupees)
+            return bool(options.shuffle_frog_song_rupees)
         case CheckType.RCTYPE_BEEHIVE:
-            return bool(o.shuffle_beehives)
+            return bool(options.shuffle_beehives)
         case CheckType.RCTYPE_POT:
-            return split(o.shuffle_pots)
+            return split(options.shuffle_pots)
         case CheckType.RCTYPE_CRATE | CheckType.RCTYPE_SMALL_CRATE:
-            return split(o.shuffle_crates)
+            return split(options.shuffle_crates)
         case CheckType.RCTYPE_NLCRATE:
-            return bool(o.true_no_logic) and o.shuffle_crates in ("overworld", "all")
+            return bool(options.true_no_logic) and options.shuffle_crates in ("overworld", "all")
         case CheckType.RCTYPE_TREE:
-            return bool(o.shuffle_trees)
+            return bool(options.shuffle_trees)
         case CheckType.RCTYPE_BUSH:
-            return bool(o.shuffle_bushes)
+            return bool(options.shuffle_bushes)
         case CheckType.RCTYPE_NLTREE:
-            return bool(o.true_no_logic and o.shuffle_trees)
+            return bool(options.true_no_logic and options.shuffle_trees)
         case CheckType.RCTYPE_FREESTANDING:
-            return split(o.shuffle_freestanding_items)
+            return split(options.shuffle_freestanding_items)
         case CheckType.RCTYPE_GRASS:
-            return split(o.shuffle_grass)
+            return split(options.shuffle_grass)
         case CheckType.RCTYPE_FOUNTAIN_FAIRY:
-            return bool(o.shuffle_fountain_fairies)
+            return bool(options.shuffle_fountain_fairies)
         case CheckType.RCTYPE_STONE_FAIRY:
-            return bool(o.shuffle_stone_fairies)
+            return bool(options.shuffle_stone_fairies)
         case CheckType.RCTYPE_BEAN_FAIRY:
-            return bool(o.shuffle_bean_fairies)
+            return bool(options.shuffle_bean_fairies)
         case CheckType.RCTYPE_SONG_FAIRY:
-            return bool(o.shuffle_song_fairies)
+            return bool(options.shuffle_song_fairies)
         case CheckType.RCTYPE_FISH:
-            return o.shuffle_fish in ("all", "pond" if data.scene == "SCENE_FISHING_POND" else "overworld")
+            return options.shuffle_fish in ("all", "pond" if data.scene == "SCENE_FISHING_POND" else "overworld")
         case CheckType.RCTYPE_LINKS_POCKET:
-            return o.start_with_links_pocket != "nothing"
+            return options.start_with_links_pocket != "nothing"
     return True
 
 
