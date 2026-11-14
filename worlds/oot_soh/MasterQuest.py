@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from .Options import MQDungeons, DekuTreeQuest
+from .Options import MQDungeons, MasterQuestChoice
 from .ship_data_gen import DUNGEON_SMALL_KEYS
 
 if TYPE_CHECKING:
@@ -34,9 +34,9 @@ def resolve_mq_dungeons(world: "SohWorld") -> list[str]:
     eligible: list[str] = []
     for dungeon, (field, _scene) in MQ_DUNGEONS.items():
         choice = getattr(world.options, field).value
-        if choice == DekuTreeQuest.option_master_quest:
+        if choice == MasterQuestChoice.option_master_quest:
             forced.append(dungeon)
-        elif choice == DekuTreeQuest.option_random_quest:
+        elif choice == MasterQuestChoice.option_random_quest:
             eligible.append(dungeon)
         # option_vanilla: never chosen, in any mode.
 

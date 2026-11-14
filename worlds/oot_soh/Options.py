@@ -1645,148 +1645,110 @@ class MQDungeonCount(Range):
     default = 0
 
 
-class DekuTreeQuest(Choice):
+class MasterQuestChoice(Choice):
+    """
+    Base Class for the MasterQuest dungeon selection options.
+    """
+    option_vanilla = 0
+    option_master_quest = 1
+    option_random_quest = 2
+    default = 0
+
+
+class DekuTreeQuest(MasterQuestChoice):
     """
     Whether this dungeon uses its vanilla or Master Quest layout.
     Random Quest - Choose a random quest and hide it in the in game tracker
     """
     display_name = "Deku Tree Quest"
-    option_vanilla = 0
-    option_master_quest = 1
-    option_random_quest = 2
-    default = 0
 
 
-class DodongosCavernQuest(Choice):
+class DodongosCavernQuest(MasterQuestChoice):
     """
     Whether this dungeon uses its vanilla or Master Quest layout.
     Random Quest - Choose a random quest and hide it in the in game tracker
     """
     display_name = "Dodongo's Cavern Quest"
-    option_vanilla = 0
-    option_master_quest = 1
-    option_random_quest = 2
-    default = 0
 
 
-class JabuJabusBellyQuest(Choice):
+class JabuJabusBellyQuest(MasterQuestChoice):
     """
     Whether this dungeon uses its vanilla or Master Quest layout.
     Random Quest - Choose a random quest and hide it in the in game tracker
     """
     display_name = "Jabu-Jabu's Belly Quest"
-    option_vanilla = 0
-    option_master_quest = 1
-    option_random_quest = 2
-    default = 0
 
 
-class ForestTempleQuest(Choice):
+class ForestTempleQuest(MasterQuestChoice):
     """
     Whether this dungeon uses its vanilla or Master Quest layout.
     Random Quest - Choose a random quest and hide it in the in game tracker
     """
     display_name = "Forest Temple Quest"
-    option_vanilla = 0
-    option_master_quest = 1
-    option_random_quest = 2
-    default = 0
 
 
-class FireTempleQuest(Choice):
+class FireTempleQuest(MasterQuestChoice):
     """
     Whether this dungeon uses its vanilla or Master Quest layout.
     Random Quest - Choose a random quest and hide it in the in game tracker
     """
     display_name = "Fire Temple Quest"
-    option_vanilla = 0
-    option_master_quest = 1
-    option_random_quest = 2
-    default = 0
 
 
-class WaterTempleQuest(Choice):
+class WaterTempleQuest(MasterQuestChoice):
     """
     Whether this dungeon uses its vanilla or Master Quest layout.
     Random Quest - Choose a random quest and hide it in the in game tracker
     """
     display_name = "Water Temple Quest"
-    option_vanilla = 0
-    option_master_quest = 1
-    option_random_quest = 2
-    default = 0
 
 
-class SpiritTempleQuest(Choice):
+class SpiritTempleQuest(MasterQuestChoice):
     """
     Whether this dungeon uses its vanilla or Master Quest layout.
     Random Quest - Choose a random quest and hide it in the in game tracker
     """
     display_name = "Spirit Temple Quest"
-    option_vanilla = 0
-    option_master_quest = 1
-    option_random_quest = 2
-    default = 0
 
 
-class ShadowTempleQuest(Choice):
+class ShadowTempleQuest(MasterQuestChoice):
     """
     Whether this dungeon uses its vanilla or Master Quest layout.
     Random Quest - Choose a random quest and hide it in the in game tracker
     """
     display_name = "Shadow Temple Quest"
-    option_vanilla = 0
-    option_master_quest = 1
-    option_random_quest = 2
-    default = 0
 
 
-class BottomOfTheWellQuest(Choice):
+class BottomOfTheWellQuest(MasterQuestChoice):
     """
     Whether this dungeon uses its vanilla or Master Quest layout.
     Random Quest - Choose a random quest and hide it in the in game tracker
     """
     display_name = "Bottom of the Well Quest"
-    option_vanilla = 0
-    option_master_quest = 1
-    option_random_quest = 2
-    default = 0
 
 
-class IceCavernQuest(Choice):
+class IceCavernQuest(MasterQuestChoice):
     """
     Whether this dungeon uses its vanilla or Master Quest layout.
     Random Quest - Choose a random quest and hide it in the in game tracker
     """
     display_name = "Ice Cavern Quest"
-    option_vanilla = 0
-    option_master_quest = 1
-    option_random_quest = 2
-    default = 0
 
 
-class GerudoTrainingGroundQuest(Choice):
+class GerudoTrainingGroundQuest(MasterQuestChoice):
     """
     Whether this dungeon uses its vanilla or Master Quest layout.
     Random Quest - Choose a random quest and hide it in the in game tracker
     """
     display_name = "Gerudo Training Ground Quest"
-    option_vanilla = 0
-    option_master_quest = 1
-    option_random_quest = 2
-    default = 0
 
 
-class GanonsCastleQuest(Choice):
+class GanonsCastleQuest(MasterQuestChoice):
     """
     Whether this dungeon uses its vanilla or Master Quest layout.
     Random Quest - Choose a random quest and hide it in the in game tracker
     """
     display_name = "Ganon's Castle Quest"
-    option_vanilla = 0
-    option_master_quest = 1
-    option_random_quest = 2
-    default = 0
 
 
 # == Not implemented =========================================================================

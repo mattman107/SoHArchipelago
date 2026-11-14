@@ -2,9 +2,7 @@ import random
 import unittest
 
 from ..MasterQuest import MQ_DUNGEONS, mq_scenes, resolve_mq_dungeons
-from ..Options import (BottomOfTheWellQuest, DekuTreeQuest, DodongosCavernQuest,
-                       GanonsCastleQuest, IceCavernQuest, MQDungeonCount, MQDungeons,
-                       SpiritTempleQuest)
+from ..Options import MasterQuestChoice, MQDungeonCount, MQDungeons
 
 
 class StubOptions:
@@ -12,9 +10,9 @@ class StubOptions:
         self.mq_dungeons = MQDungeons(mode)
         self.mq_dungeon_count = MQDungeonCount(count)
         for field, _scene in MQ_DUNGEONS.values():
-            setattr(self, field, DekuTreeQuest(DekuTreeQuest.option_random_quest))
+            setattr(self, field, MasterQuestChoice(MasterQuestChoice.option_random_quest))
         for field, value in quests.items():
-            setattr(self, field, DekuTreeQuest(value))
+            setattr(self, field, MasterQuestChoice(value))
 
 
 class StubWorld:
@@ -32,7 +30,7 @@ class TestResolveMQDungeons(unittest.TestCase):
         # Even a dungeon explicitly set to Master Quest stays vanilla: None means none.
         self.assertEqual(
             resolve(MQDungeons.option_none,
-                    deku_tree_quest=DekuTreeQuest.option_master_quest),
+                    deku_tree_quest=MasterQuestChoice.option_master_quest),
             [])
 
     def test_set_number_picks_exactly_that_many(self):
@@ -43,15 +41,15 @@ class TestResolveMQDungeons(unittest.TestCase):
     def test_forced_dungeons_count_towards_the_total(self):
         # Ship: "the dungeons chosen to be Master Quest here will count towards that total".
         chosen = resolve(MQDungeons.option_set_number, 3,
-                         deku_tree_quest=DekuTreeQuest.option_master_quest,
-                         ice_cavern_quest=IceCavernQuest.option_master_quest)
+                         deku_tree_quest=MasterQuestChoice.option_master_quest,
+                         ice_cavern_quest=MasterQuestChoice.option_master_quest)
         self.assertEqual(len(chosen), 3)
         self.assertIn("Deku Tree", chosen)
         self.assertIn("Ice Cavern", chosen)
 
     def test_vanilla_dungeons_are_never_chosen(self):
-        vanilla = {field: DekuTreeQuest.option_vanilla for field, _ in MQ_DUNGEONS.values()}
-        vanilla["deku_tree_quest"] = DekuTreeQuest.option_random_quest
+        vanilla = {field: MasterQuestChoice.option_vanilla for field, _ in MQ_DUNGEONS.values()}
+        vanilla["deku_tree_quest"] = MasterQuestChoice.option_random_quest
         chosen = resolve(MQDungeons.option_set_number, 12, **vanilla)
         # Only one dungeon was available, so Ship's "you will have fewer MQ Dungeons than the
         # number you set" applies rather than an error.
@@ -59,19 +57,19 @@ class TestResolveMQDungeons(unittest.TestCase):
 
     def test_count_above_available_yields_fewer(self):
         chosen = resolve(MQDungeons.option_set_number, 12,
-                         **{field: DekuTreeQuest.option_vanilla
+                         **{field: MasterQuestChoice.option_vanilla
                             for field, _ in MQ_DUNGEONS.values()})
         self.assertEqual(chosen, [])
 
     def test_selection_only_keeps_forced_and_rolls_the_rest(self):
         chosen = resolve(MQDungeons.option_selection_only,
-                         deku_tree_quest=DekuTreeQuest.option_master_quest,
-                         ice_cavern_quest=IceCavernQuest.option_vanilla)
+                         deku_tree_quest=MasterQuestChoice.option_master_quest,
+                         ice_cavern_quest=MasterQuestChoice.option_vanilla)
         self.assertIn("Deku Tree", chosen)
         self.assertNotIn("Ice Cavern", chosen)
 
     def test_set_number_is_exact_only_because_random_quest_defers(self):
-        deferred = {field: DekuTreeQuest.option_random_quest for field, _ in MQ_DUNGEONS.values()}
+        deferred = {field: MasterQuestChoice.option_random_quest for field, _ in MQ_DUNGEONS.values()}
         for seed in range(30):
             self.assertEqual(len(resolve(MQDungeons.option_set_number, 3, seed=seed, **deferred)), 3)
 
@@ -79,14 +77,14 @@ class TestResolveMQDungeons(unittest.TestCase):
         # longer the number the player chose.
         committed = dict(deferred)
         for i, field in enumerate(f for f, _ in MQ_DUNGEONS.values()):
-            committed[field] = (DekuTreeQuest.option_master_quest if i % 2
-                                else DekuTreeQuest.option_vanilla)
+            committed[field] = (MasterQuestChoice.option_master_quest if i % 2
+                                else MasterQuestChoice.option_vanilla)
         self.assertGreater(len(resolve(MQDungeons.option_set_number, 3, **committed)), 3)
 
     def test_selection_only_ignores_the_count(self):
         # The count slider belongs to Set Number; under Selection Only each dungeon is its own
         # roll, which is what makes the total a bell curve rather than a chosen number.
-        everything_forced = {field: DekuTreeQuest.option_master_quest
+        everything_forced = {field: MasterQuestChoice.option_master_quest
                              for field, _ in MQ_DUNGEONS.values()}
         chosen = resolve(MQDungeons.option_selection_only, 1, **everything_forced)
         self.assertEqual(len(chosen), len(MQ_DUNGEONS))
