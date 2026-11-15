@@ -1,7 +1,7 @@
 from typing import Callable, NamedTuple
 from BaseClasses import CollectionState, Location
 from .Enums import Locations, Ages
-from .gen.Ship.ship_data_gen import SHIP_LOCATIONS, CheckType, CheckArea, Items, ShipLocation
+from .gen.Ship.ship_data_gen import SHIP_LOCATIONS, CheckType, CheckArea, Items, Scene, ShipLocation
 
 
 class SohLocation(Location):
@@ -48,10 +48,10 @@ MINIGAMES = SHOOTING_MINIGAMES | {Locations.RC_LW_OCARINA_MEMORY_GAME, Locations
 
 # Groups derived from Ship's data rather than listed.
 GROUP_RULES: dict[str, Callable[[Locations, ShipLocation], bool]] = {
-    "Boss": lambda loc, d: d.type == CheckType.RCTYPE_DUNGEON_REWARD and d.scene.endswith("_BOSS"),
+    "Boss": lambda loc, d: d.type == CheckType.RCTYPE_DUNGEON_REWARD and d.scene.name.endswith("_BOSS"),
     "Heart Container": lambda loc, d: d.vanilla_item == Items.RG_HEART_CONTAINER,
     "Piece Of Heart": lambda loc, d: d.vanilla_item == Items.RG_PIECE_OF_HEART,
-    "House of Skulltula Reward": lambda loc, d: d.scene == "SCENE_HOUSE_OF_SKULLTULA",
+    "House of Skulltula Reward": lambda loc, d: d.scene == Scene.SCENE_HOUSE_OF_SKULLTULA,
     "Chest": lambda loc, d: d.actor == "ACTOR_EN_BOX",
     "Great Fairy Reward": lambda loc, d: d.actor == "ACTOR_BG_DY_YOSEIZO",
     "Shooting Minigame": lambda loc, d: loc in SHOOTING_MINIGAMES,

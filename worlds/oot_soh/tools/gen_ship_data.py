@@ -3,6 +3,7 @@
 
 - Locations / Items / Tricks: Ship's names, which the client resolves checks, items and
   tricks_in_logic by. Only tricks the logic uses; ones with no OPT_TRICK are in DISABLED_TRICKS.
+- Scene: Ship's SCENE_* ids (scene_table.h order); the RLS output imports it.
 - Enemies / EnemyDistance / TrialKey: Ship's enums, in Ship's order.
 - RandomizerSettingKey: Ship's RO_* values; each is its index in its RANDO_ENUM group, which
   must equal the AP `option_*` value.
@@ -185,7 +186,7 @@ def trick_names(rando: pathlib.Path) -> tuple[dict[str, str], list[str]]:
     for m in re.finditer(r"OPT_TRICK\(\s*(RT_\w+)\s*,", text):
         names[m.group(1)] = re.findall(r'"((?:[^"\\]|\\.)*)"', call_args(text, m.start() + len("OPT_TRICK(")))[0]
     used = set()
-    for path in WORLD.glob("*.py"):
+    for path in [*WORLD.glob("*.py"), *(WORLD / "gen/RLS").glob("*.py")]:
         if path != OUT:
             used |= set(re.findall(r"\bTricks\.(RT_\w+)", path.read_text()))
     declared = rando_enum(rando, "RandomizerTrick.h", "RandomizerTrick")
@@ -240,7 +241,7 @@ def location_table(rows: dict[str, dict], ids: list[str], items: dict[str, str])
         "    type: CheckType",
         "    quest: CheckQuest",
         "    area: CheckArea",
-        "    scene: str",
+        "    scene: Scene",
         "    actor: str  # empty when the factory implies it (tokens, pots, grass, ...)",
         "    dungeon: bool  # Ship's Location::IsDungeon",
         "    vanilla_item: Items | None",
@@ -253,7 +254,7 @@ def location_table(rows: dict[str, dict], ids: list[str], items: dict[str, str])
         r = rows[rc]
         item = f"Items.{r['item']}" if r["item"] in items and r["item"] != "RG_NONE" else "None"
         lines.append(f"    Locations.{rc}: ShipLocation({index[rc]}, CheckType.{r['type']}, "
-                     f"CheckQuest.{r['quest']}, CheckArea.{r['area']}, {json.dumps(r['scene'])}, {json.dumps(r['actor'])}, "
+                     f"CheckQuest.{r['quest']}, CheckArea.{r['area']}, Scene.{r['scene'] or 'SCENE_ID_MAX'}, {json.dumps(r['actor'])}, "
                      f"{r['dungeon']}, {item}),")
     return "\n".join([*lines, "}", "", ""])
 
@@ -279,6 +280,7 @@ def write(ship: pathlib.Path, rando: pathlib.Path) -> None:
         "from typing import NamedTuple",
         "",
         "",
+        str_enum("Scene", [*scene_order(ship), "SCENE_ID_MAX"], sort=False),
         str_enum("Locations", locations),
         str_enum("Items", items),
         str_enum("CheckType", rando_enum(rando, "RandomizerMiscEnums.h", "RandomizerCheckType"), sort=False),

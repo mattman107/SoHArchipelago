@@ -4,7 +4,7 @@ from rule_builder.rules import True_
 from .Enums import Ages, HostEvents, Items, Locations
 from .Items import SohItem, item_data_table
 from .Locations import SohLocation, location_data_table, scrubs_one_time_only
-from .gen.Ship.ship_data_gen import SHIP_LOCATIONS, ShipLocation, CheckType, DUNGEON_SMALL_KEYS
+from .gen.Ship.ship_data_gen import SHIP_LOCATIONS, ShipLocation, CheckType, DUNGEON_SMALL_KEYS, Scene
 from .gen.RLS.enums_gen import Regions
 from .Options import (RSK_GERUDO_FORTRESS, RSK_SELECTED_STARTING_AGE, ShuffleDungeonRewards, ShuffleSongs, StartWithLinksPocket,
                       StartWithOcarina)
@@ -99,7 +99,7 @@ def location_enabled(world: "SohWorld", location: Locations) -> bool:
         case CheckType.RCTYPE_SONG_FAIRY:
             return bool(options.shuffle_song_fairies)
         case CheckType.RCTYPE_FISH:
-            return options.shuffle_fish in ("all", "pond" if data.scene == "SCENE_FISHING_POND" else "overworld")
+            return options.shuffle_fish in ("all", "pond" if data.scene == Scene.SCENE_FISHING_POND else "overworld")
         case CheckType.RCTYPE_LINKS_POCKET:
             return options.start_with_links_pocket != "nothing"
     return True

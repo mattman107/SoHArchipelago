@@ -2,7 +2,7 @@ from collections import namedtuple
 from typing import TYPE_CHECKING
 
 from .Options import MQDungeons, MasterQuestChoice
-from .gen.Ship.ship_data_gen import CheckArea, DUNGEON_SMALL_KEYS
+from .gen.Ship.ship_data_gen import CheckArea, DUNGEON_SMALL_KEYS, Scene
 
 if TYPE_CHECKING:
     from . import SohWorld
@@ -13,18 +13,18 @@ MQDungeon = namedtuple('MQDungeon', ['Option', 'Scene'])
 def mq_dungeon_mapping(world: "SohWorld") -> dict[CheckArea, MQDungeon]:
     options = world.options
     return {
-        CheckArea.RCAREA_DEKU_TREE: MQDungeon(options.deku_tree_quest, "SCENE_DEKU_TREE"),
-        CheckArea.RCAREA_DODONGOS_CAVERN: MQDungeon(options.dodongos_cavern_quest, "SCENE_DODONGOS_CAVERN"),
-        CheckArea.RCAREA_JABU_JABUS_BELLY: MQDungeon(options.jabu_jabus_belly_quest, "SCENE_JABU_JABU"),
-        CheckArea.RCAREA_FOREST_TEMPLE: MQDungeon(options.forest_temple_quest, "SCENE_FOREST_TEMPLE"),
-        CheckArea.RCAREA_FIRE_TEMPLE: MQDungeon(options.fire_temple_quest, "SCENE_FIRE_TEMPLE"),
-        CheckArea.RCAREA_WATER_TEMPLE: MQDungeon(options.water_temple_quest, "SCENE_WATER_TEMPLE"),
-        CheckArea.RCAREA_SPIRIT_TEMPLE: MQDungeon(options.spirit_temple_quest, "SCENE_SPIRIT_TEMPLE"),
-        CheckArea.RCAREA_SHADOW_TEMPLE: MQDungeon(options.shadow_temple_quest, "SCENE_SHADOW_TEMPLE"),
-        CheckArea.RCAREA_BOTTOM_OF_THE_WELL: MQDungeon(options.bottom_of_the_well_quest, "SCENE_BOTTOM_OF_THE_WELL"),
-        CheckArea.RCAREA_ICE_CAVERN: MQDungeon(options.ice_cavern_quest, "SCENE_ICE_CAVERN"),
-        CheckArea.RCAREA_GERUDO_TRAINING_GROUND: MQDungeon(options.gerudo_training_ground_quest, "SCENE_GERUDO_TRAINING_GROUND"),
-        CheckArea.RCAREA_GANONS_CASTLE: MQDungeon(options.ganons_castle_quest, "SCENE_INSIDE_GANONS_CASTLE"),
+        CheckArea.RCAREA_DEKU_TREE: MQDungeon(options.deku_tree_quest, Scene.SCENE_DEKU_TREE),
+        CheckArea.RCAREA_DODONGOS_CAVERN: MQDungeon(options.dodongos_cavern_quest, Scene.SCENE_DODONGOS_CAVERN),
+        CheckArea.RCAREA_JABU_JABUS_BELLY: MQDungeon(options.jabu_jabus_belly_quest, Scene.SCENE_JABU_JABU),
+        CheckArea.RCAREA_FOREST_TEMPLE: MQDungeon(options.forest_temple_quest, Scene.SCENE_FOREST_TEMPLE),
+        CheckArea.RCAREA_FIRE_TEMPLE: MQDungeon(options.fire_temple_quest, Scene.SCENE_FIRE_TEMPLE),
+        CheckArea.RCAREA_WATER_TEMPLE: MQDungeon(options.water_temple_quest, Scene.SCENE_WATER_TEMPLE),
+        CheckArea.RCAREA_SPIRIT_TEMPLE: MQDungeon(options.spirit_temple_quest, Scene.SCENE_SPIRIT_TEMPLE),
+        CheckArea.RCAREA_SHADOW_TEMPLE: MQDungeon(options.shadow_temple_quest, Scene.SCENE_SHADOW_TEMPLE),
+        CheckArea.RCAREA_BOTTOM_OF_THE_WELL: MQDungeon(options.bottom_of_the_well_quest, Scene.SCENE_BOTTOM_OF_THE_WELL),
+        CheckArea.RCAREA_ICE_CAVERN: MQDungeon(options.ice_cavern_quest, Scene.SCENE_ICE_CAVERN),
+        CheckArea.RCAREA_GERUDO_TRAINING_GROUND: MQDungeon(options.gerudo_training_ground_quest, Scene.SCENE_GERUDO_TRAINING_GROUND),
+        CheckArea.RCAREA_GANONS_CASTLE: MQDungeon(options.ganons_castle_quest, Scene.SCENE_INSIDE_GANONS_CASTLE),
     }
 
 
@@ -59,7 +59,7 @@ def resolve_mq_dungeons(world: "SohWorld") -> list[CheckArea]:
     return sorted(forced + eligible[:remaining])
 
 
-def mq_scenes(world: "SohWorld", dungeons: list[str]) -> frozenset[str]:
+def mq_scenes(world: "SohWorld", dungeons: list[str]) -> frozenset[Scene]:
     mapping = mq_dungeon_mapping(world)
     return frozenset(mapping[dungeon].Scene for dungeon in dungeons if dungeon in mapping)
 

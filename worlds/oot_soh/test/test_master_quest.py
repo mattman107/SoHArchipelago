@@ -2,6 +2,7 @@ import random
 from dataclasses import fields
 import unittest
 
+from ..gen.Ship.ship_data_gen import Scene
 from ..MasterQuest import mq_dungeon_mapping, mq_scenes, resolve_mq_dungeons
 from ..Options import MasterQuestChoice, MQDungeonCount, MQDungeons, SohOptions
 
@@ -111,7 +112,7 @@ class TestResolveMQDungeons(unittest.TestCase):
 
     def test_scenes_map_back(self):
         self.assertEqual(mq_scenes(stub_world(), ["Deku Tree", "Ice Cavern"]),
-                         frozenset({"SCENE_DEKU_TREE", "SCENE_ICE_CAVERN"}))
+                         frozenset({Scene.SCENE_DEKU_TREE, Scene.SCENE_ICE_CAVERN}))
 
 
 class TestRegionGating(unittest.TestCase):
@@ -149,7 +150,7 @@ class TestRegionGating(unittest.TestCase):
         # ties them to the "Ganon's Castle" dungeon option -- the same scene Ganon's Tower uses,
         # which is why the tower correctly follows the castle's quest rather than its own name.
         vanilla_only = self.Regions.RR_GANONS_CASTLE_DEKU_SCRUBS
-        self.assertEqual(self.REGION_SCENE[vanilla_only], "SCENE_INSIDE_GANONS_CASTLE")
+        self.assertEqual(self.REGION_SCENE[vanilla_only], Scene.SCENE_INSIDE_GANONS_CASTLE)
         self.assertTrue(self.active(vanilla_only, self.world()))
         self.assertFalse(self.active(vanilla_only, self.world("Ganon's Castle")))
         # Another dungeon being MQ must not disturb it.
