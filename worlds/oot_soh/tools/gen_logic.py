@@ -23,7 +23,7 @@ def run(*cmd: object, **kw) -> subprocess.CompletedProcess:
 
 
 def git(*args: str, **kw) -> subprocess.CompletedProcess:
-    return subprocess.run(["git", "-C", str(COMPILER), *args], text=True, **kw)
+    return subprocess.run(["git", "-C", str(LOGIC), *args], text=True, **kw)
 
 
 def main() -> int:
