@@ -9,7 +9,7 @@ from worlds.AutoWorld import WebWorld, World
 from Fill import fill_restrictive
 from .Items import SohItem, item_data_table, item_table, SohItemData, progressive_items
 from .Locations import location_table, token_amounts, SohLocData, location_data_table, location_name_groups
-from .Options import SohOptions, soh_option_groups, wallet_capacities
+from .Options import SohOptions, soh_option_groups, wallet_capacities, RSK_FOREST
 from .LogicHelpers import prune_unreachable_events
 from .Regions import create_regions_and_locations, place_locked_items
 from .Enums import HostEvents, Items, Locations, TrialKey
@@ -334,7 +334,7 @@ class SohWorld(World):
 
     def place_start_items_early(self) -> None:
         """On a restrictive start with shuffled Open Chest, place it in the first sphere"""
-        if not self.options.shuffle_open_chest or self.options.closed_forest != "on" or len(self.start_locations()) >= 10:
+        if not self.options.shuffle_open_chest or self.options.closed_forest != RSK_FOREST.option_on or len(self.start_locations()) >= 10:
             return
         item = self.get_item_from_pool(Items.RG_OPEN_CHEST, self.item_pool)
         if not item:
