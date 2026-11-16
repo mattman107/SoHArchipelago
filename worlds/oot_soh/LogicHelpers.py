@@ -128,7 +128,7 @@ def can_use(bundle: tuple[Regions, "SohWorld"], item: Items) -> Rule:
         rule &= can_use(bundle, Items.RG_FAIRY_BOW)
 
     if item in (Items.RG_PROGRESSIVE_BOMBCHU_BAG, Items.RG_BOMBCHU_5, Items.RG_BOMBCHU_10, Items.RG_BOMBCHU_20):
-        from .gen.RLS.functions_gen import bombchu_refill  # generated, and it imports this module
+        from .gen.RLS.functions_gen import bombchu_refill
         rule &= bombchu_refill(bundle)
 
     if item == Items.RG_FISHING_POLE:
