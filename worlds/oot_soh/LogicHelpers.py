@@ -108,6 +108,13 @@ MASK_BORROW_EVENTS: dict[Items, Events] = {
 }
 
 
+BUY_SETS_FLAG: dict[Events, Items] = {
+    Events.LOGIC_BUG_ACCESS: Items.RG_BUY_BOTTLE_BUG,
+    Events.LOGIC_FAIRY_ACCESS: Items.RG_BUY_FAIRYS_SPIRIT,
+    Events.LOGIC_FISH_ACCESS: Items.RG_BUY_FISH,
+    Events.LOGIC_BLUE_FIRE_ACCESS: Items.RG_BUY_BLUE_FIRE,
+}
+
 BOTTLE_ITEMS = frozenset({
     Items.RG_BOTTLE_WITH_BLUE_FIRE, Items.RG_BOTTLE_WITH_BLUE_POTION, Items.RG_BOTTLE_WITH_BUGS,
     Items.RG_BOTTLE_WITH_FAIRY, Items.RG_BOTTLE_WITH_FISH, Items.RG_BOTTLE_WITH_GREEN_POTION,
@@ -150,6 +157,9 @@ def has_item(bundle: tuple[Regions, "SohWorld"], item: Items | Events | StrEnum,
 
     if item == Items.RG_FISHING_POLE:
         return OptionFilter(ShuffleFishingPole, False) | Has(Items.RG_FISHING_POLE)
+
+    if item in BUY_SETS_FLAG:
+        return HasAny(item, BUY_SETS_FLAG[item])
 
     if item == Events.LOGIC_BUY_BOMBCHUS:
         return HasAny(Items.RG_BUY_BOMBCHUS_10, Items.RG_BUY_BOMBCHUS_20)
