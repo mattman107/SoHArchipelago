@@ -88,6 +88,7 @@ ABILITY_SHUFFLES = {
     **{item: ShuffleJabberNuts for item in (Items.RG_SPEAK_DEKU, Items.RG_SPEAK_GERUDO, Items.RG_SPEAK_GORON,
                                             Items.RG_SPEAK_HYLIAN, Items.RG_SPEAK_KOKIRI, Items.RG_SPEAK_ZORA)},
     **{item: ShuffleBeanSouls for item in Items if item.name.endswith("_BEAN_SOUL")},
+    **{item: ShuffleOcarinaButtons for item in Items if item.name.startswith("RG_OCARINA_") and item.name.endswith("_BUTTON")},
 }
 
 MASK_QUEST_COMPLETED = OptionFilter(RSK_MASK_QUEST, RSK_MASK_QUEST.option_completed)
@@ -105,40 +106,6 @@ MASK_BORROW_EVENTS: dict[Items, Events] = {
     Items.RG_GERUDO_MASK: Events.LOGIC_BORROW_RIGHT_MASKS,
     Items.RG_MASK_OF_TRUTH: Events.LOGIC_BORROW_RIGHT_MASKS,
 }
-
-
-def can_use(bundle: tuple[Regions, "SohWorld"], item: Items) -> Rule:
-    rule : Rule = has_item(bundle, item)
-    data = item_data_table
-
-    if item in data:
-        if data[item].adult_only:
-            rule &= is_adult(bundle)
-
-        if data[item].child_only:
-            rule &= is_child(bundle)
-
-        if data[item].item_type == ItemType.magic:
-            rule &= has_item(bundle, Items.RG_MAGIC_SINGLE)
-
-        if data[item].item_type == ItemType.song:
-            rule &= can_play_song(bundle, item)
-
-    if item in (Items.RG_FIRE_ARROWS, Items.RG_ICE_ARROWS, Items.RG_LIGHT_ARROWS):
-        rule &= can_use(bundle, Items.RG_FAIRY_BOW)
-
-    if item in (Items.RG_PROGRESSIVE_BOMBCHU_BAG, Items.RG_BOMBCHU_5, Items.RG_BOMBCHU_10, Items.RG_BOMBCHU_20):
-        from .gen.RLS.functions_gen import bombchu_refill
-        rule &= bombchu_refill(bundle)
-
-    if item == Items.RG_FISHING_POLE:
-        rule &= has_item(bundle, Items.RG_CHILD_WALLET)
-
-    if item == Items.RG_EPONA:
-        rule &= is_adult(bundle) & can_use(bundle, Items.RG_EPONAS_SONG)
-    
-    return rule
-
 
 
 BOTTLE_ITEMS = frozenset({
@@ -177,7 +144,7 @@ def has_item(bundle: tuple[Regions, "SohWorld"], item: Items | Events | StrEnum,
         return (MASK_QUEST_SHUFFLED & Has(item)) | (MASK_QUEST_NOT_SHUFFLED & Has(MASK_BORROW_EVENTS[item]))
 
     if item in (Items.RG_SCARECROW, Items.RG_DISTANT_SCARECROW):
-        from .gen.RLS.functions_gen import scarecrows_song
+        from .gen.RLS.functions_gen import scarecrows_song, can_use
         return scarecrows_song(bundle) & can_use(
             bundle, Items.RG_HOOKSHOT if item == Items.RG_SCARECROW else Items.RG_LONGSHOT)
 
@@ -521,10 +488,12 @@ dungeon_events: list[Events] = [Events.LOGIC_DEKU_TREE_CLEAR, Events.LOGIC_DODON
 
 
 def fire_timer_at_least(bundle: tuple[Regions, "SohWorld"], amount: int) -> Rule:
+    from .gen.RLS.functions_gen import can_use
     return can_use(bundle, Items.RG_GORON_TUNIC) | (HeartsAtLeast(amount=int(math.ceil(amount/8))) & can_do_trick(bundle, Tricks.RT_FEWER_TUNIC_REQUIREMENTS))
 
 
 def water_timer_at_least(bundle: tuple[Regions, "SohWorld"], amount: int) -> Rule:
+    from .gen.RLS.functions_gen import can_use
     return can_use(bundle, Items.RG_ZORA_TUNIC) | (HeartsAtLeast(amount=int(math.ceil(amount/8))) & can_do_trick(bundle, Tricks.RT_FEWER_TUNIC_REQUIREMENTS))
 
 
@@ -591,6 +560,7 @@ class ItemsPlusGregEnough(Rule, game="Ship of Harkinian"):
         return HasFromListUnique(*items, count=self.target).resolve(world)
 
 def can_build_rainbow_bridge(bundle: tuple[Regions, "SohWorld"]) -> Rule:
+    from .gen.RLS.functions_gen import can_use
     greg = FromOption(RainbowBridgeGregModifier)
     return OptionFilter(RainbowBridge, RainbowBridge.option_always_open) \
          | (OptionFilter(RainbowBridge, RainbowBridge.option_vanilla) & has_item(bundle, Items.RG_SHADOW_MEDALLION) & has_item(bundle, Items.RG_SPIRIT_MEDALLION) & can_use(bundle, Items.RG_LIGHT_ARROWS)) \

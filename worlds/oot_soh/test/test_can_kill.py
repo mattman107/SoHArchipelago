@@ -58,7 +58,7 @@ class KillBase(SohTestBase):
         self.remove_by_name(items)
         for item in items:
             self.collect_by_name([item])
-            self.assertFalse(can_kill(self.get_bundle(), enemy)._instantiate(self.world)._evaluate(self.multiworld.state),
+            self.assertFalse(can_kill(self.get_bundle(), enemy, EnemyDistance.ED_CLOSE, True, 1, False, False)._instantiate(self.world)._evaluate(self.multiworld.state),
                              f"Was able to kill {str(enemy)} with only {item}")
             self.remove_by_name([item])
 
@@ -75,7 +75,7 @@ class TestCanKillEnemy(KillBase):
         Checking if player can kill Gerudo Guard
         """
         for enemy in (Enemies.RE_GERUDO_GUARD, Enemies.RE_BREAK_ROOM_GUARD):
-            self.assertFalse(can_kill(self.get_bundle(), enemy)._instantiate(self.world)._evaluate(self.multiworld.state), f'Could kill {str(enemy)}. This should be impossible.')
+            self.assertFalse(can_kill(self.get_bundle(), enemy, EnemyDistance.ED_CLOSE, True, 1, False, False)._instantiate(self.world)._evaluate(self.multiworld.state), f'Could kill {str(enemy)}. This should be impossible.')
 
     def test_gold_skulltula(self):
         """
