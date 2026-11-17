@@ -334,23 +334,25 @@ class SohWorld(World):
             [loc.name for loc in self.get_locations() if loc.address is not None]) if loc.can_reach(state)]
 
     def place_start_items_early(self) -> None:
-        """On a restrictive start with shuffled Open Chest, place it in the first sphere"""
-        if not self.options.shuffle_open_chest or self.options.closed_forest != RSK_FOREST.option_on or len(self.start_locations()) >= 10:
-            return
-        item = self.get_item_from_pool(Items.RG_OPEN_CHEST, self.item_pool)
-        if not item:
-            return
-        self.multiworld.itempool.remove(item)
-        if spots := self.start_locations():
-            spots[0].place_locked_item(item)
-            self.preplaced_items.append(item)
-        else:
-            logger.warning("[%s] Not able to place %s early, so the player starts with it.", self.player_name, item.name)
-            item.code = None
-            self.push_precollected(item)
-            filler = self.create_item(self.get_filler_item_name())
-            self.item_pool.append(filler)
-            self.multiworld.itempool.append(filler)
+        """On a restrictive start, place the shuffled ability items that gate the first sphere inside it"""
+        for name in (Items.RG_OPEN_CHEST, Items.RG_CLIMB, Items.RG_CRAWL):
+            spots = self.start_locations()
+            if len(spots) >= 10:
+                return
+            item = self.get_item_from_pool(name, self.item_pool)
+            if not item:
+                continue
+            self.multiworld.itempool.remove(item)
+            if spots:
+                spots[0].place_locked_item(item)
+                self.preplaced_items.append(item)
+            else:
+                logger.warning("[%s] Not able to place %s early, so the player starts with it.", self.player_name, item.name)
+                item.code = None
+                self.push_precollected(item)
+                filler = self.create_item(self.get_filler_item_name())
+                self.item_pool.append(filler)
+                self.multiworld.itempool.append(filler)
 
     def pre_fill(self) -> None:
         self.place_start_items_early()
@@ -360,6 +362,16 @@ class SohWorld(World):
         pre_fill_any_dungeon_keys(self)
         pre_fill_overworld_items(self)
         fill_shop_items(self)
+
+        # Option Error for when there is not enough locations with plentiful items
+        if self.options.item_pool == self.options.item_pool.option_plentiful:
+            free_locations = sum(1 for loc in self.get_locations() if loc.address is not None and loc.item is None)
+            progression = sum(1 for item in self.multiworld.itempool if item.player == self.player and item.advancement)
+            if progression > free_locations:
+                raise OptionError(
+                    f"Player {self.player_name} chose the plentiful item pool, which needs {progression} locations "
+                    f"for its progression items, but only {free_locations} are shuffled. Shuffle more locations "
+                    f"or choose a different item pool.")
 
         self.set_completion_rule()
 
