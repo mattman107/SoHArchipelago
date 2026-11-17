@@ -395,6 +395,11 @@ def give_starting_items(world: "SohWorld") -> None:
         world.multiworld.push_precollected(
             world.create_item(str(Items.RG_FIRE_TEMPLE_SMALL_KEY), True))
 
+    # Pre-Collect Extra Spirit Temple Keys (MQ Spirit Temple only)
+    if options.small_key_shuffle == RSK_KEYSANITY.option_vanilla and CheckArea.RCAREA_SPIRIT_TEMPLE in world.mq_dungeons:
+        for _ in range(3):
+            world.multiworld.push_precollected(world.create_item(str(Items.RG_SPIRIT_TEMPLE_SMALL_KEY), True))
+
     if options.start_with_kokiri_sword:
         world.precollect_from_pool(Items.RG_KOKIRI_SWORD)
 
