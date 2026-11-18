@@ -37,8 +37,8 @@ class TestAnyAge(SohTestBase):
         finally:
             state._soh_age[player] = Ages.null
 
-        # The widening must not leak past evaluation.
-        self.assertIsNone(state._soh_widen[player])
+        # The age override must not leak past evaluation.
+        self.assertIsNone(state._soh_any_age_override[player])
 
     def test_false_when_region_unreachable(self):
         """Ship's trailing `&& (IsAdult || IsChild)` no age access, no pass."""

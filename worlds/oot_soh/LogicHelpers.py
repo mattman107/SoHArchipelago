@@ -341,9 +341,9 @@ class IsAdult(Rule, game="Ship of Harkinian"):
         parent_region: Regions
         force_recalculate = True
         def _evaluate(self, state: CollectionState) -> bool:
-            widen = state._soh_widen[self.player] # type: ignore
-            if widen is not None:
-                return widen[1]
+            override = state._soh_any_age_override[self.player] # type: ignore
+            if override is not None:
+                return override[1]
             return state._soh_can_reach_as_age(self.parent_region, Ages.ADULT, self.player) # type: ignore
 
         def item_dependencies(self) -> dict[str, set[int]]:
@@ -386,9 +386,9 @@ class IsChild(Rule, game="Ship of Harkinian"):
         parent_region: Regions
         force_recalculate = True
         def _evaluate(self, state: CollectionState) -> bool:
-            widen = state._soh_widen[self.player] # type: ignore
-            if widen is not None:
-                return widen[0]
+            override = state._soh_any_age_override[self.player] # type: ignore
+            if override is not None:
+                return override[0]
             return state._soh_can_reach_as_age(self.parent_region, Ages.CHILD, self.player) # type: ignore
 
         def item_dependencies(self) -> dict[str, set[int]]:
@@ -729,14 +729,14 @@ class AnyAge(WrapperRule, game="Ship of Harkinian"):
             child, adult = ages
             result = False
             if child or adult:
-                prev = state._soh_widen[self.player] # type: ignore
-                state._soh_widen[self.player] = ages # type: ignore
+                prev = state._soh_any_age_override[self.player] # type: ignore
+                state._soh_any_age_override[self.player] = ages # type: ignore
                 try:
                     result = self.child(state)
                 finally:
-                    state._soh_widen[self.player] = prev # type: ignore
+                    state._soh_any_age_override[self.player] = prev # type: ignore
             if not result and not (child and adult):
-                state._soh_widen_pending[self.player].setdefault(self.parent_region, ages) # type: ignore
+                state._soh_age_crawl_cache_update(self.player, self.parent_region, ages) # type: ignore
             return result
 
         @override
@@ -770,7 +770,7 @@ class BothAges(Rule, game="Ship of Harkinian"):
             ages = state._soh_region_ages(self.parent_region, self.player)  # type: ignore
             if all(ages):
                 return True
-            state._soh_widen_pending[self.player].setdefault(self.parent_region, ages)  # type: ignore
+            state._soh_age_crawl_cache_update(self.player, self.parent_region, ages)  # type: ignore
             return False
 
         def item_dependencies(self) -> dict[str, set[int]]:

@@ -20,8 +20,8 @@ class SohAgeLogic(LogicMixin):
         self._soh_child_blocked_regions = {player: set() for player in players}
         self._soh_adult_blocked_regions = {player: set() for player in players}
         self._soh_age = {player: Ages.null for player in players}
-        self._soh_widen = {player: None for player in players}
-        self._soh_widen_pending = {player: {} for player in players}
+        self._soh_any_age_override = {player: None for player in players}
+        self._soh_age_crawl_cache = {player: {} for player in players}
 
     def copy_mixin(self, ret) -> CollectionState:
         ret._soh_stale = {player: stale for player,
@@ -35,9 +35,9 @@ class SohAgeLogic(LogicMixin):
         ret._soh_adult_blocked_regions = {player: copy.copy(
             regions) for player, regions in self._soh_adult_blocked_regions.items()}
         ret._soh_age = {player: age for player, age in self._soh_age.items()}
-        ret._soh_widen = {player: widen for player,
-                          widen in self._soh_widen.items()}
-        ret._soh_widen_pending = {player: {} for player in self._soh_widen_pending}
+        ret._soh_any_age_override = {player: override for player,
+                                     override in self._soh_any_age_override.items()}
+        ret._soh_age_crawl_cache = {player: {} for player in self._soh_age_crawl_cache}
         return ret
 
     def _soh_invalidate(self, player):
@@ -49,9 +49,9 @@ class SohAgeLogic(LogicMixin):
 
     def _soh_update_age_reachable_regions(self, player):
         self._soh_stale[player] = False
-        pending = self._soh_widen_pending[player]
+        crawl_cache = self._soh_age_crawl_cache[player]
         while True:
-            pending.clear()
+            crawl_cache.clear()
             for age in [Ages.CHILD, Ages.ADULT]:
                 self._soh_age[player] = age
                 start = self.multiworld.get_region(
@@ -88,15 +88,18 @@ class SohAgeLogic(LogicMixin):
                         self.path[new_region] = (new_region.name, self.path.get(
                             connection, None))  # type: ignore
 
-            # Continue searching after the first 
-            # Needed so an if Adult unlocks something for Child, it is found in this region search instead of a subsequent one
-            if all(self._soh_region_ages(region, player) == read for region, read in pending.items()):
+            # Any age and both age rules that failed their condition cache their results per loop
+            # This ensures that if any of those cached unreachable regions are now reachable, we re-run the region age crawl
+            if all(self._soh_region_ages(region, player) == read for region, read in crawl_cache.items()):
                 break
 
     def _soh_region_ages(self, region: Regions, player: int) -> tuple[bool, bool]:
         reg = self.multiworld.get_region(region.value, player)  # type: ignore
         return (reg in self._soh_child_reachable_regions[player],
                 reg in self._soh_adult_reachable_regions[player])
+
+    def _soh_age_crawl_cache_update(self, player: int, region: Regions, ages: tuple[bool, bool]):
+        self._soh_age_crawl_cache[player].setdefault(region, ages)
 
     def _soh_can_reach_as_age(self, region: Regions, age: Ages, player: int):
         if self._soh_age[player] == Ages.null:
